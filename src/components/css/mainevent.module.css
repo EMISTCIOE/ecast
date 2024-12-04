@@ -1,0 +1,71 @@
+:root {
+    --btn-bg: rgba(220, 20, 60, 255);
+}
+
+.semiContainer2 {
+    width: 40%;
+    height: auto; 
+    margin: 50px;
+    padding: 20px; 
+    font-size: 1.1rem; 
+    box-shadow: 0 4px 10px rgba(95, 32, 255, 0.8);
+    animation: pulse-shadow 2s infinite ease-in-out;
+    background-color: black;
+    line-height: 29px;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap; 
+}
+
+.container3 {
+    height: 90%;
+    width: 100vw;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: black;
+}
+
+.container4 {
+    height: 90%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 90%;
+    background-color: black;
+}
+
+.buttonContainer3 {
+    border: 3px solid var(--btn-bg);
+    border-radius: 4px;
+    color: var(--btn-bg);
+    height: 3rem;
+    width: 15rem;
+    font-size: 1rem; 
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.buttonContainer3:hover {
+    background-color: var(--btn-bg);
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .semiContainer2 {
+        width: 80%;
+        margin: 20px auto;
+        padding: 20px;
+        font-size: 1rem;
+    }
+
+    .buttonContainer3 {
+        width: 100%; 
+        font-size: 16px; 
+    }
+}

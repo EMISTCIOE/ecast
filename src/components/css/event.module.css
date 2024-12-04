@@ -1,0 +1,83 @@
+
+.title1 {
+    color: white;
+    font-size: 1.5rem; 
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-align: center;
+}
+
+.buttonContainer2 {
+    border: 3px solid var(--btn-bg);
+    border-radius: 4px;
+    color: var(--btn-bg);
+    height: 3rem;
+    width: 8rem;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+.eventImage {
+    max-width: 100%;
+    height: auto;
+    margin-bottom: 2px; /* Add space below the image */
+  }
+
+.buttonContainer1 {
+    border: 3px solid var(--btn-bg);
+    border-radius: 4px;
+    background-color: var(--btn-bg);
+    color: white;
+    height: 3rem;
+    width: 8rem;
+    font-size: 1rem;
+    font-weight: 700;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+}
+
+.btnContainer {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap; 
+}
+
+.buttonContainer2:hover {
+    background-color: var(--btn-bg);
+    color: white;
+}
+
+.buttonContainer1:hover {
+    background-color: transparent;
+    color: var(--btn-bg);
+    border: 3px solid var(--btn-bg);
+    transition: all 0.2s ease-in-out;
+}
+
+.semiImage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+@media (max-width: 768px) {
+    .title1 {
+        font-size: 1.2rem;
+    }
+
+    .buttonContainer2, .buttonContainer1 {
+        width: 98%;
+    }
+
+    .buttonContainer2, .buttonContainer1 {
+        font-size: 16px; 
+    }
+}

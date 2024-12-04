@@ -1,0 +1,141 @@
+
+
+.container {
+  width: 100vw;
+  height: 80vh;
+  background-color: black;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 95%;
+}
+
+.semi-container1{
+  width: 40%;
+  height: auto;
+  margin: 50px;
+  padding: 20px;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 10px rgba(95, 32, 255, 0.8);
+  animation: pulse-shadow 2s infinite ease-in-out;
+  background-color: black;
+  line-height: 29px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@keyframes pulse-shadow {
+  0%, 100% {
+    box-shadow: 0 4px 10px rgba(95, 32, 255, 0.8);
+  }
+  50% {
+    box-shadow: 0 8px 20px rgba(95, 32, 255, 0.4);
+  }
+}
+
+.semi-container {
+  width: 80%;
+  height: 95%;
+  margin: 50px;
+  padding: 50px;
+  font-size: 17px;
+  box-shadow: 0 4px 10px rgba(95, 32, 255, 0.8);
+  animation: pulse-shadow 2s infinite ease-in-out;
+  line-height: 29px;
+}
+
+.body{
+  height: 100%;
+}
+
+.head {
+  font-weight: 700;
+  color: yellow;
+  display: inline-block;
+}
+
+
+.images {
+  width: 100%;
+  max-width: 400px;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s, box-shadow 0.3s;
+  animation: fadeIn 1s ease-in-out;
+}
+
+.semi-container1 {
+  width: 90%;
+  height: auto;
+  margin: 50px;
+  padding: 20px;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 10px rgba(95, 32, 255, 0.8);
+  animation: pulse-shadow 2s infinite ease-in-out;
+  background-color: black;
+  line-height: 29px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.container1 {
+  height: auto;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  background-color: black;
+}
+
+.container2 {
+  height: auto;
+  display: flex;
+  flex-direction: row;
+  background-color: black;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.imageContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  align-items: center;
+}
+
+.semiImage {
+  gap: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+@media (max-width: 768px) {
+  .semiContainer1 {
+    width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    font-size: 1rem;
+  }
+
+  .images {
+    max-width: 100%;
+  }
+
+  .container1,
+  .container2 {
+    flex-direction: column;
+  }
+}

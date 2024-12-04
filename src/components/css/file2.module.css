@@ -1,0 +1,227 @@
+
+.card {
+    background-color: #111;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    text-align: center;
+  }
+  
+ 
+  .card h2 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+  }
+  
+
+  .card p {
+    font-size: 1.2em;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  
+  .card button {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .card button:hover {
+    background-color: #555;
+  }
+  
+  .aboutSection {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: #000;
+    color: #fff;
+    padding-top: 5rem;
+  }
+  
+  .divider {
+    width: 50%;
+    border-top: 1px solid #8B0000;
+    border-bottom: 2px solid #8B0000;
+    margin: 1rem 0;
+  }
+  
+  .cardContainer {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    height: auto;
+    padding-bottom: 40px;
+    background-color: #000;
+    flex-direction: column;
+  }
+  
+  @media (min-width: 640px) {
+    .cardContainer {
+      flex-direction: row;
+      justify-content: center;
+    }
+  }
+  
+  .card {
+    background-color: #222;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+  }
+  
+  .cardHeading {
+    font-size: 2.5rem;
+    font-weight: bold;
+  }
+  
+  .cardText {
+    font-size: 1.2rem;
+    line-height: 1.5;
+    margin-bottom: 20px;
+  }
+  
+  .cardButton {
+    background-color: #333;
+    color: #fff;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+  }
+  
+  .cardButton:hover {
+    background-color: #555;
+  }
+  
+
+  .cardBefore {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 1px;
+    background: linear-gradient(to right, #0000ff, #ff0000);
+    z-index: 10;
+  }
+  
+
+  .images {
+    width: 100%;
+    max-width: 400px;
+    height: auto;
+    border-radius: 8px; 
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); 
+    transition: transform 0.3s, box-shadow 0.3s; 
+    animation: fadeIn 1s ease-in-out;
+  }
+  
+  .semi-container1 {
+    width: 90%;
+    height: auto;
+    margin: 50px;
+    padding: 20px;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 10px rgba(95, 32, 255, 0.8);
+    animation: pulse-shadow 2s infinite ease-in-out;
+    background-color: black;
+    line-height: 29px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  .semi-container8 {
+    width: 400px;
+    height: auto;
+    margin: 50px;
+    padding: 20px;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 10px rgba(95, 32, 255, 0.8);
+    animation: pulse-shadow 2s infinite ease-in-out;
+    background-color: black;
+    line-height: 29px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    display:flex;
+  }
+  
+
+  .container1 {
+    height: auto; 
+    width: 50%;
+    display: flex;
+    flex-direction: column;
+    background-color: black;
+  }
+  
+  .container2 {
+    height: auto; 
+    display: flex;
+    flex-direction: row;
+    background-color: black;
+  }
+  .centeredContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px; 
+  }
+  
+
+  
+  
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  .image-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px; 
+    align-items: center;
+  }
+  
+  .semi-image {
+    gap: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: center; 
+  }
+  
+  
+  @media (max-width: 768px) {
+    .semi-container1 {
+        width: 80%; 
+        margin: 20px auto; 
+        padding: 20px;
+        font-size: 1rem; 
+    }
+  
+    .images {
+        max-width: 100%; 
+    }
+  
+    .container1, .container2 {
+        flex-direction: column; 
+    }
+  }
+  
