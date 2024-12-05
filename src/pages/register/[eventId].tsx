@@ -9,14 +9,18 @@ import styles from "../../components/css/file1.module.css";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar"; // Corrected typo from "footar" to "footer"
 import Link from "next/link";
+import { useRouter } from "next/router";
 
 interface ContactPageProps {
   eventId: string; // Assuming you pass this as a prop or derive it from context or URL
 }
 
-const ContactPage: React.FC<ContactPageProps> = ({ eventId }) => {
-  const isDjangoWorkshop = eventId === "django";
+const ContactPage: React.FC = () => {
+  const router = useRouter();
+  const { eventId } = router.query;
 
+  // Ensure eventId is available
+  const isDjangoWorkshop = eventId === "workshop-on-django";
   return (
     <>
       <NavBar />
@@ -24,7 +28,7 @@ const ContactPage: React.FC<ContactPageProps> = ({ eventId }) => {
       {/* Header Section */}
       <div>
         <h2 className="text-6xl font-medium text-slate-600 bg-black p-12 sm:flex-row sm:justify-center text-center">
-          {isDjangoWorkshop ? "Workshop On Django" : "Event Coming Soon"}
+          {isDjangoWorkshop ? "Workshop on Django" : "Event Coming Soon"}
         </h2>
       </div>
       

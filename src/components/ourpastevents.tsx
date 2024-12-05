@@ -16,8 +16,7 @@ const OurPastEvents = () => {
             <PastEventComp
               image="/EventsImages/event1.jpg"
               topic="Article Writing Competition"
-              loadLink="#"
-              secondButtonLink="#"
+              loadLink="/blogs/ecast-article-writing-competition-2024"
             />
           </div>
           </div>
@@ -29,7 +28,7 @@ const OurPastEvents = () => {
             <PastEventComp
               image="/EventsImages/firstcommit.jpg"
               topic="My First Commit"
-              loadLink="https://www.facebook.com/photo.php?fbid=243871488289053&set=pb.100079986095247.-2207520000&type=3"
+              loadLink="/blogs/my-first-commit"
             />
           </div>
 
@@ -44,7 +43,7 @@ const OurPastEvents = () => {
             <PastEventComp
               image="/EventsImages/art.jpg"
               topic="Unleashing the Art of Enquiry"
-              loadLink="https://www.facebook.com/photo.php?fbid=254634513879417&set=pb.100079986095247.-2207520000&type=3"
+              loadLink="/blogs/unleashing-the-art-of-enquiry"
             />
           </div>
         </div>
@@ -70,7 +69,7 @@ const OurPastEvents = () => {
             <PastEventComp
               image="/EventsImages/blockchain.jpg"
               topic="Talk Show on Block Chain"
-              loadLink="https://www.facebook.com/photo.php?fbid=353277224015145&set=pb.100079986095247.-2207520000&type=3"
+              loadLink="/blogs/talk-show-on-block-chain"
             />
           </div>
         </div>

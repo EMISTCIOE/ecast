@@ -11,7 +11,7 @@ interface IPROPS {
 const Events: React.FC<IPROPS> = ({ image, topic, eventId }) => {
   const getReadMoreLink = (eventId: string): string => {
     const links: Record<string, string> = {
-      "workshop-on-django": "#",
+      "workshop-on-django": "",
       "coming-soon-2": "#",
       "coming-soon-3": "#",
     };

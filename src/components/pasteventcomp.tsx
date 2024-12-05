@@ -76,15 +76,10 @@ const PastEventComp: React.FC<IPROPS> = ({ image, topic, loadLink, secondButtonL
       <div style={titleStyle}>"{topic}"</div>
       <div style={{ display: "flex", gap: "10px", flexWrap: "wrap", justifyContent: "center" }}>
   <div style={{ ...buttonStyles.base, ...buttonStyles.buttonContainer2 }}>
-    <Link href={loadLink} target="_blank" rel="noopener noreferrer">
+    <Link href={loadLink}>
       Read More
     </Link>
   </div>
-  {secondButtonLink && topic === "Article Writing Competition" && (
-    <div style={{ ...buttonStyles.base, ...buttonStyles.buttonContainer2 }}>
-      <Link href={secondButtonLink}>View Results</Link>
-    </div>
-        )}
       </div>
     </div>
   );
