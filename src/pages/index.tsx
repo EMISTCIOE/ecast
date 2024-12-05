@@ -61,7 +61,7 @@ const Home = () => {
           </h2>
           <div className="sm:flex-row flex flex-col lg:w-[50%] w-[auto] justify-center gap-8 mb-4">
             <button
-              className="px-6 py-4 bg-white text-black font-bold rounded hover:bg-theme hover:text-white transition duration-300"
+              className="px-6 py-4 bg-white text-black font-bold rounded hover:bg-yellow-500 hover:text-white transition duration-300"
               onClick={eventsClick}
             >
               Our Events
@@ -71,7 +71,7 @@ const Home = () => {
               rel="noopener noreferrer"
               href="https://discord.gg/4n8rquAp5H"
             >
-              <button className="px-6 py-4 bg-transparent text-white hover:text-theme hover:bg-white transition duration-500 border-2 border-white font-bold rounded">
+              <button className="px-6 py-4 bg-transparent text-white hover:text-yellow-500 hover:bg-white transition duration-500 border-2 border-white font-bold rounded">
                 Join Our Discord
               </button>
             </a>
