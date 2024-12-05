@@ -2,7 +2,6 @@ import React from "react";
 import styles from "./css/upcoming.module.css"; 
 import styles1 from "./css/file2.module.css"; 
 import Events from "./events";
-import Image from "next/image";
 import eventdjango from "../../public/event-django.jpg";
 import comingsoon from "../../public/EventsImages/comingsoon.png"; 
 

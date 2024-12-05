@@ -7,6 +7,7 @@
     text-align: center;
   }
   
+
  
   .card h2 {
     font-size: 2.5em;
@@ -155,6 +156,22 @@
     justify-content: center;
     display:flex;
   }
+  .semi-container9 {
+    width: 1200px;
+    height: auto;
+    margin: 50px;
+    padding: 20px;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 10px rgba(95, 32, 255, 0.8);
+    animation: pulse-shadow 2s infinite ease-in-out;
+    background-color: black;
+    line-height: 29px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    display:flex;
+  }
   
 
   .container1 {
@@ -224,4 +241,468 @@
         flex-direction: column; 
     }
   }
-  
+
+ /* Blog Container */
+.blog-container {
+  background-color: #000; /* Black background */
+  color: #fff; /* White text */
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start; /* Align to the left */
+  padding: 20px;
+  min-height: 100vh;
+}
+
+/* Blog Header */
+.blog-header {
+  text-align: center;
+  margin-bottom: 0px;
+  color: #fff;
+}
+
+.header-image {
+  width: 100%;
+  max-width: 600px; /* Adjust to your desired size */
+  height: auto;
+  border-radius: 15px; /* Rounded corners */
+  margin-bottom: 2px;
+}
+
+.blog-title {
+  font-size: 2.5rem;
+  font-weight: bold;
+  margin: 2px 0;
+  color: #fff;
+  margin-bottom: 2px;
+}
+
+/* Blog Content */
+.blog-content {
+  max-width: 800px; /* Content width */
+  width: 100%;
+  margin: 0 auto;
+  text-align: left; /* Justify the text */
+  color: #ccc;
+}
+
+.blog-description {
+  font-size: 0.9rem;
+  margin-bottom: 2px;
+}
+
+.blog-author {
+  font-size: 1rem;
+  margin-bottom: 20px;
+  color: #0000ff; /* Light blue color for author name */
+}
+
+/* Add any additional styles as needed */
+
+/* Ensure proper styling for the entire container */
+/* Main container for the blog post */
+/* General Styles for .semi-container9 */
+.semi-container9 {
+  background-color: #000; /* Black background for the container */
+  color: #fff; /* White text */
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center all children horizontally */
+  padding: 20px;
+  min-height: 100vh;
+  text-align: center; /* Text aligned to the left */
+  box-sizing: border-box;
+  margin-left: 4px;
+}
+
+/* Blog header: Image and Title */
+.semi-container9 .blog-header {
+  text-align: center; /* Center image and title */
+  margin-bottom: 40px; /* Add space below */
+}
+
+.semi-container9 img {
+  width: 100%;
+  max-width: 600px; /* Max width of the image */
+  height: auto;
+  border-radius: 15px; /* Rounded corners */
+  margin-bottom: 20px; /* Add space below image */
+}
+
+.semi-container9 h1 {
+  font-size: 2.5rem;
+  margin-bottom: 4px; /* Space between title and other content */
+  color: #fff;
+  text-align: center; /* Center the title */
+}
+
+/* Blog content styling */
+.semi-container9 .blog-content {
+  max-width: 800px; /* Content width */
+  width: 100%;
+  margin: 0 auto; /* Center content */
+  text-align: left; /* Left-aligned text */
+}
+
+.semi-container9 p {
+  font-size: 1.2rem;
+  color: #ccc;
+  line-height: 1.5;
+  margin-bottom: 20px; /* Increased margin for better spacing */
+}
+
+/* Author styling */
+.semi-container9 .blog-author {
+  font-size: 1rem;
+  color: #00f; /* Blue color for the author */
+}
+
+/* Link styling */
+.semi-container9 a {
+  color: #6575bb;
+  text-decoration: none;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.semi-container9 a:hover {
+  color: #f5a623; /* Change color on hover */
+  transform: scale(1.05); /* Slightly scale up the link */
+}
+
+/* List (ul and ol) styling to ensure bullets show */
+.semi-container9 .blog-content ul,
+.semi-container9 .blog-content ol {
+  padding-left: 40px; /* Space for bullets */
+  margin-bottom: 20px; /* Add space below lists */
+}
+
+.semi-container9 .blog-content ul {
+  list-style-type: disc !important; /* Force bullet style */
+}
+
+/* List items (li) styling */
+.semi-container9 .blog-content li {
+  font-size: 1.2rem;
+  color: #ccc;
+  line-height: 1.6;
+  margin-bottom: 10px; /* Space between list items */
+}
+
+/* Blockquote styling */
+.semi-container9 blockquote {
+  border-left: 4px solid #f5a623; /* Left border for blockquotes */
+  padding-left: 20px;
+  font-style: italic;
+  color: #ccc;
+  margin: 20px 0; /* Add space above and below blockquotes */
+}
+
+/* Code block styling */
+.semi-container9 pre {
+  background-color: #333; /* Dark background for code blocks */
+  padding: 15px;
+  border-radius: 5px;
+  color: #f5a623; /* Code block text color */
+  overflow-x: auto; /* Allow horizontal scrolling for long lines */
+  margin-bottom: 20px; /* Add space below code block */
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .semi-container9 {
+    padding: 3px;   }
+
+  .semi-container9 h1 {
+    font-size: 2rem; /* Reduce title size */
+    margin-bottom: 20px; /* Increase spacing between title and content */
+  }
+
+  .semi-container9 .blog-content {
+    max-width: 100%; /* Remove max width to allow more flexibility */
+    padding: 0 15px; /* Add padding for inner spacing */
+  }
+
+  .semi-container9 img {
+    max-width: 100%; /* Make sure image fits mobile screen */
+    margin-bottom: 15px; /* Reduce margin for better spacing */
+  }
+
+  .semi-container9 p {
+    font-size: 1rem; /* Reduce text size for better readability */
+    margin-bottom: 15px; /* Reduce spacing between paragraphs */
+  }
+
+  .semi-container9 .blog-author {
+    font-size: 0.9rem; /* Reduce font size for author */
+  }
+
+  .semi-container9 .blog-content ul,
+  .semi-container9 .blog-content ol {
+    padding-left: 20px; /* Reduce padding for lists */
+  }
+
+  .semi-container9 .blog-content li {
+    font-size: 1rem; /* Reduce list item font size */
+  }
+
+  .semi-container9 blockquote {
+    font-size: 1rem; /* Adjust blockquote font size */
+    padding-left: 15px; /* Adjust blockquote padding */
+  }
+
+  .semi-container9 pre {
+    padding: 10px; /* Reduce padding for code blocks */
+    font-size: 0.9rem; /* Reduce font size of code blocks */
+  }
+}
+
+@media (max-width: 480px) {
+  .semi-container9 {
+    padding: 1px;
+    overflow-x: hidden;
+    margin-right: 1px;
+
+  }
+
+  .semi-container9 h1 {
+    font-size: 1.8rem; /* Further reduce title size */
+    margin-bottom: 15px; /* Reduce space between title and content */
+  }
+
+  .semi-container9 .blog-content {
+    max-width: 100%; /* Ensure full width on mobile */
+    padding: 0 10px; /* More compact padding */
+  }
+
+  .semi-container9 img {
+    max-width: 100%; /* Ensure images are responsive */
+    margin-bottom: 10px; /* Reduce margin below images */
+  }
+
+  .semi-container9 p {
+    font-size: 0.95rem; /* Slightly smaller text size */
+    margin-bottom: 10px; /* Reduce spacing between paragraphs */
+  }
+
+  .semi-container9 .blog-author {
+    font-size: 0.85rem; /* Smaller author font size */
+  }
+
+  .semi-container9 .blog-content ul,
+  .semi-container9 .blog-content ol {
+    padding-left: 10px; /* Further reduce padding */
+  }
+
+  .semi-container9 .blog-content li {
+    font-size: 0.95rem; /* Smaller font size for list items */
+  }
+
+  .semi-container9 blockquote {
+    font-size: 0.95rem; /* Adjust blockquote font size */
+  }
+
+  .semi-container9 pre {
+    padding: 8px; /* Reduce padding for small screens */
+    font-size: 0.85rem; /* Smaller code block font size */
+  }
+}
+
+
+/* Individual Blog Post Styling */
+.semi-container9 h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  color: #fff;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+.semi-container9 h3 {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: #fff;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.semi-container9 p {
+  font-size: 1.2rem;
+  color: #ccc;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+
+
+
+
+/* General styles for Blog Navbar */
+.recent-posts-widget {
+  background-color: #1c1c1c;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.recent-posts-heading {
+  font-size: 1.8rem;
+  color: #fff;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.recent-posts-widget ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.recent-posts-widget ul li {
+  margin-bottom: 15px;
+}
+
+.recent-posts-widget ul li a {
+  color: #e63946;
+  text-decoration: none;
+  font-size: 1.2rem;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.recent-posts-widget ul li a:hover {
+  color: #f1faee;
+}
+
+/* Blog Item Details */
+.recent-posts-widget .post-title {
+  font-size: 1.2rem;
+  color: #fff;
+  font-weight: bold;
+  transition: color 0.3s ease;
+}
+
+.recent-posts-widget .post-description {
+  font-size: 1rem;
+  color: #bbb;
+  margin-bottom: 5px;
+}
+
+.recent-posts-widget .post-author {
+  font-size: 0.9rem;
+  color: #aaa;
+  margin-bottom: 5px;
+}
+
+.recent-posts-widget .post-time {
+  font-size: 0.9rem;
+  color: #bbb;
+}
+
+/* Categories and Tags Section */
+.blog-sidebar-widget {
+  background-color: #1c1c1c;
+  padding: 20px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.blog-sidebar-widget h3 {
+  font-size: 1.8rem;
+  color: #fff;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.blog-sidebar-widget ul {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.blog-sidebar-widget ul li {
+  margin-bottom: 10px;
+}
+
+.blog-sidebar-widget ul li a {
+  color: #bbb;
+  text-decoration: none;
+  font-size: 1.1rem;
+  transition: color 0.3s ease;
+}
+
+.blog-sidebar-widget ul li a:hover {
+  color: #e63946;
+}
+
+/* Tag Button */
+.theme-btn {
+  padding: 10px 20px;
+  font-size: 1rem;
+  background-color: #e63946;
+  color: #fff;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.theme-btn:hover {
+  background-color: #d72c34;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .recent-posts-widget,
+  .blog-sidebar-widget {
+    padding: 15px;
+  }
+
+  .recent-posts-heading,
+  .blog-sidebar-widget h3 {
+    font-size: 1.5rem;
+  }
+
+  .recent-posts-widget ul li a {
+    font-size: 1.1rem;
+  }
+
+  .recent-posts-widget .post-title {
+    font-size: 1.1rem;
+  }
+
+  .recent-posts-widget .post-description,
+  .recent-posts-widget .post-author,
+  .recent-posts-widget .post-time {
+    font-size: 0.9rem;
+  }
+
+  .theme-btn {
+    font-size: 0.9rem;
+    padding: 8px 16px;
+  }
+}
+
+@media (max-width: 480px) {
+  .recent-posts-widget {
+    padding: 10px;
+  }
+
+  .recent-posts-heading,
+  .blog-sidebar-widget h3 {
+    font-size: 1.3rem;
+  }
+
+  .recent-posts-widget ul li a {
+    font-size: 1rem;
+  }
+
+  .recent-posts-widget .post-title {
+    font-size: 1rem;
+  }
+
+  .recent-posts-widget .post-description,
+  .recent-posts-widget .post-author,
+  .recent-posts-widget .post-time {
+    font-size: 0.85rem;
+  }
+
+  .theme-btn {
+    font-size: 0.85rem;
+    padding: 6px 14px;
+  }
+}

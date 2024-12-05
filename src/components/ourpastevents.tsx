@@ -1,4 +1,4 @@
-import Image from "next/image";
+
 import PastEventComp from "./pasteventcomp";
 import styles from "./css/file2.module.css";
 

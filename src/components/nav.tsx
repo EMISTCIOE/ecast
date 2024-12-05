@@ -48,6 +48,9 @@ const NavBar: React.FC = () => {
         <Navlink to="/gallery" onClick={closeMenu} currentRoute={router.pathname}>
           Gallery
         </Navlink>
+        <Navlink to="/blogs" onClick={closeMenu} currentRoute={router.pathname}>
+          Blogs
+        </Navlink>
         <Navlink to="/contact-us" onClick={closeMenu} currentRoute={router.pathname}>
           Contact
         </Navlink>
@@ -98,6 +101,9 @@ const NavBar: React.FC = () => {
           <Navlink to="/gallery" onClick={closeMenu} currentRoute={router.pathname}>
             Gallery
           </Navlink>
+          <Navlink to="/blogs" onClick={closeMenu} currentRoute={router.pathname}>
+          Blogs
+        </Navlink>
           <Navlink to="/contact-us" onClick={closeMenu} currentRoute={router.pathname}>
             Contact Us
           </Navlink>

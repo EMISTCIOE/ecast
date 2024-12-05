@@ -2,7 +2,7 @@ import { Blog } from '../../store/src/index'; // Adjust the import
 import Link from 'next/link';
 import Moment from 'react-moment';
 import clsx from 'clsx'; // Import clsx to combine class names
-import styles from "../css/search.module.css";
+import styles from "../css/mob.module.css";
 
 type BlogNavbarProps = {
   blogs: Blog[];
@@ -10,7 +10,7 @@ type BlogNavbarProps = {
   tags: string[];
 };
 
-export const BlogNavbar = ({ blogs }: BlogNavbarProps) => {
+export const BlogNavbarmob = ({ blogs}: BlogNavbarProps) => {
   return (
     <>
       <div className={clsx("text-white", styles["recent-posts-widget"])}>

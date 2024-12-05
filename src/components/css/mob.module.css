@@ -1,0 +1,102 @@
+/* Common Styles */
+.recent-posts-widget {
+    background-color: #333; /* Background color for the section */
+    padding: 10px;
+    box-shadow: 0 4px 10px rgba(95, 32, 255, 0.8);
+    animation: pulse-shadow 2s infinite ease-in-out;
+    background-color: black;
+    line-height: 1.5; /* Adjust line height for better readability */
+    justify-content: center;
+    height: auto; /* Adjusts to content height */
+    max-height: 500px; /* Set a maximum height for the widget */
+    overflow-y: auto; /* Allows scrolling if content exceeds max-height */
+    margin:20px auto; /* Center the widget with margins */
+    flex-direction: column; /* Ensures content stacks vertically */
+    border-radius: 8px; /* Add rounded corners for a modern look */
+    width: 100%; /* Make it responsive by default */
+}
+
+/* Heading Styles */
+.recent-posts-heading {
+    text-align: center; /* Centers the heading */
+    font-size: 1.5rem; /* Adjust font size for smaller screens */
+    color: #f3eae9; /* Unique color */
+    font-weight: bold; /* Makes the heading bold */
+    margin-bottom: 20px;
+}
+
+/* Post Item Styles */
+.post-item {
+    margin-bottom: 10px;
+    padding: 10px;
+    border-bottom: 1px solid #ccc; /* Subtle divider for better clarity */
+}
+
+.post-title {
+    font-size: 1.25rem; /* Smaller for better readability on mobile */
+    color: #ffffff; /* White color for the title */
+    font-weight: 600; /* Makes it noticeable but not too heavy */
+    margin-bottom: 8px; /* Keep spacing consistent */
+    line-height: 1.4; /* Improve readability */
+    transition: color 0.3s ease; /* Smooth transition for hover effect */
+}
+
+.post-title:hover {
+    color: #ffcc00; /* Yellow color on hover */
+}
+
+.post-time,
+.post-author {
+    color: blue; /* Distinctive blue for time */
+    font-size: 0.8rem; /* Slightly larger for better readability */
+    margin-bottom: 5px;
+}
+
+.post-description {
+    font-size: 0.9rem; /* Keep descriptions concise and readable */
+    color: #ca9292;
+    margin-bottom: 8px; /* Spacing between posts */
+}
+
+/* Responsive Design */
+
+/* Mobile Screens */
+@media (max-width: 768px) {
+    .recent-posts-widget {
+        margin: 10px auto; /* Center and add spacing on mobile */
+        padding: 10px; /* Reduce padding for better fit */
+        width: 95%; /* Use most of the screen width */
+        max-height: 300px;
+        margin-bottom: 0px; /* Reduce max height for smaller screens */
+    }
+
+    .recent-posts-heading {
+        font-size: 1.2rem; /* Adjust heading size for mobile */
+        margin-bottom: 15px;
+    }
+
+    .post-title {
+        font-size: 1rem; /* Adjust size for smaller screens */
+    }
+
+    .post-time,
+    .post-author {
+        font-size: 0.7rem; /* Smaller font for meta details */
+    }
+
+    .post-description {
+        font-size: 0.8rem; /* Keep concise for mobile */
+    }
+}
+
+/* Tablet Screens */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .recent-posts-widget {
+        width: 80%; /* Use more space on tablets */
+        margin: 20px auto; /* Center the widget */
+    }
+
+    .recent-posts-heading {
+        font-size: 1.4rem; /* Slightly larger heading for tablets */
+    }
+}
