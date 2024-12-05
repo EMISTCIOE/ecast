@@ -25,8 +25,25 @@ const Gallery: React.FC = () => {
   }, []);
 
   if (loading) {
-    return <div>Loading...</div>; 
+    return (
+      <>
+      <NavBar />
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        background: `url('https://cdn.svgator.com/images/2024/01/svgator-bird-alligator-cta.gif') no-repeat center center`,
+        backgroundSize: 'cover', // Make the image cover the entire screen
+        zIndex: 9999, // Ensure it appears on top of other content
+      }} />
+      <Footer />
+      </>
+    );
   }
+  
+  
 
   return (
     <>

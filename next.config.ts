@@ -18,6 +18,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'app.svgator.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'cdn.svgator.com',
+      },
+     
     ],
   },
   pageExtensions: ['ts', 'tsx', 'mdx'], // Add MDX file support as page extensions
