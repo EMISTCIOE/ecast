@@ -11,7 +11,7 @@ interface IPROPS {
 const Events: React.FC<IPROPS> = ({ image, topic, eventId }) => {
   const getReadMoreLink = (eventId: string): string => {
     const links: Record<string, string> = {
-      "workshop-on-django": "",
+      "workshop-on-django": "/blogs/workshop-on-django",
       "coming-soon-2": "#",
       "coming-soon-3": "#",
     };
@@ -31,7 +31,7 @@ const Events: React.FC<IPROPS> = ({ image, topic, eventId }) => {
           </Link>
         </div>
         <div className={styles.buttonContainer2}>
-          <a href={getReadMoreLink(eventId)} target="_blank" rel="noopener noreferrer">
+          <a href={getReadMoreLink(eventId)} >
             Read More
           </a>
         </div>
