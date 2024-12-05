@@ -37,7 +37,7 @@ const ContactPage: React.FC = () => {
               <>
                 {/* Use Next.js Image component here */}
                 <Image
-                  src="/event-django.jpg"
+                  src="/assets/event-django.jpg"
                   alt="Django Workshop"
                   className="mx-auto mb-6 pb-6 sm:mb-0 rounded-lg"
                   width={800}  // You can specify the width
