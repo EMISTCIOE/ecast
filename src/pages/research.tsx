@@ -5,7 +5,7 @@ import styles from "../components/css/file1.module.css";
 const Research = () => {
   
 
-  const researchPDF = '/research/ProposalDeepGenerativeModelingforAutomatedImageManipulationbyInterpretingText-GuidedPromptswithNaturalLanguageInstructions.pdf';
+  const researchPDF = '/assets/research/ProposalDeepGenerativeModelingforAutomatedImageManipulationbyInterpretingText-GuidedPromptswithNaturalLanguageInstructions.pdf';
 
   return (
     <>

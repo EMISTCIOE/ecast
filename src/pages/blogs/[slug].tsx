@@ -10,6 +10,7 @@ import { BlogNavbar } from '@/components/blogcomponents/blog-navbar.component';
 import styles from "../../components/css/file2.module.css";
 import React, { useState, useEffect } from 'react';
 import { BlogNavbarmob } from '@/components/blogcomponents/nav-mobile';
+import Image from 'next/image';
 interface BlogProps {
   blog: {
     title: string;
@@ -52,11 +53,14 @@ const BlogPost: React.FC<BlogProps> = ({ blog, content, posts, categories, tags 
         <div className={styles["semi-container9"]}>
           <div className={styles["blog-header"]}>
           <div className='flex justify-center items-center'>
-            <img
-              src={blog.thumbnail}
-              alt={blog.title}
-              className={styles["header-image"]}
-            />
+          <Image
+                  src={blog.thumbnail} // Use the thumbnail from blog data
+                  alt={blog.title}
+                  className={styles["header-image"]}
+                  width={800} // Provide a default width
+                  height={400} // Provide a default height (adjust as needed)
+                  layout="responsive" // Ensures the image is responsive
+                />
             </div>
             <h1 className={styles["blog-title"]}>"{blog.title}"</h1>
           </div>

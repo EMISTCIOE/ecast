@@ -5,7 +5,20 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   reactStrictMode: false,
   images: {
-    domains: ['avatars.githubusercontent.com', 'shotcan.com','app.svgator.com'], // External image domains
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'avatars.githubusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'shotcan.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'app.svgator.com',
+      },
+    ],
   },
   pageExtensions: ['ts', 'tsx', 'mdx'], // Add MDX file support as page extensions
   webpack(config) {

@@ -11,7 +11,7 @@ const Footer = () => {
         <div className="motto text-center pb-5">
           <Link href="/" className="flex justify-center pb-2 items-center">
             <Image
-              src="/ecast-logo.png" 
+              src="/assets/ecast-logo.png" 
               alt="Logo"
               className="h-14 w-14 justify-center mr-2"
               width={56} 

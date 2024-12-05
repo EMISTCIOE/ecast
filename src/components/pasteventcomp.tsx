@@ -6,10 +6,10 @@ interface IPROPS {
   image: string; 
   topic: string;
   loadLink: string;
-  secondButtonLink?: string;
+
 }
 
-const PastEventComp: React.FC<IPROPS> = ({ image, topic, loadLink, secondButtonLink }) => {
+const PastEventComp: React.FC<IPROPS> = ({ image, topic, loadLink }) => {
   const buttonStyles = {
     base: {
       borderRadius: "4px",

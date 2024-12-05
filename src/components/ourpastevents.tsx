@@ -5,6 +5,7 @@ import styles from "./css/file2.module.css";
 const OurPastEvents = () => {
   return (
     <>
+    
       <div className="flex flex-col items-center justify-center bg-black text-white pt-10">
         <p className="text-center font-bold text-xl">OUR PAST EVENTS</p>
         <div className="w-1/2 lg:w-1/4 mx-auto border-t-1 border-b-2 border-red-800 my-4"></div>

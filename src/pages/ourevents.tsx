@@ -9,7 +9,7 @@ const WholeEvents: React.FC = () => {
   return (
     <>
     <NavBar />
-    <div className={`${styles.wholeEventsContainer} flex flex-col items-center bg-black`}>
+    <div className={`${styles["wholeEventsContainer"]} flex flex-col items-center bg-black overflow-hidden`}>
       <UpcomingEvents />
       <OurPastEvents />
     </div>

@@ -10,10 +10,7 @@ import NavBar from "@/components/nav";
 import Footer from "@/components/footar"; // Corrected typo from "footar" to "footer"
 import Link from "next/link";
 import { useRouter } from "next/router";
-
-interface ContactPageProps {
-  eventId: string; // Assuming you pass this as a prop or derive it from context or URL
-}
+import Image from "next/image"; // Import the Next.js Image component
 
 const ContactPage: React.FC = () => {
   const router = useRouter();
@@ -38,11 +35,13 @@ const ContactPage: React.FC = () => {
           <div className={styles["semi-container"]}>
             {isDjangoWorkshop ? (
               <>
-                <img
+                {/* Use Next.js Image component here */}
+                <Image
                   src="/event-django.jpg"
                   alt="Django Workshop"
                   className="mx-auto mb-6 pb-6 sm:mb-0 rounded-lg"
-                  style={{ maxWidth: "100%", height: "auto" }}
+                  width={800}  // You can specify the width
+                  height={400} // You can specify the height
                 />
                 <h1 className="text-white text-center text-3xl font-bold mb-8">
                   𝐉𝐨𝐢𝐧 𝐭𝐡𝐞 𝟖 𝐃𝐚𝐲𝐬 𝐃𝐣𝐚𝐧𝐠𝐨 𝐖𝐨𝐫𝐤𝐬𝐡𝐨𝐩: 𝐌𝐚𝐬𝐭𝐞𝐫 𝐭𝐡𝐞 𝐀𝐫𝐭 𝐨𝐟 𝐖𝐞𝐛 𝐃𝐞𝐯𝐞𝐥𝐨𝐩𝐦𝐞𝐧𝐭!
@@ -111,11 +110,12 @@ const ContactPage: React.FC = () => {
                 <h1 className="text-white text-center text-3xl font-bold mb-8">
                   Event Coming Soon!
                 </h1>
-                <img
+                <Image
                   src="https://app.svgator.com/assets/svgator.webapp/log-in-girl.svg"
                   alt="Event Coming Soon"
                   className="mx-auto mb-6 pb-6 sm:mb-0 rounded-lg"
-                  style={{ maxWidth: "100%", height: "auto" }}
+                  width={800}
+                  height={400}
                 />
                 <p className="text-white text-center">Stay tuned for more details on our upcoming events.</p>
               </>

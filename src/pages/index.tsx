@@ -33,7 +33,7 @@ const Home = () => {
       <NavBar />
       <main
         className="flex h-[100vh] bg-no-repeat bg-cover"
-        style={{ backgroundImage: `url('/Thapathali.jpg')` }} // Ensure image is in the public folder
+        style={{ backgroundImage: `url('/assets/Thapathali.jpg')` }} // Ensure image is in the public folder
       >
         <div className="static p-2 text-white flex flex-col w-full h-full justify-evenly items-center z-10 backdrop-blur-sm backdrop-brightness-50 bg-no-repeat bg-cover">
         <div className="relative p-6 rounded-lg text-9xl">

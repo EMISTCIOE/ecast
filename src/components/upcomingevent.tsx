@@ -2,8 +2,8 @@ import React from "react";
 import styles from "./css/upcoming.module.css"; 
 import styles1 from "./css/file2.module.css"; 
 import Events from "./events";
-import eventdjango from "../../public/event-django.jpg";
-import comingsoon from "../../public/EventsImages/comingsoon.png"; 
+import eventdjango from "../../public/assets/event-django.jpg";
+import comingsoon from "../../public/assets/EventsImages/comingsoon.png"; 
 
 const UpcomingEvents: React.FC = () => {
   const upcomingEvents = [
@@ -33,7 +33,7 @@ const UpcomingEvents: React.FC = () => {
       </div>
 
       {/* Events Section */}
-      <div className={styles["container2"]}>
+      <div className={styles["semiContainer1"]}>
         <div className={`${styles1["container2"]} ${styles1["centeredContainer"]}`}>
           {upcomingEvents.map((event) => (
             <div key={event.id} className={styles1["semi-container8"]}>

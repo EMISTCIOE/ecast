@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link"; 
 import { useRouter } from "next/router"; 
-import Logo from "../../public/ecast-logo.png"; 
+import Logo from "../../public/assets/ecast-logo.png"; 
 
 const NavBar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);

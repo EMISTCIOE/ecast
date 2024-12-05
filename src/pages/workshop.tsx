@@ -30,14 +30,14 @@ const Workshop = () => {
           <div className="semi-image1 flex flex-col items-center">
             <Image
               className="images m-4 rounded-lg"
-              src="/ecast3.webp"
+              src="/assets/ecast3.webp"
               alt="Workshop Image 1"
               width={400}
               height={300}
             />
             <Image
               className="images m-4 rounded-lg"
-              src="/ecast6.webp"
+              src="/assets/ecast6.webp"
               alt="Workshop Image 2"
               width={400}
               height={300}
@@ -46,14 +46,14 @@ const Workshop = () => {
           <div className="semi-image1 flex flex-col items-center">
             <Image
               className="images m-4 rounded-lg"
-              src="/ecast7.webp"
+              src="/assets/ecast7.webp"
               alt="Workshop Image 3"
               width={400}
               height={300}
             />
             <Image
               className="images m-4 rounded-lg"
-              src="/ecast8.webp"
+              src="/assets/ecast8.webp"
               alt="Workshop Image 4"
               width={400}
               height={300}
