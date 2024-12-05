@@ -41,7 +41,6 @@ const BlogList: React.FC<BlogListProps> = ({ blogs }) => {
                       alt={blog.title}
                       width={350} // Replace with appropriate dimensions
                       height={250} 
-                      objectFit="cover"
                       className="rounded-md mb-4 mx-auto"
                     />
                     {/* Blog Title */}
