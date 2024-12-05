@@ -3,7 +3,7 @@ import fs from 'fs';
 import path from 'path';
 
 export default function handler(req: NextApiRequest, res: NextApiResponse) {
-  const imagesDirectory = path.join(process.cwd(), 'public','images');
+  const imagesDirectory = path.join(process.cwd(), 'public','assets','images');
   
   fs.readdir(imagesDirectory, (err, files) => {
     if (err) {
@@ -14,6 +14,6 @@ export default function handler(req: NextApiRequest, res: NextApiResponse) {
       file.endsWith('.jpg') || file.endsWith('.png') || file.endsWith('.jpeg')
     );
 
-    res.status(200).json(imageFiles.map(file => `/images/${file}`));
+    res.status(200).json(imageFiles.map(file => `/assets/images/${file}`));
   });
 }
