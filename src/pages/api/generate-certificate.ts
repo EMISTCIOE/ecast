@@ -8,13 +8,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     return res.status(400).json({ error: "Missing name or event_name parameter" });
   }
 
+  const apiUrl = process.env.API_URL || 'http://127.0.0.1:8000';
+
   try {
     // Use the environment variable for the base URL
-    const response = await fetch(
-      `${process.env.API_URL}/certificates/generate-certificate/?name=${encodeURIComponent(
-        name as string
-      )}&event_name=${encodeURIComponent(event_name as string)}`
-    );
+    const response = await fetch(`${apiUrl}/certificates/generate-certificate/?name=${name}&event_name=${event_name}`);
 
     // Parse the response
     if (!response.ok) {
