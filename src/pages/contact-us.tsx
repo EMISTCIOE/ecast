@@ -10,6 +10,7 @@ import { FaRegEnvelope, FaLocationDot } from "react-icons/fa6";
 import styles from "../components/css/file1.module.css";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
+import Image from "next/image";
 
 const Contact: React.FC = () => {
   const [name, setName] = useState<string>("");
@@ -21,7 +22,7 @@ const Contact: React.FC = () => {
     event.preventDefault();
 
     try {
-      const response = await fetch("https://ecast.pythonanywhere.com/api/contact/form", {
+      const response = await fetch("http://127.0.0.1:8000/api/contact/form/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -55,12 +56,15 @@ const Contact: React.FC = () => {
       <div className="flex justify-center items-center bg-black w-full col-2">
         <div className="highlight text-white flex flex-col sm:flex-row justify-center items-center w-full sm:max-w-5xl pb-12 bg-black">
           <div className={styles["semi-container"]}>
-            <img
-              src="https://shotcan.com/images/2024/07/06/449363624_1023379369466682_3008407874607543682_n712a6d91a613817d.jpg"
-              alt="Our team"
-              className="mx-auto mb-6 pb-6 sm:mb-0 rounded-lg"
-              style={{ maxWidth: "100%", height: "auto" }}
-            />
+          <Image
+  src="https://shotcan.com/images/2024/07/06/449363624_1023379369466682_3008407874607543682_n712a6d91a613817d.jpg"
+  alt="Our team"
+  width={800} // Set width
+  height={600} // Set height
+  className="mx-auto mb-6 pb-6 sm:mb-0 rounded-lg"
+  style={{ maxWidth: "100%", height: "auto" }}
+  priority // Optional: To load the image faster
+/>
             <p className="para leading-normal justify-center pb-5 flex">
               If you need our help with anything, have questions, or are experiencing any technical difficulties, please don’t hesitate to reach out to us. We're here to assist you! Additionally, if you have any suggestions, ideas, or feedback to share, we'd love to hear from you. Your input helps us improve our services.
             </p>

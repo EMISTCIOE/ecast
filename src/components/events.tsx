@@ -1,9 +1,10 @@
 import React from "react";
-import Link from "next/link"; 
+import Link from "next/link";
+import Image from "next/image";
 import styles from "./css/event.module.css";
 
 interface IPROPS {
-  image: string; 
+  image: string;
   topic: string;
   eventId: string;
 }
@@ -20,10 +21,18 @@ const Events: React.FC<IPROPS> = ({ image, topic, eventId }) => {
 
   return (
     <div className={styles.semiImage}>
-      <img src={image} alt={topic} className={styles.eventImage} />
-      <br></br>
+      <Image
+        src={image}
+        alt={topic}
+        className={styles.eventImage}
+        width={800} // Replace with the desired width
+        height={600} // Replace with the desired height
+        style={{ objectFit: "cover" }} // Optional: Add styling for the image
+        priority // Optional: Loads the image faster
+      />
+      <br />
       <div className={styles.title1}>{topic}</div>
-      <br></br>
+      <br />
       <div className={styles.btnContainer}>
         <div className={styles.buttonContainer1}>
           <Link href={`/register/${eventId}`}>
@@ -31,7 +40,7 @@ const Events: React.FC<IPROPS> = ({ image, topic, eventId }) => {
           </Link>
         </div>
         <div className={styles.buttonContainer2}>
-          <a href={getReadMoreLink(eventId)} >
+          <a href={getReadMoreLink(eventId)}>
             Read More
           </a>
         </div>
