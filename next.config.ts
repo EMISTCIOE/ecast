@@ -26,6 +26,8 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
       },
+
+
       
      
     ],
@@ -41,3 +43,9 @@ const nextConfig: NextConfig = {
         },
       ],
     });
+
+    return config;
+  },
+};
+
+export default nextConfig;
