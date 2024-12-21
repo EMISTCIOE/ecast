@@ -10,8 +10,9 @@ const nextConfig: NextConfig = {
   // Disable React strict mode if unnecessary
   reactStrictMode: false,
 
-  // Configure external image domains
+  // Disable image optimization for static export
   images: {
+    unoptimized: true, // Disable image optimization
     remotePatterns: [
       { protocol: 'https', hostname: 'avatars.githubusercontent.com' },
       { protocol: 'https', hostname: 'shotcan.com' },
