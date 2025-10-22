@@ -24,6 +24,25 @@ export function useNotices() {
     if (!res.ok) throw new Error('approve notice failed');
     return res.json();
   }, []);
+  const update = useCallback(async (id: string, payload: FormData | Record<string, any>) => {
+    const isForm = typeof FormData !== 'undefined' && payload instanceof FormData;
+    const res = await fetch('/api/app/notice/update', {
+      method: 'PATCH',
+      headers: isForm ? { 'Authorization': `Bearer ${localStorage.getItem('access')}`, 'x-notice-id': id } : { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('access')}`, 'x-notice-id': id },
+      body: isForm ? (payload as any) : JSON.stringify(payload)
+    } as any);
+    if (!res.ok) throw new Error('update notice failed');
+    return res.json();
+  }, []);
 
-  return { list, create, approve };
+  const remove = useCallback(async (id: string) => {
+    const res = await fetch('/api/app/notice/delete', {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('access')}`, 'x-notice-id': id }
+    });
+    if (!res.ok) throw new Error('delete notice failed');
+    return true;
+  }, []);
+
+  return { list, create, approve, update, remove };
 }

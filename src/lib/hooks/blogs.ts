@@ -15,12 +15,35 @@ export function useBlogs() {
   }, []);
 
   const create = useCallback(async (form: FormData) => {
-    const base = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
-    const res = await fetch(`${base}/api/blog/posts/`, { method: 'POST', headers: { 'Authorization': `Bearer ${localStorage.getItem('access')}` }, body: form });
+    const token = localStorage.getItem('access') || '';
+    const res = await fetch('/api/app/blog/create', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${token}`, 'x-access-token': `Bearer ${token}` },
+      body: form,
+    } as any);
     if (!res.ok) throw new Error('create failed');
     return res.json();
   }, []);
+  const update = useCallback(async (slug: string, payload: FormData | Record<string, any>) => {
+    const isForm = typeof FormData !== 'undefined' && payload instanceof FormData;
+    const token = localStorage.getItem('access') || '';
+    const res = await fetch('/api/app/blog/update', {
+      method: 'PATCH',
+      headers: isForm ? { 'Authorization': `Bearer ${token}`, 'x-access-token': `Bearer ${token}`, 'x-blog-slug': slug } : { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}`, 'x-access-token': `Bearer ${token}`, 'x-blog-slug': slug },
+      body: isForm ? (payload as any) : JSON.stringify(payload)
+    } as any);
+    if (!res.ok) throw new Error('update blog failed');
+    return res.json();
+  }, []);
 
-  return { list, approve, create };
+  const remove = useCallback(async (slug: string) => {
+    const res = await fetch('/api/app/blog/delete', {
+      method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('access')}`, 'x-blog-slug': slug }
+    });
+    if (!res.ok) throw new Error('delete blog failed');
+    return true;
+  }, []);
+
+  return { list, approve, create, update, remove };
 }
-

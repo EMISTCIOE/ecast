@@ -7,8 +7,9 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const base = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
   const r = await fetch(`${base}/api/event/gallery/${id}/approve/`, {
     method: 'POST',
-    headers: { 'Authorization': req.headers['authorization'] || '' }
-  } as any);
+    headers: { 'Authorization': (req.headers['authorization'] as string) || '' }
+  });
   const data = await r.json().catch(()=>({}));
   res.status(r.status).json(data);
 }
+

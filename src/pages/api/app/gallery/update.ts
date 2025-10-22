@@ -11,11 +11,14 @@ async function readBuffer(req: NextApiRequest): Promise<Buffer> {
 }
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
-  if (req.method !== 'POST') return res.status(405).end();
+  if (req.method !== 'PATCH' && req.method !== 'PUT') return res.status(405).end();
+  const { id } = req.query as { id?: string };
+  const targetId = (req.headers['x-gallery-id'] as string) || id;
+  if (!targetId) return res.status(400).json({ detail: 'id required' });
   const base = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
   const body = await readBuffer(req);
-  const r = await fetch(`${base}/api/event/gallery/`, {
-    method: 'POST',
+  const r = await fetch(`${base}/api/event/gallery/${targetId}/`, {
+    method: req.method,
     headers: {
       'Authorization': (req.headers['authorization'] as string) || '',
       'Content-Type': (req.headers['content-type'] as string) || '',

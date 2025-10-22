@@ -13,17 +13,21 @@ async function readBuffer(req: NextApiRequest): Promise<Buffer> {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== 'POST') return res.status(405).end();
   const base = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+  let auth = (req.headers['authorization'] as string) || '';
+  if (!auth) {
+    const token = (req.headers['x-access-token'] as string) || '';
+    if (token) auth = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+  }
   const body = await readBuffer(req);
-  const r = await fetch(`${base}/api/event/gallery/`, {
+  const r = await fetch(`${base}/api/blog/posts/`, {
     method: 'POST',
     headers: {
-      'Authorization': (req.headers['authorization'] as string) || '',
+      'Authorization': auth,
       'Content-Type': (req.headers['content-type'] as string) || '',
       'Content-Length': String(body.length),
     },
     body,
   } as any);
-  const data = await r.json();
+  const data = await r.json().catch(()=>({}));
   res.status(r.status).json(data);
 }
-

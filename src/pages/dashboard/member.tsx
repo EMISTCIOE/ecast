@@ -43,8 +43,8 @@ export default function MemberDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
   const [notices, setNotices] = useState<Notice[]>([]);
-  const { create: createNoticeApi, list: listNotices } = useNotices();
-  const { create: createBlogApi } = useBlogs();
+  const { create: createNoticeApi, list: listNotices, update: updateNotice, remove: deleteNotice } = useNotices();
+  const { create: createBlogApi, list: listBlogs, update: updateBlog, remove: deleteBlog } = useBlogs();
   const { create: createProjectApi } = useProjects();
   const { create: createEventApi } = useEvents();
   const [nTitle, setNTitle] = useState("");
@@ -52,6 +52,8 @@ export default function MemberDashboard() {
   const [nAudience, setNAudience] = useState("ALL");
   const [nFile, setNFile] = useState<File | null>(null);
   const [msg, setMsg] = useState("");
+  const [myNotices, setMyNotices] = useState<any[]>([]);
+  const [myBlogs, setMyBlogs] = useState<any[]>([]);
 
   // Blog
   const [bTitle, setBTitle] = useState("");
@@ -91,13 +93,12 @@ export default function MemberDashboard() {
           });
         } catch {}
       }
-      // Fetch both ALL and MEMBERS notices (public endpoint supports GET without auth)
-      listNotices({ audience: "ALL" }).then((d) =>
-        setNotices((prev) => [...prev, ...d])
-      );
-      listNotices({ audience: "MEMBERS" }).then((d) =>
-        setNotices((prev) => [...prev, ...d])
-      );
+      // Fetch both ALL and MEMBERS notices for feed
+      listNotices({ audience: "ALL" }).then((d) => setNotices((prev) => [...prev, ...d]));
+      listNotices({ audience: "MEMBERS" }).then((d) => setNotices((prev) => [...prev, ...d]));
+      // Fetch my own items for CRUD
+      listNotices({ mine: '1' }).then(setMyNotices).catch(()=>{});
+      listBlogs({ mine: '1' }).then(setMyBlogs).catch(()=>{});
     }
   }, []);
 
@@ -146,6 +147,20 @@ export default function MemberDashboard() {
       setMsg("Failed to submit blog");
     }
   };
+
+  // Simple inline edit state for my items
+  const [editNoticeId, setEditNoticeId] = useState<string | null>(null);
+  const [editNoticeTitle, setEditNoticeTitle] = useState('');
+  const [editNoticeContent, setEditNoticeContent] = useState('');
+  const startEditNotice = (n:any) => { setEditNoticeId(n.id); setEditNoticeTitle(n.title); setEditNoticeContent(n.content); };
+  const saveEditNotice = async () => { if (!editNoticeId) return; const form = new FormData(); form.append('title', editNoticeTitle); form.append('content', editNoticeContent); await updateNotice(editNoticeId, form); setEditNoticeId(null); listNotices({ mine: '1' }).then(setMyNotices); };
+
+  const [editBlogSlug, setEditBlogSlug] = useState<string | null>(null);
+  const [editBlogTitle, setEditBlogTitle] = useState('');
+  const [editBlogDesc, setEditBlogDesc] = useState('');
+  const [editBlogContent, setEditBlogContent] = useState('');
+  const startEditBlog = (b:any) => { setEditBlogSlug(b.slug); setEditBlogTitle(b.title); setEditBlogDesc(b.description || ''); setEditBlogContent(b.content || ''); };
+  const saveEditBlog = async () => { if (!editBlogSlug) return; const form = new FormData(); form.append('title', editBlogTitle); form.append('description', editBlogDesc); form.append('content', editBlogContent); await updateBlog(editBlogSlug, form); setEditBlogSlug(null); listBlogs({ mine: '1' }).then(setMyBlogs); };
 
   const handleInsertImage = async (file: File) => {
     const form = new FormData();
@@ -239,6 +254,9 @@ export default function MemberDashboard() {
       localStorage.setItem("user", JSON.stringify(user));
     }
   };
+
+  const canEditOrDeleteNotice = (n:any) => n.status !== 'APPROVED';
+  const canEditOrDeleteBlog = (b:any) => b.status !== 'APPROVED';
 
   const menuItems = [
     { id: "overview", name: "Overview", icon: HomeIcon },
@@ -488,6 +506,45 @@ export default function MemberDashboard() {
                   Submit Notice
                 </button>
               </form>
+
+              {/* My Notices CRUD */}
+              <div className="mt-8 bg-gray-800/50 backdrop-blur p-6 rounded-xl border border-gray-700 shadow-xl">
+                <h3 className="text-xl font-semibold mb-4">My Notices</h3>
+                <div className="overflow-x-auto rounded border border-gray-800">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-900">
+                      <tr>
+                        <th className="text-left p-3">Title</th>
+                        <th className="text-left p-3">Status</th>
+                        <th className="text-left p-3">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {myNotices.map((n:any)=> (
+                        <tr key={n.id} className="border-t border-gray-800">
+                          <td className="p-3">{editNoticeId===n.id ? (<input className="bg-gray-900 p-2 rounded w-full" value={editNoticeTitle} onChange={e=>setEditNoticeTitle(e.target.value)} />) : n.title}</td>
+                          <td className="p-3">{n.status}</td>
+                          <td className="p-3 flex gap-2">
+                            {canEditOrDeleteNotice(n) && (
+                              editNoticeId===n.id ? (
+                                <>
+                                  <button onClick={saveEditNotice} className="text-blue-400">Save</button>
+                                  <button onClick={()=>setEditNoticeId(null)} className="text-gray-400">Cancel</button>
+                                </>
+                              ) : (
+                                <>
+                                  <button onClick={()=>startEditNotice(n)} className="text-blue-400">Edit</button>
+                                  <button onClick={()=>deleteNotice(n.id).then(()=>listNotices({ mine: '1' }).then(setMyNotices))} className="text-red-400">Delete</button>
+                                </>
+                              )
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 
@@ -582,6 +639,45 @@ export default function MemberDashboard() {
                   Submit Blog
                 </button>
               </form>
+
+              {/* My Blogs CRUD */}
+              <div className="mt-8 bg-gray-800/50 backdrop-blur p-6 rounded-xl border border-gray-700 shadow-xl">
+                <h3 className="text-xl font-semibold mb-4">My Blogs</h3>
+                <div className="overflow-x-auto rounded border border-gray-800">
+                  <table className="min-w-full text-sm">
+                    <thead className="bg-gray-900">
+                      <tr>
+                        <th className="text-left p-3">Title</th>
+                        <th className="text-left p-3">Status</th>
+                        <th className="text-left p-3">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {myBlogs.map((b:any)=> (
+                        <tr key={b.id} className="border-t border-gray-800">
+                          <td className="p-3">{editBlogSlug===b.slug ? (<input className="bg-gray-900 p-2 rounded w-full" value={editBlogTitle} onChange={e=>setEditBlogTitle(e.target.value)} />) : b.title}</td>
+                          <td className="p-3">{b.status}</td>
+                          <td className="p-3 flex gap-2">
+                            {canEditOrDeleteBlog(b) && (
+                              editBlogSlug===b.slug ? (
+                                <>
+                                  <button onClick={saveEditBlog} className="text-blue-400">Save</button>
+                                  <button onClick={()=>setEditBlogSlug(null)} className="text-gray-400">Cancel</button>
+                                </>
+                              ) : (
+                                <>
+                                  <button onClick={()=>startEditBlog(b)} className="text-blue-400">Edit</button>
+                                  <button onClick={()=>deleteBlog(b.slug).then(()=>listBlogs({ mine: '1' }).then(setMyBlogs))} className="text-red-400">Delete</button>
+                                </>
+                              )
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
             </div>
           )}
 

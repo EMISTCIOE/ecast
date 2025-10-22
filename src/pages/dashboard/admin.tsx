@@ -9,6 +9,8 @@ import { useNotices } from "@/lib/hooks/notices";
 import { useAdmin } from "@/lib/hooks/admin";
 import { useEvents } from "@/lib/hooks/events";
 import { useProjects } from "@/lib/hooks/projects";
+import { useUsers } from "@/lib/hooks/users";
+import { useGallery } from "@/lib/hooks/gallery";
 import {
   BellIcon,
   DocumentTextIcon,
@@ -36,9 +38,11 @@ export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("overview");
   const [noticeMsg, setNoticeMsg] = useState("");
   const [blogMsg, setBlogMsg] = useState("");
-  const [committeeMsg, setCommitteeMsg] = useState("");
+  const [userMsg, setUserMsg] = useState("");
   const [taskMsg, setTaskMsg] = useState("");
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [latestBlogs, setLatestBlogs] = useState<any[]>([]);
+  const [role, setRole] = useState<string | null>(null);
 
   // Notice form
   const [nTitle, setNTitle] = useState("");
@@ -69,11 +73,9 @@ export default function AdminDashboard() {
   // Derive role from committee position per rules
   useEffect(() => {
     if (cmPosition === 'President' || cmPosition === 'Vice President') {
-      setCmRole('ADMIN');
+      setCmRole('ADMIN' as any);
     } else if (cmPosition) {
-      setCmRole('MEMBER');
-    } else {
-      if (cmRole !== 'AMBASSADOR' && cmRole !== 'ALUMNI') setCmRole('AMBASSADOR');
+      setCmRole('MEMBER' as any);
     }
   }, [cmPosition]);
 
@@ -103,14 +105,9 @@ export default function AdminDashboard() {
   } = useNotices();
   const { list: listEvents, approve: approveEvent } = useEvents();
   const { list: listProjects, approve: approveProject } = useProjects();
-  const {
-    listUsers,
-    createCommitteeMember: createCommitteeApi,
-    createUser,
-    pendingSubmissions: pendingSubsApi,
-    reviewSubmission: reviewApi,
-    createTask: createTaskApi,
-  } = useAdmin();
+  const { listUsers, pendingSubmissions: pendingSubsApi, reviewSubmission: reviewApi, createTask: createTaskApi } = useAdmin();
+  const usersApi = useUsers();
+  const galleryApi = useGallery();
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -120,6 +117,7 @@ export default function AdminDashboard() {
       try {
         const u = JSON.parse(userStr);
         setSidebarUser({ name: u.full_name || u.username, role: u.role, avatarUrl: u.user_photo || u.committee_member_photo });
+        setRole(u.role || null);
       } catch {}
     }
     if (!access || role !== "ADMIN") {
@@ -133,6 +131,8 @@ export default function AdminDashboard() {
       listBlogs({ status: "PENDING" })
         .then(setPendingBlogs)
         .catch(() => {});
+      // Latest 3 blogs (any status)
+      listBlogs().then((all:any[]) => setLatestBlogs((all || []).slice(0,3))).catch(()=>{});
       listNotices({ status: "PENDING" })
         .then(setPendingNotices)
         .catch(() => {});
@@ -192,27 +192,45 @@ export default function AdminDashboard() {
 
   const createCommitteeMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    setCommitteeMsg("");
+    setUserMsg("");
     try {
       const form = new FormData();
       form.append('username', cmUsername);
       form.append('email', cmEmail);
       form.append('first_name', cmFirst);
       form.append('last_name', cmLast);
-      form.append('role', cmRole);
+      form.append('role', cmRole as any);
       if (cmLinkedIn) form.append('linkedin_url', cmLinkedIn);
       if (cmGithub) form.append('github_url', cmGithub);
       if (cmPosition) {
         form.append('committee.position', cmPosition);
         if (cmStart) form.append('committee.started_from', cmStart);
         if (cmTenure !== '' && cmTenure !== null) form.append('committee.tenure', String(cmTenure));
-        if (cmPhoto) form.append('committee.memberPhoto', cmPhoto);
       }
       if (cmPhotoFile) form.append('photo', cmPhotoFile);
-      await createUser(form);
-      setCommitteeMsg("User created (email sent if configured).");
-      } catch {
-      setCommitteeMsg("Failed to create user");
+      try {
+        await usersApi.create(form);
+        setUserMsg("User created (email sent if configured).");
+      } catch (err:any) {
+        // Fallback: legacy committee create (JSON, no photo)
+        if (cmPosition) {
+          await createCommitteeApi({
+            username: cmUsername,
+            email: cmEmail,
+            first_name: cmFirst,
+            last_name: cmLast,
+            position: cmPosition,
+            started_from: cmStart,
+            tenure: cmTenure || 1,
+          });
+          setUserMsg("User created via committee endpoint.");
+        } else {
+          setUserMsg(err?.message || "Failed to create user");
+          return;
+        }
+      }
+      } catch (e:any) {
+      setUserMsg(e?.message || "Failed to create user");
     }
   };
 
@@ -268,9 +286,10 @@ export default function AdminDashboard() {
 
   const menuItems = [
     { id: "overview", name: "Overview", icon: HomeIcon },
-    { id: "notices", name: "Publish Notice", icon: BellIcon },
-    { id: "blogs", name: "Publish Blog", icon: DocumentTextIcon },
-    { id: "committee", name: "Create User", icon: UserGroupIcon },
+    { id: "notices", name: "Notices", icon: BellIcon },
+    { id: "blogs", name: "Blogs", icon: DocumentTextIcon },
+    { id: "gallery", name: "Gallery", icon: FolderIcon },
+    { id: "users", name: "Users", icon: UserGroupIcon },
     { id: "tasks", name: "Assign Task", icon: ClipboardDocumentCheckIcon },
     { id: "moderation", name: "Moderation", icon: ClockIcon },
     { id: "leaderboard", name: "Leaderboard", icon: TrophyIcon },
@@ -287,8 +306,9 @@ export default function AdminDashboard() {
           groups={([
             { title: 'Main Menu', items: [
               { id:'overview', label:'Overview', icon: HomeIcon, active: activeSection==='overview', onClick: ()=>setActiveSection('overview') },
-              { id:'notices', label:'Publish Notice', icon: BellIcon, active: activeSection==='notices', onClick: ()=>setActiveSection('notices') },
-              { id:'blogs', label:'Publish Blog', icon: DocumentTextIcon, active: activeSection==='blogs', onClick: ()=>setActiveSection('blogs') },
+              { id:'notices', label:'Notices', icon: BellIcon, active: activeSection==='notices', onClick: ()=>setActiveSection('notices') },
+              { id:'blogs', label:'Blogs', icon: DocumentTextIcon, active: activeSection==='blogs', onClick: ()=>setActiveSection('blogs') },
+              { id:'gallery', label:'Gallery', icon: FolderIcon, active: activeSection==='gallery', onClick: ()=>setActiveSection('gallery') },
             ]},
             { title: 'General', items: [
               { id:'tasks', label:'Assign Task', icon: ClipboardDocumentCheckIcon, active: activeSection==='tasks', onClick: ()=>setActiveSection('tasks') },
@@ -296,7 +316,7 @@ export default function AdminDashboard() {
               { id:'leaderboard', label:'Leaderboard', icon: TrophyIcon, active: activeSection==='leaderboard', onClick: ()=>setActiveSection('leaderboard') },
             ]},
             { title: 'Account', items: [
-              { id:'committee', label:'Create User', icon: UserGroupIcon, active: activeSection==='committee', onClick: ()=>setActiveSection('committee') },
+              { id:'users', label:'Users', icon: UserGroupIcon, active: activeSection==='users', onClick: ()=>setActiveSection('users') },
             ]},
           ]) as SidebarGroup[]}
         />
@@ -400,6 +420,24 @@ export default function AdminDashboard() {
                         pendingProjects.length}
                     </p>
                   </div>
+                </div>
+              </div>
+
+              {/* Latest Blogs (Approve inline) */}
+              <div className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800">
+                <h3 className="text-xl font-semibold mb-4">Latest Blogs</h3>
+                <div className="space-y-3">
+                  {latestBlogs.map((b:any)=> (
+                    <div key={b.id} className="flex items-center justify-between bg-gray-950 border border-gray-800 rounded p-3">
+                      <div>
+                        <div className="font-semibold">{b.title}</div>
+                        <div className="text-xs text-gray-400">by {b.author_username} • {b.status}</div>
+                      </div>
+                      {b.status==='PENDING' && (
+                        <button onClick={()=>approve('blog', b.slug)} className="text-green-400 hover:text-green-300">Approve</button>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
@@ -568,202 +606,29 @@ export default function AdminDashboard() {
             </div>
           )}
 
-          {/* Create User Section */}
-          {activeSection === "committee" && (
-            <div className="max-w-2xl mx-auto">
-              <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                <UserGroupIcon className="w-8 h-8 text-blue-400" />
-                Create User
-              </h1>
-              <form
-                onSubmit={createCommitteeMember}
-                className="bg-gray-900/50 backdrop-blur p-8 rounded-xl border border-gray-800 space-y-5"
-              >
-                {committeeMsg && (
-                  <div
-                    className={`p-4 rounded-lg ${
-                      committeeMsg.includes("Failed")
-                        ? "bg-red-900/50 text-red-300"
-                        : "bg-green-900/50 text-green-300"
-                    }`}
-                  >
-                    {committeeMsg}
-                  </div>
-                )}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Username
-                  </label>
-                  <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    placeholder="username"
-                    value={cmUsername}
-                    onChange={(e) => setCmUsername(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Email
-                  </label>
-                  <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    placeholder="email@example.com"
-                    type="email"
-                    value={cmEmail}
-                    onChange={(e) => setCmEmail(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      First Name
-                    </label>
-                    <input
-                      className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      placeholder="First name"
-                      value={cmFirst}
-                      onChange={(e) => setCmFirst(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      Last Name
-                    </label>
-                    <input
-                      className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      placeholder="Last name"
-                      value={cmLast}
-                      onChange={(e) => setCmLast(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      Role
-                    </label>
-                    <select
-                      className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      value={cmRole}
-                      onChange={(e) => setCmRole(e.target.value as any)}
-                      disabled={!!cmPosition}
-                    >
-                      {cmPosition ? (
-                        <>
-                          {cmPosition === 'President' || cmPosition === 'Vice President' ? (
-                            <option value="ADMIN">Admin</option>
-                          ) : (
-                            <option value="MEMBER">Member</option>
-                          )}
-                        </>
-                      ) : (
-                        <>
-                          <option value="AMBASSADOR">Ambassador</option>
-                          <option value="ALUMNI">Alumni</option>
-                        </>
-                      )}
-                    </select>
-                    {cmPosition && (
-                      <p className="text-xs text-gray-400 mt-1">Role is derived from committee position.</p>
-                    )}
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      Committee Position (optional)
-                    </label>
-                    <select
-                      className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      value={cmPosition}
-                      onChange={(e) => setCmPosition(e.target.value)}
-                    >
-                      <option value="">Not a committee member</option>
-                      <option value="President">President</option>
-                      <option value="Vice President">Vice President</option>
-                      <option value="Secretary">Secretary</option>
-                      <option value="Vice Secretary/Treasurer">Vice Secretary/Treasurer</option>
-                      <option value="Vice Treasurer">Vice Treasurer</option>
-                      <option value="Technical Team">Technical Team</option>
-                      <option value="Graphics Designer">Graphics Designer</option>
-                      <option value="Communication,Events & HR">Communication,Events & HR</option>
-                      <option value="Social Media Manager">Social Media Manager</option>
-                      <option value="Consultant">Consultant</option>
-                      <option value="Research and Development Team">Research and Development Team</option>
-                      <option value="Editor In Chief">Editor In Chief</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      Start Date
-                    </label>
-                    <input
-                      className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      type="date"
-                      value={cmStart}
-                      onChange={(e) => setCmStart(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      Tenure (years)
-                    </label>
-                    <input
-                      className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      type="number"
-                      placeholder="2"
-                      value={cmTenure}
-                      onChange={(e) => setCmTenure(e.target.value as any)}
-                      
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      Photo URL
-                    </label>
-                    <input
-                      className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      placeholder="https://..."
-                      value={cmPhoto}
-                      onChange={(e) => setCmPhoto(e.target.value)}
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
-                      LinkedIn URL
-                    </label>
-                    <input
-                      className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                      placeholder="https://linkedin.com/in/..."
-                      value={cmLinkedIn}
-                      onChange={(e) => setCmLinkedIn(e.target.value)}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    GitHub URL
-                  </label>
-                  <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    placeholder="https://github.com/username"
-                    value={cmGithub}
-                    onChange={(e) => setCmGithub(e.target.value)}
-                  />
-                </div>
-                <button className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 p-4 rounded-lg font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2">
-                  <UserGroupIcon className="w-5 h-5" />
-                  Create User
-                </button>
-              </form>
-            </div>
+
+          {/* Notices Section - CRUD */}
+          {activeSection === 'notices' && (
+            <NoticesCrud useNoticesHook={useNotices} role={role} />
+          )}
+
+          {/* Blogs Section - CRUD */}
+          {activeSection === 'blogs' && (
+            <BlogsCrud useBlogsHook={useBlogs} role={role} />
+          )}
+
+          {/* Gallery Section - CRUD */}
+          {activeSection === 'gallery' && (
+            <GalleryCrud />
+          )}
+
+          {/* Users Section - CRUD */}
+          {activeSection === 'users' && (
+            <UsersCrud usersApi={usersApi} 
+              cm={{ cmUsername, setCmUsername, cmEmail, setCmEmail, cmFirst, setCmFirst, cmLast, setCmLast, cmRole, setCmRole, cmPosition, setCmPosition, cmStart, setCmStart, cmTenure, setCmTenure, cmPhoto, setCmPhoto, cmPhotoFile, setCmPhotoFile, cmLinkedIn, setCmLinkedIn, cmGithub, setCmGithub }}
+              createUser={createCommitteeMember}
+              userMsg={userMsg}
+            />
           )}
 
           {/* Assign Task Section */}
@@ -1111,5 +976,444 @@ export default function AdminDashboard() {
       </div>
       <Footer />
     </>
+  );
+}
+
+// --- Inline CRUD components ---
+
+function SectionHeader({ title, onAdd }: { title: string; onAdd?: () => void }) {
+  return (
+    <div className="flex items-center justify-between mb-6">
+      <h1 className="text-3xl font-bold">{title}</h1>
+      {onAdd && (
+        <button onClick={onAdd} className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">
+          <PlusCircleIcon className="w-5 h-5" /> Add
+        </button>
+      )}
+    </div>
+  );
+}
+
+function NoticesCrud({ useNoticesHook, role }: { useNoticesHook: typeof useNotices; role: string | null }) {
+  const { list, create, approve, update, remove } = useNoticesHook();
+  const [items, setItems] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState('');
+  const [content, setContent] = useState('');
+  const [audience, setAudience] = useState('ALL');
+  const [file, setFile] = useState<File | null>(null);
+  const isAdmin = role === 'ADMIN';
+
+  const refresh = async () => {
+    const params = isAdmin ? {} : { mine: '1' };
+    try { setItems(await list(params)); } catch {}
+  };
+  useEffect(() => { refresh(); }, []);
+
+  const onCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = new FormData();
+    form.append('title', title);
+    form.append('content', content);
+    form.append('audience', audience);
+    if (file) form.append('attachment', file);
+    try { await create(form); setShowForm(false); setTitle(''); setContent(''); setAudience('ALL'); setFile(null); refresh(); } catch {}
+  };
+
+  const onApprove = async (id: string) => { try { await approve(id); refresh(); } catch {} };
+  const onDelete = async (id: string) => { try { await remove(id); refresh(); } catch {} };
+
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editContent, setEditContent] = useState('');
+  const [editAudience, setEditAudience] = useState('ALL');
+  const startEdit = (n: any) => { setEditId(n.id); setEditTitle(n.title); setEditContent(n.content); setEditAudience(n.audience); };
+  const doEdit = async () => {
+    if (!editId) return;
+    const form = new FormData();
+    form.append('title', editTitle);
+    form.append('content', editContent);
+    form.append('audience', editAudience);
+    try { await update(editId, form); setEditId(null); refresh(); } catch {}
+  };
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      <SectionHeader title="Notices" onAdd={() => setShowForm(true)} />
+      {showForm && (
+        <form onSubmit={onCreate} className="bg-gray-900 border border-gray-800 rounded p-4 mb-6 space-y-3">
+          <div className="grid md:grid-cols-2 gap-3">
+            <input className="bg-gray-800 p-3 rounded" placeholder="Title" value={title} onChange={e=>setTitle(e.target.value)} required />
+            <select className="bg-gray-800 p-3 rounded" value={audience} onChange={e=>setAudience(e.target.value)}>
+              <option value="ALL">All</option>
+              <option value="MEMBERS">Members</option>
+              <option value="AMBASSADORS">Ambassadors</option>
+            </select>
+          </div>
+          <textarea className="bg-gray-800 p-3 rounded w-full" rows={4} placeholder="Content" value={content} onChange={e=>setContent(e.target.value)} />
+          <input type="file" onChange={e=>setFile(e.target.files?.[0] || null)} />
+          <div className="flex gap-2">
+            <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Save</button>
+            <button type="button" onClick={()=>setShowForm(false)} className="px-4 py-2 rounded border border-gray-700">Cancel</button>
+          </div>
+        </form>
+      )}
+
+      <div className="overflow-x-auto rounded border border-gray-800">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-900">
+            <tr>
+              <th className="text-left p-3">Title</th>
+              <th className="text-left p-3">Audience</th>
+              <th className="text-left p-3">Status</th>
+              <th className="text-left p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((n:any)=>{
+              const canEditOrDelete = isAdmin || (n.status !== 'APPROVED');
+              return (
+                <tr key={n.id} className="border-t border-gray-800">
+                  <td className="p-3">
+                    {editId===n.id ? (
+                      <input className="bg-gray-800 p-2 rounded w-full" value={editTitle} onChange={e=>setEditTitle(e.target.value)} />
+                    ) : n.title}
+                  </td>
+                  <td className="p-3">
+                    {editId===n.id ? (
+                      <select className="bg-gray-800 p-2 rounded" value={editAudience} onChange={e=>setEditAudience(e.target.value)}>
+                        <option value="ALL">All</option>
+                        <option value="MEMBERS">Members</option>
+                        <option value="AMBASSADORS">Ambassadors</option>
+                      </select>
+                    ) : n.audience}
+                  </td>
+                  <td className="p-3">{n.status}</td>
+                  <td className="p-3 flex gap-2">
+                    {n.status==='PENDING' && isAdmin && (
+                      <button onClick={()=>onApprove(n.id)} className="text-green-400">Approve</button>
+                    )}
+                    {canEditOrDelete && (
+                      editId===n.id ? (
+                        <>
+                          <button onClick={doEdit} className="text-blue-400">Save</button>
+                          <button onClick={()=>setEditId(null)} className="text-gray-400">Cancel</button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={()=>startEdit(n)} className="text-blue-400">Edit</button>
+                          <button onClick={()=>onDelete(n.id)} className="text-red-400">Delete</button>
+                        </>
+                      )
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function BlogsCrud({ useBlogsHook, role }: { useBlogsHook: typeof useBlogs; role: string | null }) {
+  const { list, create, approve, update, remove } = useBlogsHook();
+  const [items, setItems] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [content, setContent] = useState('');
+  const [cover, setCover] = useState<File | null>(null);
+  const isAdmin = role === 'ADMIN';
+
+  const refresh = async () => {
+    const params = isAdmin ? {} : { mine: '1' };
+    try { setItems(await list(params)); } catch {}
+  };
+  useEffect(() => { refresh(); }, []);
+
+  const onCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = new FormData();
+    form.append('title', title);
+    form.append('description', description);
+    form.append('content', content);
+    if (cover) form.append('cover_image', cover);
+    try { await create(form); setShowForm(false); setTitle(''); setDescription(''); setContent(''); setCover(null); refresh(); } catch {}
+  };
+
+  const [editSlug, setEditSlug] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const [editContent, setEditContent] = useState('');
+  const startEdit = (b:any) => { setEditSlug(b.slug); setEditTitle(b.title); setEditDesc(b.description || ''); setEditContent(b.content || ''); };
+  const doEdit = async () => {
+    if (!editSlug) return;
+    const form = new FormData();
+    form.append('title', editTitle);
+    form.append('description', editDesc);
+    form.append('content', editContent);
+    try { await update(editSlug, form); setEditSlug(null); refresh(); } catch {}
+  };
+
+  const onApprove = async (slug: string) => { try { await approve(slug); refresh(); } catch {} };
+  const onDelete = async (slug: string) => { try { await remove(slug); refresh(); } catch {} };
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      <SectionHeader title="Blogs" onAdd={()=>setShowForm(true)} />
+      {showForm && (
+        <form onSubmit={onCreate} className="bg-gray-900 border border-gray-800 rounded p-4 mb-6 space-y-3">
+          <input className="bg-gray-800 p-3 rounded w-full" placeholder="Title" value={title} onChange={e=>setTitle(e.target.value)} required />
+          <input className="bg-gray-800 p-3 rounded w-full" placeholder="Description" value={description} onChange={e=>setDescription(e.target.value)} />
+          <textarea className="bg-gray-800 p-3 rounded w-full" rows={6} placeholder="Content" value={content} onChange={e=>setContent(e.target.value)} />
+          <input type="file" onChange={e=>setCover(e.target.files?.[0] || null)} />
+          <div className="flex gap-2">
+            <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Save</button>
+            <button type="button" onClick={()=>setShowForm(false)} className="px-4 py-2 rounded border border-gray-700">Cancel</button>
+          </div>
+        </form>
+      )}
+
+      <div className="overflow-x-auto rounded border border-gray-800">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-900">
+            <tr>
+              <th className="text-left p-3">Title</th>
+              <th className="text-left p-3">Author</th>
+              <th className="text-left p-3">Status</th>
+              <th className="text-left p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {items.map((b:any)=>{
+              const canEditOrDelete = isAdmin || (b.status !== 'APPROVED');
+              return (
+                <tr key={b.id} className="border-t border-gray-800">
+                  <td className="p-3">{editSlug===b.slug ? (<input className="bg-gray-800 p-2 rounded w-full" value={editTitle} onChange={e=>setEditTitle(e.target.value)} />) : b.title}</td>
+                  <td className="p-3">{b.author_username}</td>
+                  <td className="p-3">{b.status}</td>
+                  <td className="p-3 flex gap-2">
+                    {b.status==='PENDING' && isAdmin && (
+                      <button onClick={()=>onApprove(b.slug)} className="text-green-400">Approve</button>
+                    )}
+                    {canEditOrDelete && (
+                      editSlug===b.slug ? (
+                        <>
+                          <button onClick={doEdit} className="text-blue-400">Save</button>
+                          <button onClick={()=>setEditSlug(null)} className="text-gray-400">Cancel</button>
+                        </>
+                      ) : (
+                        <>
+                          <button onClick={()=>startEdit(b)} className="text-blue-400">Edit</button>
+                          <button onClick={()=>onDelete(b.slug)} className="text-red-400">Delete</button>
+                        </>
+                      )
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function GalleryCrud() {
+  const { list, create, update, remove, approve, reject } = useGallery();
+  const [items, setItems] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [image, setImage] = useState<File | null>(null);
+
+  const refresh = async () => {
+    try { setItems(await list()); } catch {}
+  };
+  useEffect(() => { refresh(); }, []);
+
+  const onCreate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const form = new FormData();
+    if (title) form.append('title', title);
+    if (description) form.append('description', description);
+    if (image) form.append('image', image);
+    try { await create(form); setShowForm(false); setTitle(''); setDescription(''); setImage(null); refresh(); } catch {}
+  };
+
+  const [editId, setEditId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
+  const startEdit = (g:any) => { setEditId(g.id); setEditTitle(g.title || ''); setEditDesc(g.description || ''); };
+  const doEdit = async () => { if (!editId) return; const form = new FormData(); form.append('title', editTitle); form.append('description', editDesc); try { await update(editId, form); setEditId(null); refresh(); } catch {} };
+
+  return (
+    <div className="max-w-5xl mx-auto">
+      <SectionHeader title="Gallery" onAdd={()=>setShowForm(true)} />
+      {showForm && (
+        <form onSubmit={onCreate} className="bg-gray-900 border border-gray-800 rounded p-4 mb-6 space-y-3">
+          <input className="bg-gray-800 p-3 rounded w-full" placeholder="Title (optional)" value={title} onChange={e=>setTitle(e.target.value)} />
+          <textarea className="bg-gray-800 p-3 rounded w-full" rows={3} placeholder="Description (optional)" value={description} onChange={e=>setDescription(e.target.value)} />
+          <input type="file" onChange={e=>setImage(e.target.files?.[0] || null)} required />
+          <div className="flex gap-2">
+            <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Upload</button>
+            <button type="button" onClick={()=>setShowForm(false)} className="px-4 py-2 rounded border border-gray-700">Cancel</button>
+          </div>
+        </form>
+      )}
+
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {items.map((g:any)=> {
+          const src = g.image && g.image.startsWith('http') ? g.image : `${process.env.NEXT_PUBLIC_API_BASE || ''}${g.image || ''}`;
+          return (
+          <div key={g.id} className="bg-gray-900 border border-gray-800 rounded p-3">
+            <img src={src} className="w-full h-40 object-cover rounded" />
+            <div className="mt-2 text-sm text-gray-300">{editId===g.id ? (<input className="bg-gray-800 p-2 rounded w-full" value={editTitle} onChange={e=>setEditTitle(e.target.value)} />) : (g.title || '—')}</div>
+            <div className="text-xs text-gray-500">{g.status}</div>
+            <div className="flex gap-3 mt-2">
+              {g.status==='PENDING' ? (
+                <>
+                  <button onClick={()=>approve(g.id).then(refresh)} className="text-green-400">Approve</button>
+                  <button onClick={()=>reject(g.id).then(refresh)} className="text-yellow-400">Reject</button>
+                </>
+              ) : null}
+              {editId===g.id ? (
+                <>
+                  <button onClick={doEdit} className="text-blue-400">Save</button>
+                  <button onClick={()=>setEditId(null)} className="text-gray-400">Cancel</button>
+                </>
+              ) : (
+                <>
+                  <button onClick={()=>startEdit(g)} className="text-blue-400">Edit</button>
+                  <button onClick={()=>remove(g.id).then(refresh)} className="text-red-400">Delete</button>
+                </>
+              )}
+            </div>
+          </div>
+        );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function UsersCrud({ usersApi, cm, createUser, userMsg }: {
+  usersApi: ReturnType<typeof useUsers>;
+  cm: any;
+  createUser: (e: React.FormEvent) => Promise<void>;
+  userMsg: string;
+}) {
+  const [list, setList] = useState<any[]>([]);
+  const [showForm, setShowForm] = useState(false);
+  const refresh = async () => { try { setList(await usersApi.list()); } catch {} };
+  useEffect(() => { refresh(); }, []);
+
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editRole, setEditRole] = useState('MEMBER');
+  const [editFirst, setEditFirst] = useState('');
+  const [editLast, setEditLast] = useState('');
+  const startEdit = (u:any) => { setEditId(u.id); setEditRole(u.role); setEditFirst(u.first_name || ''); setEditLast(u.last_name || ''); };
+  const doEdit = async () => {
+    if (editId==null) return;
+    const payload = { role: editRole, first_name: editFirst, last_name: editLast };
+    try { await usersApi.update(editId, payload); setEditId(null); refresh(); } catch {}
+  };
+
+  return (
+    <div className="max-w-6xl mx-auto">
+      <SectionHeader title="Users" onAdd={()=>setShowForm(true)} />
+      {showForm && (
+        <form onSubmit={createUser} className="bg-gray-900 border border-gray-800 rounded p-4 mb-6 space-y-3">
+          {userMsg && <div className="text-sm text-gray-300">{userMsg}</div>}
+          <div className="grid md:grid-cols-2 gap-3">
+            <input className="bg-gray-800 p-3 rounded" placeholder="Username" value={cm.cmUsername} onChange={(e)=>cm.setCmUsername(e.target.value)} required />
+            <input className="bg-gray-800 p-3 rounded" placeholder="Email" value={cm.cmEmail} onChange={(e)=>cm.setCmEmail(e.target.value)} required />
+            <input className="bg-gray-800 p-3 rounded" placeholder="First name" value={cm.cmFirst} onChange={(e)=>cm.setCmFirst(e.target.value)} />
+            <input className="bg-gray-800 p-3 rounded" placeholder="Last name" value={cm.cmLast} onChange={(e)=>cm.setCmLast(e.target.value)} />
+            <select className="bg-gray-800 p-3 rounded" value={cm.cmRole} onChange={(e)=>cm.setCmRole(e.target.value)}>
+              <option value="MEMBER">Member</option>
+              <option value="AMBASSADOR">Ambassador</option>
+              <option value="ALUMNI">Alumni</option>
+              <option value="ADMIN">Admin</option>
+            </select>
+            <input className="bg-gray-800 p-3 rounded" placeholder="LinkedIn URL" value={cm.cmLinkedIn} onChange={(e)=>cm.setCmLinkedIn(e.target.value)} />
+            <input className="bg-gray-800 p-3 rounded" placeholder="GitHub URL" value={cm.cmGithub} onChange={(e)=>cm.setCmGithub(e.target.value)} />
+            <select className="bg-gray-800 p-3 rounded" value={cm.cmPosition} onChange={(e)=>cm.setCmPosition(e.target.value)}>
+              <option value="">No Committee Role</option>
+              <option value="President">President</option>
+              <option value="Vice President">Vice President</option>
+              <option value="Secretary">Secretary</option>
+              <option value="Vice Secretary/Treasurer">Vice Secretary/Treasurer</option>
+              <option value="Vice Treasurer">Vice Treasurer</option>
+              <option value="Technical Team">Technical Team</option>
+              <option value="Graphics Designer">Graphics Designer</option>
+              <option value="Communication,Events & HR">Communication,Events & HR</option>
+              <option value="Social Media Manager">Social Media Manager</option>
+              <option value="Consultant">Consultant</option>
+              <option value="Research and Development Team">Research and Development Team</option>
+              <option value="Editor In Chief">Editor In Chief</option>
+            </select>
+            <input type="date" className="bg-gray-800 p-3 rounded" value={cm.cmStart} onChange={(e)=>cm.setCmStart(e.target.value)} />
+            <input type="number" className="bg-gray-800 p-3 rounded" placeholder="Tenure (years)" value={cm.cmTenure} onChange={(e)=>cm.setCmTenure(e.target.value as any)} />
+            {/* Removed Photo URL field; we use file upload below */}
+            <input type="file" onChange={(e)=>cm.setCmPhotoFile(e.target.files?.[0] || null)} />
+          </div>
+          <div className="flex gap-2">
+            <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded">Create</button>
+            <button type="button" onClick={()=>setShowForm(false)} className="px-4 py-2 rounded border border-gray-700">Cancel</button>
+          </div>
+        </form>
+      )}
+
+      <div className="overflow-x-auto rounded border border-gray-800">
+        <table className="min-w-full text-sm">
+          <thead className="bg-gray-900">
+            <tr>
+              <th className="text-left p-3">Username</th>
+              <th className="text-left p-3">Name</th>
+              <th className="text-left p-3">Email</th>
+              <th className="text-left p-3">Role</th>
+              <th className="text-left p-3">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {list.map((u:any)=> (
+              <tr key={u.id} className="border-t border-gray-800">
+                <td className="p-3">{u.username}</td>
+                <td className="p-3">{editId===u.id ? (
+                  <div className="flex gap-2"><input className="bg-gray-800 p-2 rounded" value={editFirst} onChange={e=>setEditFirst(e.target.value)} placeholder="First" />
+                  <input className="bg-gray-800 p-2 rounded" value={editLast} onChange={e=>setEditLast(e.target.value)} placeholder="Last" /></div>
+                ) : (u.full_name || `${u.first_name || ''} ${u.last_name || ''}`)}</td>
+                <td className="p-3">{u.email}</td>
+                <td className="p-3">{editId===u.id ? (
+                  <select className="bg-gray-800 p-2 rounded" value={editRole} onChange={e=>setEditRole(e.target.value)}>
+                    <option value="MEMBER">Member</option>
+                    <option value="AMBASSADOR">Ambassador</option>
+                    <option value="ALUMNI">Alumni</option>
+                    <option value="ADMIN">Admin</option>
+                  </select>
+                ) : u.role}</td>
+                <td className="p-3 flex gap-2">
+                  {editId===u.id ? (
+                    <>
+                      <button onClick={doEdit} className="text-blue-400">Save</button>
+                      <button onClick={()=>setEditId(null)} className="text-gray-400">Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <button onClick={()=>startEdit(u)} className="text-blue-400">Edit</button>
+                      <button onClick={()=>usersApi.remove(u.id).then(refresh)} className="text-red-400">Delete</button>
+                    </>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
   );
 }
