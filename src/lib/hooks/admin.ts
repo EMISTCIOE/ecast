@@ -14,6 +14,18 @@ export function useAdmin() {
     return res.json();
   }, []);
 
+  const createUser = useCallback(async (payload: any) => {
+    const base = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+    const isForm = typeof FormData !== 'undefined' && payload instanceof FormData;
+    const res = await fetch(`${base}/api/auth/unified/`, {
+      method: 'POST',
+      headers: isForm ? { 'Authorization': `Bearer ${localStorage.getItem('access')}` } : { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('access')}` },
+      body: isForm ? payload : JSON.stringify(payload)
+    } as any);
+    if (!res.ok) throw new Error('user create failed');
+    return res.json();
+  }, []);
+
   const pendingSubmissions = useCallback(async () => {
     const res = await fetch('/api/app/tasks/submissions?status=PENDING', { headers: { 'Authorization': `Bearer ${localStorage.getItem('access')}` } });
     if (!res.ok) throw new Error('pending submissions failed');
@@ -32,6 +44,5 @@ export function useAdmin() {
     return res.json();
   }, []);
 
-  return { listUsers, createCommitteeMember, pendingSubmissions, reviewSubmission, createTask };
+  return { listUsers, createCommitteeMember, createUser, pendingSubmissions, reviewSubmission, createTask };
 }
-

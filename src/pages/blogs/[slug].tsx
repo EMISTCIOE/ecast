@@ -53,8 +53,8 @@ const BlogPost: React.FC<BlogProps> = ({ blog }) => {
           <div className={styles["blog-content"]}>
             <p className={styles["blog-description"]}>{blog.description}</p>
             <p className={styles["blog-author"]}>-{blog.author}</p>
-            <div className="prose prose-invert max-w-none whitespace-pre-wrap">
-              {blog.content}
+            <div className="prose prose-invert max-w-none">
+              <div dangerouslySetInnerHTML={{ __html: blog.content }} />
             </div>
           </div>
         </div>

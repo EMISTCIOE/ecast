@@ -8,8 +8,13 @@ export function useNotices() {
     return res.json();
   }, []);
 
-  const create = useCallback(async (payload: { title: string; content: string; audience: string; }) => {
-    const res = await fetch('/api/app/notice/create', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${localStorage.getItem('access')}` }, body: JSON.stringify(payload) });
+  const create = useCallback(async (form: FormData) => {
+    // Use Next API proxy to avoid CORS and consistently attach auth
+    const res = await fetch('/api/app/notice/create', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${localStorage.getItem('access')}` },
+      body: form,
+    } as any);
     if (!res.ok) throw new Error('create notice failed');
     return res.json();
   }, []);
@@ -22,4 +27,3 @@ export function useNotices() {
 
   return { list, create, approve };
 }
-
