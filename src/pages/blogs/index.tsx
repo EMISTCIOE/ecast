@@ -1,7 +1,4 @@
-import { GetStaticProps } from 'next';
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
+import { GetServerSideProps } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Blog } from '../../store/src/lib/blog/types';
@@ -77,37 +74,27 @@ const BlogList: React.FC<BlogListProps> = ({ blogs }) => {
   );
 };
 
-export const getStaticProps: GetStaticProps = async () => {
-  const blogsDirectory = path.join(process.cwd(), 'src/blogs');
-  const filenames = fs.readdirSync(blogsDirectory);
-
-  const blogs = filenames.map((filename) => {
-    const filePath = path.join(blogsDirectory, filename);
-    const fileContents = fs.readFileSync(filePath, 'utf8');
-    const { data } = matter(fileContents);
-
-    // Ensure modified exists and fallback to created if not present
-    const modifiedDate = data.modified || data.created;
-
-    return {
-      ...data,
-      uid: filename.replace(/\.mdx$/, ''),
-      modified: modifiedDate, // Assign a value for modified
-    };
-  });
-
-  // Sort blogs by the 'modified' date (newest first)
-  blogs.sort((a, b) => {
-    const dateA = new Date(a.modified);
-    const dateB = new Date(b.modified);
-    return dateB.getTime() - dateA.getTime();
-  });
-
-  return {
-    props: {
-      blogs,
-    },
-  };
+export const getServerSideProps: GetServerSideProps = async (ctx) => {
+  const host = ctx.req?.headers?.host || 'localhost:3000';
+  const protocol = host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https';
+  try {
+    const res = await fetch(`${protocol}://${host}/api/app/blog/list`);
+    const items = await res.json();
+    const blogs: Blog[] = items.map((it: any) => ({
+      title: it.title,
+      uid: it.slug,
+      thumbnail: it.cover_image || '/assets/placeholder.png',
+      category: 'General',
+      tag: '',
+      author: it.author_username,
+      description: it.description || '',
+      created: it.created_at,
+      modified: it.updated_at,
+    }));
+    return { props: { blogs } };
+  } catch (e) {
+    return { props: { blogs: [] } };
+  }
 };
 
 export default BlogList;

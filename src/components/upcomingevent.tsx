@@ -1,28 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./css/upcoming.module.css"; 
 import styles1 from "./css/file2.module.css"; 
 import Events from "./events";
-import eventdjango from "../../public/assets/event-django.jpg";
-import comingsoon from "../../public/assets/EventsImages/comingsoon.png"; 
+
+type EventItem = {
+  slug: string;
+  title: string;
+  image: string;
+  coming_soon: boolean;
+  status: string;
+};
+
+const base = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
 
 const UpcomingEvents: React.FC = () => {
-  const upcomingEvents = [
-    {
-      id: "workshop-on-django",
-      topic: "Workshop on Django ",
-      image: eventdjango, 
-    },
-    {
-      id: "coming-soon-2",
-      topic: "Coming Soon",
-      image: comingsoon,
-    },
-    {
-      id: "coming-soon-3",
-      topic: "Coming Soon",
-      image: comingsoon,
-    },
-  ];
+  const [items, setItems] = useState<EventItem[]>([]);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const r = await fetch(`/api/app/event/list?status=APPROVED`);
+        const data = await r.json();
+        const mapped: EventItem[] = (data || []).filter((e: any) => e.coming_soon).map((e: any) => ({
+          slug: e.slug,
+          title: e.title,
+          image: e.image?.startsWith('http') ? e.image : `${base}${e.image}`,
+          coming_soon: e.coming_soon,
+          status: e.status,
+        }));
+        setItems(mapped);
+      } catch {}
+    })();
+  }, []);
 
   return (
     <>
@@ -35,12 +44,12 @@ const UpcomingEvents: React.FC = () => {
       {/* Events Section */}
       <div className={styles["semiContainer1"]}>
         <div className={`${styles1["container2"]} ${styles1["centeredContainer"]}`}>
-          {upcomingEvents.map((event) => (
-            <div key={event.id} className={styles1["semi-container8"]}>
+          {items.map((event) => (
+            <div key={event.slug} className={styles1["semi-container8"]}>
               <Events
-                image={event.image.src} 
-                topic={event.topic}
-                eventId={event.id}
+                image={event.image}
+                topic={event.title}
+                eventId={event.slug}
               />
             </div>
           ))}

@@ -1,15 +1,8 @@
-import { GetStaticPaths, GetStaticProps } from 'next';
-import fs from 'fs';
-import path from 'path';
-import matter from 'gray-matter';
-import { MDXRemote, MDXRemoteSerializeResult } from 'next-mdx-remote';
-import { serialize } from 'next-mdx-remote/serialize';
+import { GetServerSideProps } from 'next';
 import NavBar from '@/components/nav';
 import Footer from '@/components/footar';
-import { BlogNavbar } from '@/components/blogcomponents/blog-navbar.component';
 import styles from "../../components/css/file2.module.css";
 import React, { useState, useEffect } from 'react';
-import { BlogNavbarmob } from '@/components/blogcomponents/nav-mobile';
 import Image from 'next/image';
 interface BlogProps {
   blog: {
@@ -17,16 +10,11 @@ interface BlogProps {
     author: string;
     description: string;
     thumbnail: string;
-    category?: string;
-    tag?: string;
+    content: string;
   };
-  content: MDXRemoteSerializeResult;
-  posts: [];
-  categories: string[];
-  tags: string[];
 }
 
-const BlogPost: React.FC<BlogProps> = ({ blog, content, posts, categories, tags }) => {
+const BlogPost: React.FC<BlogProps> = ({ blog }) => {
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -47,9 +35,7 @@ const BlogPost: React.FC<BlogProps> = ({ blog, content, posts, categories, tags 
       <NavBar />
       <div className='bg-black w-full'>
       <div className="flex justify-center bg-black w-full">
-        {!isMobile && (
-          <BlogNavbar blogs={posts} categories={categories} tags={tags} />
-        )}
+        {/* Optional: related posts sidebar could go here */}
         <div className={styles["semi-container9"]}>
           <div className={styles["blog-header"]}>
           <div className='flex justify-center items-center'>
@@ -67,14 +53,14 @@ const BlogPost: React.FC<BlogProps> = ({ blog, content, posts, categories, tags 
           <div className={styles["blog-content"]}>
             <p className={styles["blog-description"]}>{blog.description}</p>
             <p className={styles["blog-author"]}>-{blog.author}</p>
-            <MDXRemote {...content} />
+            <div className="prose prose-invert max-w-none whitespace-pre-wrap">
+              {blog.content}
+            </div>
           </div>
         </div>
       </div>
       <div className='bg-black'>
-      {isMobile && (
-          <BlogNavbarmob blogs={posts} categories={categories} tags={tags} />
-        )}
+      {/* Optional: mobile nav for blogs */}
         </div>
         </div>
       <Footer />
@@ -82,50 +68,25 @@ const BlogPost: React.FC<BlogProps> = ({ blog, content, posts, categories, tags 
   );
 };;
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  const blogsDirectory = path.join(process.cwd(), 'src/blogs');
-  const filenames = fs.readdirSync(blogsDirectory);
-
-  const paths = filenames.map((filename) => ({
-    params: { slug: filename.replace(/\.mdx$/, '') },
-  }));
-
-  return {
-    paths,
-    fallback: false,
-  };
-};
-
-export const getStaticProps: GetStaticProps = async ({ params }) => {
+export const getServerSideProps: GetServerSideProps = async ({ params, req }) => {
   const { slug } = params as { slug: string };
-
-  const filePath = path.join(process.cwd(), 'src/blogs', `${slug}.mdx`);
-  const fileContents = fs.readFileSync(filePath, 'utf8');
-  const { data, content } = matter(fileContents);
-
-  const mdxSource = await serialize(content);
-
-  const blogsDirectory = path.join(process.cwd(), 'src/blogs');
-  const filenames = fs.readdirSync(blogsDirectory);
-
-  const posts = filenames.map((filename) => {
-    const filePath = path.join(blogsDirectory, filename);
-    const fileContents = fs.readFileSync(filePath, 'utf8');
-    const { data } = matter(fileContents);
-
-    return {
-      ...data,
-      uid: filename.replace(/\.mdx$/, ''),
+  const host = req?.headers?.host || 'localhost:3000';
+  const protocol = host.startsWith('localhost') || host.startsWith('127.0.0.1') ? 'http' : 'https';
+  try {
+    const res = await fetch(`${protocol}://${host}/api/app/blog/detail?slug=${encodeURIComponent(slug)}`);
+    if (!res.ok) throw new Error('not found');
+    const it = await res.json();
+    const blog = {
+      title: it.title,
+      author: it.author_username,
+      description: it.description || '',
+      thumbnail: it.cover_image || '/assets/placeholder.png',
+      content: it.content,
     };
-  });
-
-  return {
-    props: {
-      blog: data,
-      content: mdxSource,
-      posts,
-    },
-  };
+    return { props: { blog } };
+  } catch (e) {
+    return { notFound: true };
+  }
 };
 
 export default BlogPost;
