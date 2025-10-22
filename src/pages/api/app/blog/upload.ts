@@ -1,27 +1,28 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const config = { api: { bodyParser: false } };
 
-export default async function handler(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+async function readBuffer(req: NextApiRequest): Promise<Buffer> {
+  const chunks: Buffer[] = [];
+  for await (const chunk of req as any) {
+    chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+  }
+  return Buffer.concat(chunks);
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
   const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
-
   const authorization = req.headers["authorization"] || "";
+  const body = await readBuffer(req);
   const r = await fetch(`${base}/api/blog/uploads/`, {
     method: "POST",
     headers: {
       Authorization: authorization as string,
       "Content-Type": (req.headers["content-type"] as string) || "",
+      "Content-Length": String(body.length),
     },
-    duplex: "half",
-    body: req as any,
+    body,
   } as any);
   const data = await r.json();
   res.status(r.status).json(data);

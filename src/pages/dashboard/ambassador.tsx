@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Router from "next/router";
 import NavBar from "@/components/nav";
 import Sidebar from "@/components/Sidebar";
+import ProfilePictureModal from "@/components/ProfilePictureModal";
 import Footer from "@/components/footar";
 import { useBlogs } from "@/lib/hooks/blogs";
 import RichTextEditor from "@/components/RichTextEditor";
@@ -23,7 +24,12 @@ export default function AmbassadorDashboard() {
   const [authReady, setAuthReady] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [sidebarUser, setSidebarUser] = useState<{name:string; role?:string; avatarUrl?:string}>();
+  const [sidebarUser, setSidebarUser] = useState<{
+    name: string;
+    role?: string;
+    avatarUrl?: string;
+  }>();
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
   const [msg, setMsg] = useState("");
   const [title, setTitle] = useState("");
@@ -45,7 +51,14 @@ export default function AmbassadorDashboard() {
     const access = localStorage.getItem("access");
     const role = userStr ? JSON.parse(userStr)?.role : null;
     if (userStr) {
-      try { const u = JSON.parse(userStr); setSidebarUser({ name: u.full_name || u.username, role: u.role, avatarUrl: u.user_photo || u.committee_member_photo }); } catch {}
+      try {
+        const u = JSON.parse(userStr);
+        setSidebarUser({
+          name: u.full_name || u.username,
+          role: u.role,
+          avatarUrl: u.user_photo || u.committee_member_photo,
+        });
+      } catch {}
     }
     if (!access || role !== "AMBASSADOR") {
       Router.replace("/login");
@@ -98,6 +111,35 @@ export default function AmbassadorDashboard() {
     }
   };
 
+  const handleProfileUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("user_photo", file);
+
+    const access = localStorage.getItem("access");
+    const response = await fetch(`${base}/api/auth/profile/update/`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${access}` },
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error("Upload failed");
+
+    const updated = await response.json();
+    // Update sidebar user
+    setSidebarUser((prev) => ({
+      ...prev!,
+      avatarUrl: updated.user_photo || updated.committee_member_photo,
+    }));
+    // Update localStorage
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      user.user_photo = updated.user_photo;
+      user.committee_member_photo = updated.committee_member_photo;
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+  };
+
   const menuItems = [
     { id: "overview", name: "Overview", icon: HomeIcon },
     { id: "publish", name: "Publish Blog", icon: DocumentTextIcon },
@@ -126,20 +168,61 @@ export default function AmbassadorDashboard() {
         {/* Sidebar */}
         <Sidebar
           expanded={!sidebarCollapsed}
-          setExpanded={(v)=>setSidebarCollapsed(!v)}
+          setExpanded={(v) => setSidebarCollapsed(!v)}
           user={sidebarUser}
+          onProfileClick={() => setShowProfileModal(true)}
           groups={[
-            { title:'Main Menu', items:[
-              { id:'overview', label:'Overview', icon: HomeIcon as any, active: activeSection==='overview', onClick: ()=>setActiveSection('overview') },
-              { id:'publish', label:'Publish Blog', icon: DocumentTextIcon as any, active: activeSection==='publish', onClick: ()=>setActiveSection('publish') },
-              { id:'submit', label:'Submit Task', icon: ClipboardDocumentCheckIcon as any, active: activeSection==='submit', onClick: ()=>setActiveSection('submit') },
-              { id:'leaderboard', label:'Leaderboard', icon: TrophyIcon as any, active: activeSection==='leaderboard', onClick: ()=>setActiveSection('leaderboard') },
-            ]}
+            {
+              title: "Main Menu",
+              items: [
+                {
+                  id: "overview",
+                  label: "Overview",
+                  icon: HomeIcon as any,
+                  active: activeSection === "overview",
+                  onClick: () => setActiveSection("overview"),
+                },
+                {
+                  id: "publish",
+                  label: "Publish Blog",
+                  icon: DocumentTextIcon as any,
+                  active: activeSection === "publish",
+                  onClick: () => setActiveSection("publish"),
+                },
+                {
+                  id: "submit",
+                  label: "Submit Task",
+                  icon: ClipboardDocumentCheckIcon as any,
+                  active: activeSection === "submit",
+                  onClick: () => setActiveSection("submit"),
+                },
+                {
+                  id: "leaderboard",
+                  label: "Leaderboard",
+                  icon: TrophyIcon as any,
+                  active: activeSection === "leaderboard",
+                  onClick: () => setActiveSection("leaderboard"),
+                },
+              ],
+            },
           ]}
         />
 
+        {/* Profile Picture Modal */}
+        <ProfilePictureModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          currentImage={sidebarUser?.avatarUrl}
+          userName={sidebarUser?.name || "User"}
+          onUpload={handleProfileUpload}
+        />
+
         {/* Main Content */}
-        <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-64'} p-6 pt-24 transition-all duration-300`}>
+        <div
+          className={`${
+            sidebarCollapsed ? "ml-20" : "ml-64"
+          } p-6 pt-24 transition-all duration-300`}
+        >
           {/* Overview Section */}
           {activeSection === "overview" && (
             <div className="space-y-6">
@@ -281,16 +364,26 @@ export default function AmbassadorDashboard() {
                   <RichTextEditor value={content} onChange={setContent} />
                   <div className="mt-3">
                     <label className="text-sm text-gray-400 flex items-center gap-2">
-                      <input type="checkbox" onChange={(e)=>{
-                        const el = document.getElementById('amb-blog-preview');
-                        if (!el) return;
-                        el.classList.toggle('hidden', !e.target.checked);
-                      }} />
+                      <input
+                        type="checkbox"
+                        onChange={(e) => {
+                          const el =
+                            document.getElementById("amb-blog-preview");
+                          if (!el) return;
+                          el.classList.toggle("hidden", !e.target.checked);
+                        }}
+                      />
                       Preview
                     </label>
                   </div>
-                  <div id="amb-blog-preview" className="hidden mt-3 p-4 bg-gray-950 border border-gray-800 rounded">
-                    <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: content }} />
+                  <div
+                    id="amb-blog-preview"
+                    className="hidden mt-3 p-4 bg-gray-950 border border-gray-800 rounded"
+                  >
+                    <div
+                      className="prose prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: content }}
+                    />
                   </div>
                 </div>
                 <div>

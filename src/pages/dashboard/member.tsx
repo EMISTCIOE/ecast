@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Router from "next/router";
 import NavBar from "@/components/nav";
 import Sidebar from "@/components/Sidebar";
+import ProfilePictureModal from "@/components/ProfilePictureModal";
 import Footer from "@/components/footar";
 import { useNotices } from "@/lib/hooks/notices";
 import { useBlogs } from "@/lib/hooks/blogs";
@@ -34,7 +35,12 @@ export default function MemberDashboard() {
   const [authReady, setAuthReady] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [sidebarUser, setSidebarUser] = useState<{name:string; role?:string; avatarUrl?:string}>();
+  const [sidebarUser, setSidebarUser] = useState<{
+    name: string;
+    role?: string;
+    avatarUrl?: string;
+  }>();
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
   const [notices, setNotices] = useState<Notice[]>([]);
   const { create: createNoticeApi, list: listNotices } = useNotices();
@@ -74,8 +80,17 @@ export default function MemberDashboard() {
       Router.replace("/login");
     } else {
       setAuthReady(true);
-      const userStr = localStorage.getItem('user');
-      if (userStr) { try { const u = JSON.parse(userStr); setSidebarUser({ name: u.full_name || u.username, role: u.role, avatarUrl: u.user_photo || u.committee_member_photo }); } catch {} }
+      const userStr = localStorage.getItem("user");
+      if (userStr) {
+        try {
+          const u = JSON.parse(userStr);
+          setSidebarUser({
+            name: u.full_name || u.username,
+            role: u.role,
+            avatarUrl: u.user_photo || u.committee_member_photo,
+          });
+        } catch {}
+      }
       // Fetch both ALL and MEMBERS notices (public endpoint supports GET without auth)
       listNotices({ audience: "ALL" }).then((d) =>
         setNotices((prev) => [...prev, ...d])
@@ -98,10 +113,10 @@ export default function MemberDashboard() {
     setMsg("");
     try {
       const form = new FormData();
-      form.append('title', nTitle);
-      form.append('content', nContent);
-      form.append('audience', nAudience);
-      if (nFile) form.append('attachment', nFile);
+      form.append("title", nTitle);
+      form.append("content", nContent);
+      form.append("audience", nAudience);
+      if (nFile) form.append("attachment", nFile);
       await createNoticeApi(form);
       setMsg("Notice submitted for approval");
       setNTitle("");
@@ -134,16 +149,16 @@ export default function MemberDashboard() {
 
   const handleInsertImage = async (file: File) => {
     const form = new FormData();
-    form.append('image', file);
-    const res = await fetch('/api/app/blog/upload', {
-      method: 'POST',
-      headers: { 'Authorization': `Bearer ${localStorage.getItem('access')}` },
+    form.append("image", file);
+    const res = await fetch("/api/app/blog/upload", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
       body: form,
     });
     if (res.ok) {
       const data = await res.json();
       const url = data.url;
-      setBContent(prev => (prev + `\n<img src="${url}" alt="image" />\n`));
+      setBContent((prev) => prev + `\n<img src="${url}" alt="image" />\n`);
     }
   };
 
@@ -196,6 +211,35 @@ export default function MemberDashboard() {
     }
   };
 
+  const handleProfileUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("user_photo", file);
+
+    const access = localStorage.getItem("access");
+    const response = await fetch(`${base}/api/auth/profile/update/`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${access}` },
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error("Upload failed");
+
+    const updated = await response.json();
+    // Update sidebar user
+    setSidebarUser((prev) => ({
+      ...prev!,
+      avatarUrl: updated.user_photo || updated.committee_member_photo,
+    }));
+    // Update localStorage
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      user.user_photo = updated.user_photo;
+      user.committee_member_photo = updated.committee_member_photo;
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+  };
+
   const menuItems = [
     { id: "overview", name: "Overview", icon: HomeIcon },
     { id: "notice", name: "Create Notice", icon: BellIcon },
@@ -225,18 +269,68 @@ export default function MemberDashboard() {
         {/* Sidebar */}
         <Sidebar
           expanded={!sidebarCollapsed}
-          setExpanded={(v)=>setSidebarCollapsed(!v)}
+          setExpanded={(v) => setSidebarCollapsed(!v)}
           user={sidebarUser}
-          groups={[{ title:'Main Menu', items:[
-            { id:'overview', label:'Overview', icon: HomeIcon as any, active: activeSection==='overview', onClick: ()=>setActiveSection('overview') },
-            { id:'notice', label:'Create Notice', icon: BellIcon as any, active: activeSection==='notice', onClick: ()=>setActiveSection('notice') },
-            { id:'blog', label:'Create Blog', icon: DocumentTextIcon as any, active: activeSection==='blog', onClick: ()=>setActiveSection('blog') },
-            { id:'project', label:'Create Project', icon: FolderIcon as any, active: activeSection==='project', onClick: ()=>setActiveSection('project') },
-            { id:'event', label:'Create Event', icon: CalendarIcon as any, active: activeSection==='event', onClick: ()=>setActiveSection('event') },
-          ]}]} />
+          onProfileClick={() => setShowProfileModal(true)}
+          groups={[
+            {
+              title: "Main Menu",
+              items: [
+                {
+                  id: "overview",
+                  label: "Overview",
+                  icon: HomeIcon as any,
+                  active: activeSection === "overview",
+                  onClick: () => setActiveSection("overview"),
+                },
+                {
+                  id: "notice",
+                  label: "Create Notice",
+                  icon: BellIcon as any,
+                  active: activeSection === "notice",
+                  onClick: () => setActiveSection("notice"),
+                },
+                {
+                  id: "blog",
+                  label: "Create Blog",
+                  icon: DocumentTextIcon as any,
+                  active: activeSection === "blog",
+                  onClick: () => setActiveSection("blog"),
+                },
+                {
+                  id: "project",
+                  label: "Create Project",
+                  icon: FolderIcon as any,
+                  active: activeSection === "project",
+                  onClick: () => setActiveSection("project"),
+                },
+                {
+                  id: "event",
+                  label: "Create Event",
+                  icon: CalendarIcon as any,
+                  active: activeSection === "event",
+                  onClick: () => setActiveSection("event"),
+                },
+              ],
+            },
+          ]}
+        />
+
+        {/* Profile Picture Modal */}
+        <ProfilePictureModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          currentImage={sidebarUser?.avatarUrl}
+          userName={sidebarUser?.name || "User"}
+          onUpload={handleProfileUpload}
+        />
 
         {/* Main Content */}
-        <div className={`${sidebarCollapsed ? 'ml-20' : 'ml-64'} p-6 pt-24 transition-all duration-300`}>
+        <div
+          className={`${
+            sidebarCollapsed ? "ml-20" : "ml-64"
+          } p-6 pt-24 transition-all duration-300`}
+        >
           {/* Overview Section */}
           {activeSection === "overview" && (
             <div className="space-y-6">
@@ -450,16 +544,26 @@ export default function MemberDashboard() {
                   <RichTextEditor value={bContent} onChange={setBContent} />
                   <div className="mt-3">
                     <label className="text-sm text-gray-400 flex items-center gap-2">
-                      <input type="checkbox" onChange={(e)=>{
-                        const el = document.getElementById('mem-blog-preview');
-                        if (!el) return;
-                        el.classList.toggle('hidden', !e.target.checked);
-                      }} />
+                      <input
+                        type="checkbox"
+                        onChange={(e) => {
+                          const el =
+                            document.getElementById("mem-blog-preview");
+                          if (!el) return;
+                          el.classList.toggle("hidden", !e.target.checked);
+                        }}
+                      />
                       Preview
                     </label>
                   </div>
-                  <div id="mem-blog-preview" className="hidden mt-3 p-4 bg-gray-950 border border-gray-800 rounded">
-                    <div className="prose prose-invert max-w-none" dangerouslySetInnerHTML={{ __html: bContent }} />
+                  <div
+                    id="mem-blog-preview"
+                    className="hidden mt-3 p-4 bg-gray-950 border border-gray-800 rounded"
+                  >
+                    <div
+                      className="prose prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{ __html: bContent }}
+                    />
                   </div>
                 </div>
                 <div>

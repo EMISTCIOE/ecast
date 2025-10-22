@@ -1,12 +1,19 @@
 import React, { useState } from "react";
 import Image from "next/image";
-import Link from "next/link"; 
-import { useRouter } from "next/router"; 
-import Logo from "../../public/assets/ecast-logo.png"; 
+import Link from "next/link";
+import { useRouter } from "next/router";
+import Logo from "../../public/assets/ecast-logo.png";
+import {
+  ChevronDownIcon,
+  ArrowRightOnRectangleIcon,
+  RectangleStackIcon,
+} from "@heroicons/react/24/outline";
 
 const NavBar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const router = useRouter(); 
+  const [userOpen, setUserOpen] = useState(false);
+  const [me, setMe] = useState<any>(null);
+  const router = useRouter();
 
   const handleMenuToggle = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -14,6 +21,47 @@ const NavBar: React.FC = () => {
 
   const closeMenu = () => {
     setIsMenuOpen(false);
+  };
+
+  React.useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const u = localStorage.getItem("user");
+      if (u) setMe(JSON.parse(u));
+    } catch {}
+  }, [router.pathname]);
+
+  // Close dropdown when clicking outside
+  React.useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest(".user-dropdown-container")) {
+        setUserOpen(false);
+      }
+    };
+    if (userOpen) {
+      document.addEventListener("click", handleClickOutside);
+      return () => document.removeEventListener("click", handleClickOutside);
+    }
+  }, [userOpen]);
+
+  const logout = () => {
+    localStorage.removeItem("access");
+    localStorage.removeItem("refresh");
+    localStorage.removeItem("user");
+    setMe(null);
+    setUserOpen(false);
+    router.push("/");
+  };
+
+  const getRoleDisplay = (role: string) => {
+    const roleMap: { [key: string]: string } = {
+      ADMIN: "Administrator",
+      AMBASSADOR: "Ambassador",
+      ALUMNI: "Alumni",
+      MEMBER: "Member",
+    };
+    return roleMap[role] || role;
   };
 
   return (
@@ -39,21 +87,144 @@ const NavBar: React.FC = () => {
         <Navlink to="/about" onClick={closeMenu} currentRoute={router.pathname}>
           About
         </Navlink>
-        <Navlink to="/committee" onClick={closeMenu} currentRoute={router.pathname}>
+        <Navlink
+          to="/committee"
+          onClick={closeMenu}
+          currentRoute={router.pathname}
+        >
           Committee
         </Navlink>
-        <Navlink to="/projects" onClick={closeMenu} currentRoute={router.pathname}>
+        <Navlink
+          to="/projects"
+          onClick={closeMenu}
+          currentRoute={router.pathname}
+        >
           Projects
         </Navlink>
-        <Navlink to="/gallery" onClick={closeMenu} currentRoute={router.pathname}>
+        <Navlink
+          to="/gallery"
+          onClick={closeMenu}
+          currentRoute={router.pathname}
+        >
           Gallery
         </Navlink>
         <Navlink to="/blogs" onClick={closeMenu} currentRoute={router.pathname}>
           Blogs
         </Navlink>
-        <Navlink to="/contact-us" onClick={closeMenu} currentRoute={router.pathname}>
+        <Navlink
+          to="/contact-us"
+          onClick={closeMenu}
+          currentRoute={router.pathname}
+        >
           Contact
         </Navlink>
+
+        <div className="relative ml-4 user-dropdown-container">
+          {me ? (
+            <>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setUserOpen((v) => !v);
+                }}
+                className="flex items-center gap-3 bg-gradient-to-r from-purple-600/20 to-blue-600/20 hover:from-purple-600/30 hover:to-blue-600/30 border border-purple-500/30 px-5 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg min-w-[180px]"
+              >
+                {me.user_photo || me.committee_member_photo ? (
+                  <img
+                    src={me.user_photo || me.committee_member_photo}
+                    className="w-10 h-10 rounded-full object-cover border-2 border-purple-500"
+                  />
+                ) : (
+                  <span className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 text-white flex items-center justify-center text-base font-bold border-2 border-purple-500">
+                    {(me.full_name || me.username || "?")
+                      .trim()
+                      .charAt(0)
+                      .toUpperCase()}
+                  </span>
+                )}
+                <span className="text-sm font-medium flex-1 text-left truncate">
+                  {me.full_name || me.username}
+                </span>
+                <ChevronDownIcon
+                  className={`w-4 h-4 transition-transform flex-shrink-0 ${
+                    userOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {userOpen && (
+                <div className="absolute right-0 mt-3 w-64 bg-slate-900/95 backdrop-blur-xl border border-gray-700/50 rounded-xl shadow-2xl z-50 overflow-hidden">
+                  {/* User Info Header */}
+                  <div className="px-4 py-4 bg-gradient-to-r from-purple-600/10 to-blue-600/10 border-b border-gray-700/50">
+                    <div className="flex items-center gap-3 mb-2">
+                      {me.user_photo || me.committee_member_photo ? (
+                        <img
+                          src={me.user_photo || me.committee_member_photo}
+                          className="w-14 h-14 rounded-full object-cover border-2 border-purple-500 shadow-lg"
+                        />
+                      ) : (
+                        <span className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 text-white flex items-center justify-center text-xl font-bold border-2 border-purple-500 shadow-lg">
+                          {(me.full_name || me.username || "?")
+                            .trim()
+                            .charAt(0)
+                            .toUpperCase()}
+                        </span>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-white truncate">
+                          {me.full_name || me.username}
+                        </div>
+                        <div className="text-xs text-purple-400 capitalize">
+                          {getRoleDisplay(me.role)}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-xs text-gray-400 truncate">
+                      {me.email || me.username}
+                    </div>
+                  </div>
+
+                  {/* Menu Items */}
+                  <div className="py-2">
+                    <Link
+                      href={`/${
+                        me.role === "ADMIN"
+                          ? "dashboard/admin"
+                          : me.role === "AMBASSADOR"
+                          ? "dashboard/ambassador"
+                          : me.role === "ALUMNI"
+                          ? "dashboard/alumni"
+                          : "dashboard/member"
+                      }`}
+                      onClick={() => setUserOpen(false)}
+                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-gray-200 hover:text-white group"
+                    >
+                      <RectangleStackIcon className="w-5 h-5 text-gray-400 group-hover:text-purple-400" />
+                      <span className="text-sm font-medium">Dashboard</span>
+                    </Link>
+                  </div>
+
+                  {/* Logout Button */}
+                  <div className="border-t border-gray-700/50">
+                    <button
+                      onClick={logout}
+                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-500/10 transition-colors text-red-400 hover:text-red-300 group"
+                    >
+                      <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                      <span className="text-sm font-medium">Log out</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <Link
+              href="/login"
+              className="text-white hover:text-yellow-500 transition-colors px-4 py-2 font-medium"
+            >
+              Login
+            </Link>
+          )}
+        </div>
       </div>
 
       {/* Mobile Menu Toggle */}
@@ -89,22 +260,46 @@ const NavBar: React.FC = () => {
           <Navlink to="/" onClick={closeMenu} currentRoute={router.pathname}>
             Home
           </Navlink>
-          <Navlink to="/about" onClick={closeMenu} currentRoute={router.pathname}>
+          <Navlink
+            to="/about"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
+          >
             About Us
           </Navlink>
-          <Navlink to="/committee" onClick={closeMenu} currentRoute={router.pathname}>
+          <Navlink
+            to="/committee"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
+          >
             Committee
           </Navlink>
-          <Navlink to="/projects" onClick={closeMenu} currentRoute={router.pathname}>
+          <Navlink
+            to="/projects"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
+          >
             Projects
           </Navlink>
-          <Navlink to="/gallery" onClick={closeMenu} currentRoute={router.pathname}>
+          <Navlink
+            to="/gallery"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
+          >
             Gallery
           </Navlink>
-          <Navlink to="/blogs" onClick={closeMenu} currentRoute={router.pathname}>
-          Blogs
-        </Navlink>
-          <Navlink to="/contact-us" onClick={closeMenu} currentRoute={router.pathname}>
+          <Navlink
+            to="/blogs"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
+          >
+            Blogs
+          </Navlink>
+          <Navlink
+            to="/contact-us"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
+          >
             Contact Us
           </Navlink>
         </div>
@@ -120,7 +315,12 @@ interface NavlinkProps {
   currentRoute: string;
 }
 
-const Navlink: React.FC<NavlinkProps> = ({ to, children, onClick, currentRoute }) => {
+const Navlink: React.FC<NavlinkProps> = ({
+  to,
+  children,
+  onClick,
+  currentRoute,
+}) => {
   // Check if the link is active (current route matches)
   const isActive = currentRoute === to;
 

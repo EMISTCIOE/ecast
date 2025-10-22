@@ -382,17 +382,7 @@ export default function AdminDashboard() {
                     </button>
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Photo (Upload)
-                  </label>
-                  <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setCmPhotoFile(e.target.files?.[0] || null)}
-                  />
-                </div>
+                {/* Removed unintended photo upload in Overview */}
 
                 <div className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800">
                   <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">

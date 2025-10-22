@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import Router from "next/router";
 import NavBar from "@/components/nav";
+import Sidebar from "@/components/Sidebar";
+import ProfilePictureModal from "@/components/ProfilePictureModal";
 import Footer from "@/components/footar";
 import {
   DocumentTextIcon,
@@ -17,6 +19,13 @@ const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 export default function AlumniDashboard() {
   const [authReady, setAuthReady] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [sidebarUser, setSidebarUser] = useState<{
+    name: string;
+    role?: string;
+    avatarUrl?: string;
+  }>();
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
   const [msg, setMsg] = useState("");
   const [title, setTitle] = useState("");
@@ -29,6 +38,16 @@ export default function AlumniDashboard() {
     const userStr = localStorage.getItem("user");
     const access = localStorage.getItem("access");
     const role = userStr ? JSON.parse(userStr)?.role : null;
+    if (userStr) {
+      try {
+        const u = JSON.parse(userStr);
+        setSidebarUser({
+          name: u.full_name || u.username,
+          role: u.role,
+          avatarUrl: u.user_photo || u.committee_member_photo,
+        });
+      } catch {}
+    }
     if (!access || role !== "ALUMNI") {
       Router.replace("/login");
     } else {
@@ -67,13 +86,36 @@ export default function AlumniDashboard() {
     }
   };
 
-  if (!authReady) return null;
+  const handleProfileUpload = async (file: File) => {
+    const formData = new FormData();
+    formData.append("user_photo", file);
 
-  const menuItems = [
-    { id: "overview", name: "Overview", icon: HomeIcon },
-    { id: "publish", name: "Publish Blog", icon: DocumentTextIcon },
-    { id: "leaderboard", name: "Leaderboard", icon: TrophyIcon },
-  ];
+    const access = localStorage.getItem("access");
+    const response = await fetch(`${base}/api/auth/profile/update/`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${access}` },
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error("Upload failed");
+
+    const updated = await response.json();
+    // Update sidebar user
+    setSidebarUser((prev) => ({
+      ...prev!,
+      avatarUrl: updated.user_photo || updated.committee_member_photo,
+    }));
+    // Update localStorage
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      user.user_photo = updated.user_photo;
+      user.committee_member_photo = updated.committee_member_photo;
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+  };
+
+  if (!authReady) return null;
 
   return (
     <>
@@ -94,42 +136,56 @@ export default function AlumniDashboard() {
         </div>
 
         {/* Sidebar */}
-        <aside
-          className={`fixed left-0 top-0 h-full w-64 bg-gray-900 border-r border-gray-800 transform transition-transform duration-300 z-40 ${
-            sidebarOpen ? "translate-x-0" : "-translate-x-full"
-          } md:translate-x-0 mt-16 shadow-2xl`}
-        >
-          <div className="p-6">
-            <h2 className="text-2xl font-bold mb-6 bg-gradient-to-r from-orange-400 to-red-400 bg-clip-text text-transparent">
-              Alumni Panel
-            </h2>
-            <nav className="space-y-2">
-              {menuItems.map((item) => {
-                const Icon = item.icon;
-                return (
-                  <button
-                    key={item.id}
-                    onClick={() => {
-                      setActiveSection(item.id);
-                      setSidebarOpen(false);
-                    }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
-                      activeSection === item.id
-                        ? "bg-gradient-to-r from-orange-600 to-red-600 shadow-lg scale-105"
-                        : "hover:bg-gray-800 hover:scale-102"
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                    <span className="font-medium">{item.name}</span>
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        </aside>
+        <Sidebar
+          expanded={!sidebarCollapsed}
+          setExpanded={(v) => setSidebarCollapsed(!v)}
+          user={sidebarUser}
+          onProfileClick={() => setShowProfileModal(true)}
+          groups={[
+            {
+              title: "Main Menu",
+              items: [
+                {
+                  id: "overview",
+                  label: "Overview",
+                  icon: HomeIcon as any,
+                  active: activeSection === "overview",
+                  onClick: () => setActiveSection("overview"),
+                },
+                {
+                  id: "publish",
+                  label: "Publish Blog",
+                  icon: DocumentTextIcon as any,
+                  active: activeSection === "publish",
+                  onClick: () => setActiveSection("publish"),
+                },
+                {
+                  id: "leaderboard",
+                  label: "Leaderboard",
+                  icon: TrophyIcon as any,
+                  active: activeSection === "leaderboard",
+                  onClick: () => setActiveSection("leaderboard"),
+                },
+              ],
+            },
+          ]}
+        />
+
+        {/* Profile Picture Modal */}
+        <ProfilePictureModal
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          currentImage={sidebarUser?.avatarUrl}
+          userName={sidebarUser?.name || "User"}
+          onUpload={handleProfileUpload}
+        />
 
         {/* Main Content */}
-        <div className="md:ml-64 p-6 pt-24">
+        <div
+          className={`${
+            sidebarCollapsed ? "ml-20" : "ml-64"
+          } p-6 pt-24 transition-all duration-300`}
+        >
           {/* Overview Section */}
           {activeSection === "overview" && (
             <div className="space-y-6">
