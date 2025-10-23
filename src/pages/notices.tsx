@@ -384,8 +384,8 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       allNotices = data.results;
     }
 
-    // Filter to only show notices with audience "ALL"
-    allNotices = allNotices.filter((notice) => notice.audience === "ALL");
+    // No need to filter by audience here - backend handles it with APPROVED status
+    // All approved notices should be visible on the public notices page
 
     // Client-side pagination
     const total = allNotices.length;

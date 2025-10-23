@@ -376,40 +376,55 @@ export default function RichTextEditor({
         />
       </div>
 
-      {/* View Mode Tabs */}
-      <div className="flex gap-1 px-2 py-2 border-b border-gray-800 bg-gray-950">
+      {/* View Mode Tabs - Compact Design */}
+      <div className="flex gap-0 border-b border-gray-700">
         <button
           type="button"
-          className={`px-4 py-2 text-sm rounded-lg transition-all ${
+          className={`relative px-4 py-2.5 text-xs font-medium transition-all ${
             viewMode === "edit"
-              ? "bg-pink-600 text-white font-semibold"
-              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              ? "text-pink-400 bg-gray-900"
+              : "text-gray-400 bg-gray-950 hover:text-gray-200 hover:bg-gray-900"
           }`}
           onClick={() => setViewMode("edit")}
         >
-          ✏️ Edit
+          <span className="flex items-center gap-1.5">
+            ✏️ <span>Edit</span>
+          </span>
+          {viewMode === "edit" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-500" />
+          )}
         </button>
         <button
           type="button"
-          className={`px-4 py-2 text-sm rounded-lg transition-all ${
+          className={`relative px-4 py-2.5 text-xs font-medium transition-all ${
             viewMode === "preview"
-              ? "bg-pink-600 text-white font-semibold"
-              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              ? "text-pink-400 bg-gray-900"
+              : "text-gray-400 bg-gray-950 hover:text-gray-200 hover:bg-gray-900"
           }`}
           onClick={() => setViewMode("preview")}
         >
-          👁️ Preview
+          <span className="flex items-center gap-1.5">
+            👁️ <span>Preview</span>
+          </span>
+          {viewMode === "preview" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-500" />
+          )}
         </button>
         <button
           type="button"
-          className={`px-4 py-2 text-sm rounded-lg transition-all ${
+          className={`relative px-4 py-2.5 text-xs font-medium transition-all ${
             viewMode === "split"
-              ? "bg-pink-600 text-white font-semibold"
-              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
+              ? "text-pink-400 bg-gray-900"
+              : "text-gray-400 bg-gray-950 hover:text-gray-200 hover:bg-gray-900"
           }`}
           onClick={() => setViewMode("split")}
         >
-          ⚡ Side by Side
+          <span className="flex items-center gap-1.5">
+            ⚡ <span>Split</span>
+          </span>
+          {viewMode === "split" && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-500" />
+          )}
         </button>
       </div>
 

@@ -67,6 +67,11 @@ interface ToastContainerProps {
 }
 
 export function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
+  // Safety check: ensure toasts is always an array
+  if (!toasts || !Array.isArray(toasts)) {
+    return null;
+  }
+
   return (
     <div className="fixed top-20 right-4 z-50 space-y-2">
       {toasts.map((toast, index) => (

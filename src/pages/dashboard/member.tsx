@@ -11,6 +11,12 @@ import { useProjects } from "@/lib/hooks/projects";
 import { useEvents } from "@/lib/hooks/events";
 import { useTasks } from "@/lib/hooks/tasks";
 import MySubmissions from "@/components/MySubmissions";
+import { useToast } from "@/hooks/useToast";
+import { ToastContainer } from "@/components/Toast";
+import CreateNoticeModal from "@/components/modals/CreateNoticeModal";
+import CreateBlogModal from "@/components/modals/CreateBlogModal";
+import CreateProjectModal from "@/components/modals/CreateProjectModal";
+import CreateEventModal from "@/components/modals/CreateEventModal";
 import {
   BellIcon,
   DocumentTextIcon,
@@ -29,6 +35,9 @@ import {
   LinkIcon,
   GlobeAltIcon,
   MapPinIcon,
+  PlusIcon,
+  PencilSquareIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import {
   BellIcon as BellIconSolid,
@@ -63,6 +72,7 @@ export default function MemberDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
   const [notices, setNotices] = useState<Notice[]>([]);
+  const toast = useToast();
   const {
     create: createNoticeApi,
     list: listNotices,
@@ -75,9 +85,10 @@ export default function MemberDashboard() {
     update: updateBlog,
     remove: deleteBlog,
   } = useBlogs();
-  const { create: createProjectApi } = useProjects();
-  const { create: createEventApi } = useEvents();
+  const { create: createProjectApi, list: listProjects } = useProjects();
+  const { create: createEventApi, list: listEvents } = useEvents();
   const { listAssigned, submit } = useTasks();
+  const [role, setRole] = useState<string | null>(null);
   const [nTitle, setNTitle] = useState("");
   const [nContent, setNContent] = useState("");
   const [nAudience, setNAudience] = useState("ALL");
@@ -85,6 +96,8 @@ export default function MemberDashboard() {
   const [msg, setMsg] = useState("");
   const [myNotices, setMyNotices] = useState<any[]>([]);
   const [myBlogs, setMyBlogs] = useState<any[]>([]);
+  const [myProjects, setMyProjects] = useState<any[]>([]);
+  const [myEvents, setMyEvents] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Blog
@@ -136,6 +149,7 @@ export default function MemberDashboard() {
             committee_position: u.committee_position,
             avatarUrl: avatar,
           });
+          setRole(u.role || null);
         } catch {}
       }
       // Fetch both ALL and MEMBERS notices for feed
@@ -151,6 +165,12 @@ export default function MemberDashboard() {
         .catch(() => {});
       listBlogs({ mine: "1" })
         .then(setMyBlogs)
+        .catch(() => {});
+      listProjects({ mine: "1" })
+        .then(setMyProjects)
+        .catch(() => {});
+      listEvents({ mine: "1" })
+        .then(setMyEvents)
         .catch(() => {});
       listAssigned()
         .then(setTasks)
@@ -393,12 +413,18 @@ export default function MemberDashboard() {
   const canEditOrDeleteNotice = (n: any) => n.status !== "APPROVED";
   const canEditOrDeleteBlog = (b: any) => b.status !== "APPROVED";
 
+  // Modal states
+  const [showCreateNoticeModal, setShowCreateNoticeModal] = useState(false);
+  const [showCreateBlogModal, setShowCreateBlogModal] = useState(false);
+  const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
+  const [showCreateEventModal, setShowCreateEventModal] = useState(false);
+
   const menuItems = [
     { id: "overview", name: "Overview", icon: HomeIcon },
-    { id: "notice", name: "Create Notice", icon: BellIcon },
-    { id: "blog", name: "Create Blog", icon: DocumentTextIcon },
-    { id: "project", name: "Create Project", icon: FolderIcon },
-    { id: "event", name: "Create Event", icon: CalendarIcon },
+    { id: "notices", name: "My Notices", icon: BellIcon },
+    { id: "blogs", name: "My Blogs", icon: DocumentTextIcon },
+    { id: "projects", name: "My Projects", icon: FolderIcon },
+    { id: "events", name: "My Events", icon: CalendarIcon },
     { id: "submit", name: "Submit Task", icon: PaperAirplaneIcon },
     { id: "submissions", name: "My Submissions", icon: DocumentTextIcon },
   ];
@@ -421,6 +447,7 @@ export default function MemberDashboard() {
 
   return (
     <>
+      <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
       <NavBar />
       <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen">
         {/* Mobile Menu Button */}
@@ -455,29 +482,29 @@ export default function MemberDashboard() {
                   onClick: () => setActiveSection("overview"),
                 },
                 {
-                  id: "notice",
-                  label: "Create Notice",
+                  id: "notices",
+                  label: "My Notices",
                   icon: BellIcon as any,
-                  active: activeSection === "notice",
-                  onClick: () => setActiveSection("notice"),
+                  active: activeSection === "notices",
+                  onClick: () => setActiveSection("notices"),
                 },
                 {
                   id: "blog",
-                  label: "Create Blog",
+                  label: "My Blogs",
                   icon: DocumentTextIcon as any,
                   active: activeSection === "blog",
                   onClick: () => setActiveSection("blog"),
                 },
                 {
                   id: "project",
-                  label: "Create Project",
+                  label: "My Projects",
                   icon: FolderIcon as any,
                   active: activeSection === "project",
                   onClick: () => setActiveSection("project"),
                 },
                 {
                   id: "event",
-                  label: "Create Event",
+                  label: "My Events",
                   icon: CalendarIcon as any,
                   active: activeSection === "event",
                   onClick: () => setActiveSection("event"),
@@ -874,146 +901,50 @@ export default function MemberDashboard() {
             </div>
           )}
 
-          {/* Create Notice Section */}
-          {activeSection === "notice" && (
-            <div className="max-w-3xl mx-auto animate-fade-in">
-              <div className="mb-8">
-                <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                  <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
-                    <BellIcon className="w-7 h-7 text-white" />
-                  </div>
-                  Create Notice
-                </h1>
-                <p className="text-gray-400 text-lg">
-                  Share important announcements with the community
-                </p>
-              </div>
-              <form
-                onSubmit={createNotice}
-                className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-10 rounded-3xl border border-gray-700/50 shadow-2xl space-y-6"
-              >
-                {msg && (
-                  <div
-                    className={`p-5 rounded-2xl font-medium flex items-center gap-3 ${
-                      msg.includes("Failed")
-                        ? "bg-red-900/30 border border-red-500/50 text-red-300"
-                        : "bg-green-900/30 border border-green-500/50 text-green-300"
-                    }`}
-                  >
-                    {msg.includes("Failed") ? (
-                      <XCircleIcon className="w-6 h-6" />
-                    ) : (
-                      <CheckCircleIcon className="w-6 h-6" />
-                    )}
-                    {msg}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <DocumentTextIcon className="w-5 h-5 text-purple-400" />
-                    Notice Title
-                  </label>
-                  <input
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 font-medium text-lg"
-                    placeholder="Enter a clear and concise title..."
-                    value={nTitle}
-                    onChange={(e) => setNTitle(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <DocumentTextIcon className="w-5 h-5 text-purple-400" />
-                    Notice Content
-                  </label>
-                  <textarea
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 resize-none font-medium"
-                    placeholder="Write your notice content here. Be clear and informative..."
-                    rows={6}
-                    value={nContent}
-                    onChange={(e) => setNContent(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <BellIcon className="w-5 h-5 text-purple-400" />
-                    Target Audience
-                  </label>
-                  <select
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 font-medium"
-                    value={nAudience}
-                    onChange={(e) => setNAudience(e.target.value)}
-                  >
-                    <option value="ALL">All Members</option>
-                    <option value="MEMBERS">Members Only</option>
-                    <option value="AMBASSADORS">Ambassadors Only</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <ArrowUpTrayIcon className="w-5 h-5 text-purple-400" />
-                    Attachment (Optional){" "}
-                    {nFile && (
-                      <span className="text-green-400 text-xs">
-                        ({nFile.name})
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    key={nFile ? "has-file" : "no-file"}
-                    type="file"
-                    accept="application/pdf,image/*"
-                    className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-purple-600 file:to-pink-600 file:text-white file:font-semibold hover:file:from-purple-700 hover:file:to-pink-700 file:shadow-lg file:transition-all cursor-pointer"
-                    onChange={(e) => setNFile(e.target.files?.[0] || null)}
-                  />
-                  {nFile && nFile.type?.startsWith("image/") && (
-                    <div className="mt-3">
-                      <img
-                        src={URL.createObjectURL(nFile)}
-                        alt="Attachment preview"
-                        className="max-h-48 rounded-lg border border-purple-500/30"
-                      />
+          {/* My Notices Section */}
+          {activeSection === "notices" && (
+            <div className="animate-fade-in">
+              {/* Header with Create Button */}
+              <div className="mb-8 flex items-center justify-between">
+                <div>
+                  <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+                      <BellIcon className="w-7 h-7 text-white" />
                     </div>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">
-                    Supported: PDF, JPG, PNG (Max 10MB)
+                    My Notices
+                  </h1>
+                  <p className="text-gray-400 text-lg">
+                    View and manage your submitted notices
                   </p>
                 </div>
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-700 hover:via-purple-800 hover:to-pink-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-purple-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  onClick={() => setShowCreateNoticeModal(true)}
+                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <PaperAirplaneIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                      Submit Notice for Review
-                    </>
-                  )}
+                  <PlusIcon className="w-5 h-5" />
+                  Create Notice
                 </button>
-              </form>
+              </div>
 
-              {/* My Notices CRUD */}
-              <div className="mt-10 bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
-                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <BellIcon className="w-7 h-7 text-purple-400" />
-                  My Notices
-                </h3>
+              {/* My Notices List */}
+              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
                 {myNotices.length === 0 ? (
-                  <div className="text-center py-12">
-                    <BellIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg">
+                  <div className="text-center py-16">
+                    <BellIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
+                    <p className="text-gray-400 text-xl font-semibold mb-2">
                       No notices created yet
                     </p>
-                    <p className="text-gray-500 text-sm mt-2">
-                      Your submitted notices will appear here
+                    <p className="text-gray-500 text-sm mb-6">
+                      Create your first notice to share announcements with the
+                      community
                     </p>
+                    <button
+                      onClick={() => setShowCreateNoticeModal(true)}
+                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg transition-all duration-300"
+                    >
+                      <PlusIcon className="w-5 h-5" />
+                      Create Your First Notice
+                    </button>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1027,7 +958,7 @@ export default function MemberDashboard() {
                             {editNoticeId === n.id ? (
                               <div className="space-y-3">
                                 <input
-                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 font-semibold text-lg"
+                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 font-semibold text-lg text-white"
                                   placeholder="Notice Title"
                                   value={editNoticeTitle}
                                   onChange={(e) =>
@@ -1035,7 +966,7 @@ export default function MemberDashboard() {
                                   }
                                 />
                                 <textarea
-                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 resize-none"
+                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 resize-none text-white"
                                   placeholder="Notice Content"
                                   rows={4}
                                   value={editNoticeContent}
@@ -1044,7 +975,7 @@ export default function MemberDashboard() {
                                   }
                                 />
                                 <select
-                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500"
+                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 text-white"
                                   value={editNoticeAudience}
                                   onChange={(e) =>
                                     setEditNoticeAudience(e.target.value)
@@ -1075,14 +1006,13 @@ export default function MemberDashboard() {
                                   <input
                                     type="file"
                                     accept="application/pdf,image/*"
-                                    className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-purple-500/30 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600/20 file:text-purple-300 hover:file:bg-purple-600/30 file:transition-all cursor-pointer text-sm"
+                                    className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-purple-500/30 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600/20 file:text-purple-300 hover:file:bg-purple-600/30 file:transition-all cursor-pointer text-sm text-white"
                                     onChange={(e) =>
                                       setEditNoticeFile(
                                         e.target.files?.[0] || null
                                       )
                                     }
                                   />
-                                  {/* Preview new image or existing image attachment */}
                                   {editNoticeFile &&
                                     editNoticeFile.type?.startsWith(
                                       "image/"
@@ -1175,7 +1105,7 @@ export default function MemberDashboard() {
                                     onClick={() => startEditNotice(n)}
                                     className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg font-medium transition-all border border-blue-500/30"
                                   >
-                                    Edit
+                                    <PencilSquareIcon className="w-5 h-5" />
                                   </button>
                                   <button
                                     onClick={() =>
@@ -1187,7 +1117,7 @@ export default function MemberDashboard() {
                                     }
                                     className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg font-medium transition-all border border-red-500/30"
                                   >
-                                    Delete
+                                    <TrashIcon className="w-5 h-5" />
                                   </button>
                                 </>
                               ))}
@@ -1201,137 +1131,50 @@ export default function MemberDashboard() {
             </div>
           )}
 
-          {/* Create Blog Section */}
+          {/* My Blogs Section */}
           {activeSection === "blog" && (
-            <div className="max-w-3xl mx-auto animate-fade-in">
-              <div className="mb-8">
-                <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-                  <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/30">
-                    <DocumentTextIcon className="w-7 h-7 text-white" />
-                  </div>
-                  Create Blog
-                </h1>
-                <p className="text-gray-400 text-lg">
-                  Share your thoughts and ideas with the community
-                </p>
-              </div>
-              <form
-                onSubmit={createBlog}
-                className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-10 rounded-3xl border border-gray-700/50 shadow-2xl space-y-6"
-              >
-                {msg && (
-                  <div
-                    className={`p-5 rounded-2xl font-medium flex items-center gap-3 ${
-                      msg.includes("Failed")
-                        ? "bg-red-900/30 border border-red-500/50 text-red-300"
-                        : "bg-green-900/30 border border-green-500/50 text-green-300"
-                    }`}
-                  >
-                    {msg.includes("Failed") ? (
-                      <XCircleIcon className="w-6 h-6" />
-                    ) : (
-                      <CheckCircleIcon className="w-6 h-6" />
-                    )}
-                    {msg}
-                  </div>
-                )}
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <DocumentTextIcon className="w-5 h-5 text-pink-400" />
-                    Blog Title
-                  </label>
-                  <input
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-300 hover:border-pink-500/50 font-medium text-lg"
-                    placeholder="Enter an engaging blog title..."
-                    value={bTitle}
-                    onChange={(e) => setBTitle(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <DocumentTextIcon className="w-5 h-5 text-pink-400" />
-                    Short Description
-                  </label>
-                  <input
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-300 hover:border-pink-500/50 font-medium"
-                    placeholder="A brief summary of your blog post..."
-                    value={bDesc}
-                    onChange={(e) => setBDesc(e.target.value)}
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <DocumentTextIcon className="w-5 h-5 text-pink-400" />
-                    Blog Content
-                  </label>
-                  <RichTextEditor value={bContent} onChange={setBContent} />
-                </div>
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <ArrowUpTrayIcon className="w-5 h-5 text-pink-400" />
-                    Cover Image{" "}
-                    {bCover && (
-                      <span className="text-green-400 text-xs">
-                        ({bCover.name})
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    key={bCover ? "has-cover" : "no-cover"}
-                    type="file"
-                    accept="image/*"
-                    className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-pink-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-pink-600 file:to-purple-600 file:text-white file:font-semibold hover:file:from-pink-700 hover:file:to-purple-700 file:shadow-lg file:transition-all cursor-pointer"
-                    onChange={(e) => setBCover(e.target.files?.[0] || null)}
-                  />
-                  {bCover && bCover.type?.startsWith("image/") && (
-                    <div className="mt-3">
-                      <img
-                        src={URL.createObjectURL(bCover)}
-                        alt="Cover preview"
-                        className="max-h-48 rounded-lg border border-pink-500/30"
-                      />
+            <div className="animate-fade-in">
+              {/* Header with Create Button */}
+              <div className="mb-8 flex items-center justify-between">
+                <div>
+                  <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+                    <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/30">
+                      <DocumentTextIcon className="w-7 h-7 text-white" />
                     </div>
-                  )}
-                  <p className="text-xs text-gray-500 mt-1">
-                    Supported: JPG, PNG, GIF (Max 5MB)
+                    My Blogs
+                  </h1>
+                  <p className="text-gray-400 text-lg">
+                    View and manage your submitted blog posts
                   </p>
                 </div>
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-pink-600 via-pink-700 to-purple-600 hover:from-pink-700 hover:via-pink-800 hover:to-purple-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-pink-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  onClick={() => setShowCreateBlogModal(true)}
+                  className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-pink-500/30 transition-all duration-300 hover:scale-105"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <PaperAirplaneIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                      Submit Blog for Review
-                    </>
-                  )}
+                  <PlusIcon className="w-5 h-5" />
+                  Create Blog
                 </button>
-              </form>
+              </div>
 
-              {/* My Blogs CRUD */}
-              <div className="mt-10 bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
-                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <DocumentTextIcon className="w-7 h-7 text-pink-400" />
-                  My Blogs
-                </h3>
+              {/* My Blogs List */}
+              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
                 {myBlogs.length === 0 ? (
-                  <div className="text-center py-12">
-                    <DocumentTextIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg">
+                  <div className="text-center py-16">
+                    <DocumentTextIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
+                    <p className="text-gray-400 text-xl font-semibold mb-2">
                       No blogs created yet
                     </p>
-                    <p className="text-gray-500 text-sm mt-2">
-                      Your submitted blogs will appear here
+                    <p className="text-gray-500 text-sm mb-6">
+                      Create your first blog post to share your ideas with the
+                      community
                     </p>
+                    <button
+                      onClick={() => setShowCreateBlogModal(true)}
+                      className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg transition-all duration-300"
+                    >
+                      <PlusIcon className="w-5 h-5" />
+                      Create Your First Blog
+                    </button>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1345,7 +1188,7 @@ export default function MemberDashboard() {
                             {editBlogSlug === b.slug ? (
                               <div className="space-y-3">
                                 <input
-                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 font-semibold text-lg"
+                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 font-semibold text-lg text-white"
                                   placeholder="Blog Title"
                                   value={editBlogTitle}
                                   onChange={(e) =>
@@ -1353,22 +1196,23 @@ export default function MemberDashboard() {
                                   }
                                 />
                                 <input
-                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500"
+                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 text-white"
                                   placeholder="Short Description"
                                   value={editBlogDesc}
                                   onChange={(e) =>
                                     setEditBlogDesc(e.target.value)
                                   }
                                 />
-                                <textarea
-                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 resize-none"
-                                  placeholder="Blog Content (HTML supported)"
-                                  rows={6}
-                                  value={editBlogContent}
-                                  onChange={(e) =>
-                                    setEditBlogContent(e.target.value)
-                                  }
-                                />
+                                <div className="w-full">
+                                  <label className="block text-sm font-semibold text-gray-300 mb-2">
+                                    Blog Content
+                                  </label>
+                                  <RichTextEditor
+                                    value={editBlogContent}
+                                    onChange={setEditBlogContent}
+                                    className="min-h-[300px]"
+                                  />
+                                </div>
                                 <div>
                                   <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
                                     <ArrowUpTrayIcon className="w-4 h-4 text-pink-400" />
@@ -1387,7 +1231,7 @@ export default function MemberDashboard() {
                                   <input
                                     type="file"
                                     accept="image/*"
-                                    className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-pink-500/30 rounded-xl hover:border-pink-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-pink-600/20 file:text-pink-300 hover:file:bg-pink-600/30 file:transition-all cursor-pointer text-sm"
+                                    className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-pink-500/30 rounded-xl hover:border-pink-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-pink-600/20 file:text-pink-300 hover:file:bg-pink-600/30 file:transition-all cursor-pointer text-sm text-white"
                                     onChange={(e) =>
                                       setEditBlogCover(
                                         e.target.files?.[0] || null
@@ -1502,282 +1346,301 @@ export default function MemberDashboard() {
           )}
 
           {/* Create Project Section */}
+          {/* My Projects Section */}
           {activeSection === "project" && (
-            <div className="max-w-3xl mx-auto">
-              {/* Modern Header */}
-              <div className="mb-8 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl mb-4 shadow-2xl shadow-blue-500/30">
-                  <FolderIcon className="w-9 h-9 text-white" />
-                </div>
-                <h1 className="text-4xl font-black bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2">
-                  Create Project
-                </h1>
-                <p className="text-gray-400 text-lg">
-                  Share your amazing work with the community
-                </p>
-              </div>
-
-              <form
-                onSubmit={createProject}
-                className="bg-gradient-to-br from-gray-800/70 via-gray-800/50 to-gray-900/70 backdrop-blur-xl p-10 rounded-3xl border border-gray-700/60 shadow-2xl space-y-7 hover:shadow-blue-500/10 transition-all duration-500"
-              >
-                {msg && (
-                  <div
-                    className={`p-5 rounded-2xl font-semibold shadow-lg border-2 ${
-                      msg.includes("Failed")
-                        ? "bg-red-900/30 text-red-300 border-red-500/50"
-                        : "bg-green-900/30 text-green-300 border-green-500/50"
-                    }`}
-                  >
-                    {msg}
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <DocumentTextIcon className="w-5 h-5 text-blue-400" />
-                    Project Title
-                  </label>
-                  <input
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-500/50 placeholder-gray-500 text-white font-medium"
-                    placeholder="Enter your project name..."
-                    value={pTitle}
-                    onChange={(e) => setPTitle(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <DocumentTextIcon className="w-5 h-5 text-blue-400" />
-                    Description
-                  </label>
-                  <textarea
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl h-36 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-500/50 placeholder-gray-500 text-white font-medium resize-none"
-                    placeholder="Describe what makes your project unique..."
-                    value={pDesc}
-                    onChange={(e) => setPDesc(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <LinkIcon className="w-5 h-5 text-blue-400" />
-                    Repository URL
-                  </label>
-                  <input
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-500/50 placeholder-gray-500 text-white font-medium"
-                    placeholder="https://github.com/username/repo"
-                    value={pRepo}
-                    onChange={(e) => setPRepo(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <GlobeAltIcon className="w-5 h-5 text-blue-400" />
-                    Live URL{" "}
-                    <span className="text-xs text-gray-500">(optional)</span>
-                  </label>
-                  <input
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-500/50 placeholder-gray-500 text-white font-medium"
-                    placeholder="https://your-project-demo.com"
-                    value={pLive}
-                    onChange={(e) => setPLive(e.target.value)}
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <ArrowUpTrayIcon className="w-5 h-5 text-blue-400" />
-                    Project Image{" "}
-                    {pImage && (
-                      <span className="text-green-400 text-xs">
-                        ({pImage.name})
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    key={pImage ? "has-image" : "no-image"}
-                    className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-blue-600 file:to-cyan-600 file:text-white file:font-semibold hover:file:from-blue-700 hover:file:to-cyan-700 file:shadow-lg file:transition-all cursor-pointer"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setPImage(e.target.files?.[0] || null)}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Supported: JPG, PNG, GIF (Max 5MB)
+            <div className="animate-fade-in">
+              {/* Header with Create Button */}
+              <div className="mb-8 flex items-center justify-between">
+                <div>
+                  <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                      <FolderIcon className="w-7 h-7 text-white" />
+                    </div>
+                    My Projects
+                  </h1>
+                  <p className="text-gray-400 text-lg">
+                    View and manage your submitted projects
                   </p>
                 </div>
-
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-700 hover:via-blue-800 hover:to-cyan-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  onClick={() => setShowCreateProjectModal(true)}
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-105"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <PaperAirplaneIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                      Submit Project for Review
-                    </>
-                  )}
+                  <PlusIcon className="w-5 h-5" />
+                  Create Project
                 </button>
-              </form>
+              </div>
+
+              {/* My Projects List */}
+              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
+                {myProjects.length === 0 ? (
+                  <div className="text-center py-16">
+                    <FolderIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
+                    <p className="text-gray-400 text-xl font-semibold mb-2">
+                      No projects created yet
+                    </p>
+                    <p className="text-gray-500 text-sm mb-6">
+                      Create your first project to showcase your work
+                    </p>
+                    <button
+                      onClick={() => setShowCreateProjectModal(true)}
+                      className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg transition-all duration-300"
+                    >
+                      <PlusIcon className="w-5 h-5" />
+                      Create Your First Project
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-gray-400">
+                      {myProjects.length} project
+                      {myProjects.length !== 1 ? "s" : ""} submitted
+                    </p>
+                    {myProjects.map((p: any) => (
+                      <div
+                        key={p.id}
+                        className="group bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-6 rounded-2xl border border-gray-700/50 hover:border-blue-500/30 transition-all duration-300"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h4 className="font-bold text-lg text-white mb-2">
+                              {p.title}
+                            </h4>
+                            {p.description && (
+                              <p className="text-sm text-gray-400 line-clamp-2 mb-2">
+                                {p.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-2 mb-3">
+                              <span
+                                className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                                  p.status === "APPROVED"
+                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                    : p.status === "REJECTED"
+                                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                    : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                }`}
+                              >
+                                {p.status}
+                              </span>
+                              <span className="text-sm text-gray-400">
+                                {new Date(p.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                            {(p.repo_url || p.live_url) && (
+                              <div className="flex gap-3 mt-2">
+                                {p.repo_url && (
+                                  <a
+                                    href={p.repo_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1"
+                                  >
+                                    <LinkIcon className="w-4 h-4" />
+                                    Repository
+                                  </a>
+                                )}
+                                {p.live_url && (
+                                  <a
+                                    href={p.live_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-cyan-400 hover:text-cyan-300 text-sm flex items-center gap-1"
+                                  >
+                                    <GlobeAltIcon className="w-4 h-4" />
+                                    Live Demo
+                                  </a>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
-          {/* Create Event Section */}
+          {/* My Events Section */}
           {activeSection === "event" && (
-            <div className="max-w-3xl mx-auto">
-              {/* Modern Header */}
-              <div className="mb-8 text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl mb-4 shadow-2xl shadow-emerald-500/30">
-                  <CalendarIcon className="w-9 h-9 text-white" />
-                </div>
-                <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 bg-clip-text text-transparent mb-2">
-                  Create Event
-                </h1>
-                <p className="text-gray-400 text-lg">
-                  Organize and share exciting events with everyone
-                </p>
-              </div>
-
-              <form
-                onSubmit={createEvent}
-                className="bg-gradient-to-br from-gray-800/70 via-gray-800/50 to-gray-900/70 backdrop-blur-xl p-10 rounded-3xl border border-gray-700/60 shadow-2xl space-y-7 hover:shadow-emerald-500/10 transition-all duration-500"
-              >
-                {msg && (
-                  <div
-                    className={`p-5 rounded-2xl font-semibold shadow-lg border-2 ${
-                      msg.includes("Failed")
-                        ? "bg-red-900/30 text-red-300 border-red-500/50"
-                        : "bg-green-900/30 text-green-300 border-green-500/50"
-                    }`}
-                  >
-                    {msg}
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <DocumentTextIcon className="w-5 h-5 text-emerald-400" />
-                    Event Title
-                  </label>
-                  <input
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 hover:border-emerald-500/50 placeholder-gray-500 text-white font-medium"
-                    placeholder="Enter event name..."
-                    value={eTitle}
-                    onChange={(e) => setETitle(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <DocumentTextIcon className="w-5 h-5 text-emerald-400" />
-                    Description
-                  </label>
-                  <textarea
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl h-36 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 hover:border-emerald-500/50 placeholder-gray-500 text-white font-medium resize-none"
-                    placeholder="Describe what attendees can expect..."
-                    value={eDesc}
-                    onChange={(e) => setEDesc(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                      <CalendarIcon className="w-5 h-5 text-emerald-400" />
-                      Date
-                    </label>
-                    <input
-                      className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 hover:border-emerald-500/50 text-white font-medium"
-                      type="date"
-                      value={eDate}
-                      onChange={(e) => setEDate(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                      <ClockIcon className="w-5 h-5 text-emerald-400" />
-                      Time
-                    </label>
-                    <input
-                      className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 hover:border-emerald-500/50 text-white font-medium"
-                      type="time"
-                      value={eTime}
-                      onChange={(e) => setETime(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <MapPinIcon className="w-5 h-5 text-emerald-400" />
-                    Location
-                  </label>
-                  <input
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 hover:border-emerald-500/50 placeholder-gray-500 text-white font-medium"
-                    placeholder="Where will the event take place?"
-                    value={eLoc}
-                    onChange={(e) => setELoc(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                    <ArrowUpTrayIcon className="w-5 h-5 text-emerald-400" />
-                    Event Image{" "}
-                    {eImage && (
-                      <span className="text-green-400 text-xs">
-                        ({eImage.name})
-                      </span>
-                    )}
-                  </label>
-                  <input
-                    key={eImage ? "has-event-image" : "no-event-image"}
-                    className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-emerald-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-emerald-600 file:to-green-600 file:text-white file:font-semibold hover:file:from-emerald-700 hover:file:to-green-700 file:shadow-lg file:transition-all cursor-pointer"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setEImage(e.target.files?.[0] || null)}
-                  />
-                  <p className="text-xs text-gray-500 mt-1">
-                    Supported: JPG, PNG, GIF (Max 5MB)
+            <div className="animate-fade-in">
+              {/* Header with Create Button */}
+              <div className="mb-8 flex items-center justify-between">
+                <div>
+                  <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">
+                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                      <CalendarIcon className="w-7 h-7 text-white" />
+                    </div>
+                    My Events
+                  </h1>
+                  <p className="text-gray-400 text-lg">
+                    View and manage your submitted events
                   </p>
                 </div>
-
                 <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-emerald-600 via-green-700 to-emerald-600 hover:from-emerald-700 hover:via-green-800 hover:to-emerald-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  onClick={() => setShowCreateEventModal(true)}
+                  className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-105"
                 >
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
-                      Submitting...
-                    </>
-                  ) : (
-                    <>
-                      <PaperAirplaneIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                      Submit Event for Review
-                    </>
-                  )}
+                  <PlusIcon className="w-5 h-5" />
+                  Create Event
                 </button>
-              </form>
+              </div>
+
+              {/* My Events List */}
+              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
+                {myEvents.length === 0 ? (
+                  <div className="text-center py-16">
+                    <CalendarIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
+                    <p className="text-gray-400 text-xl font-semibold mb-2">
+                      No events created yet
+                    </p>
+                    <p className="text-gray-500 text-sm mb-6">
+                      Create your first event to engage with the community
+                    </p>
+                    <button
+                      onClick={() => setShowCreateEventModal(true)}
+                      className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg transition-all duration-300"
+                    >
+                      <PlusIcon className="w-5 h-5" />
+                      Create Your First Event
+                    </button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    <p className="text-gray-400">
+                      {myEvents.length} event{myEvents.length !== 1 ? "s" : ""}{" "}
+                      submitted
+                    </p>
+                    {myEvents.map((e: any) => (
+                      <div
+                        key={e.id}
+                        className="group bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-6 rounded-2xl border border-gray-700/50 hover:border-emerald-500/30 transition-all duration-300"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h4 className="font-bold text-lg text-white mb-2">
+                              {e.title}
+                            </h4>
+                            {e.description && (
+                              <p className="text-sm text-gray-400 line-clamp-2 mb-2">
+                                {e.description}
+                              </p>
+                            )}
+                            <div className="flex items-center gap-2 mb-3">
+                              <span
+                                className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                                  e.status === "APPROVED"
+                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                    : e.status === "REJECTED"
+                                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                    : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                }`}
+                              >
+                                {e.status}
+                              </span>
+                            </div>
+                            {(e.date || e.time || e.location) && (
+                              <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-400">
+                                {e.date && (
+                                  <span className="flex items-center gap-1">
+                                    <CalendarIcon className="w-4 h-4 text-emerald-400" />
+                                    {new Date(e.date).toLocaleDateString()}
+                                  </span>
+                                )}
+                                {e.time && (
+                                  <span className="flex items-center gap-1">
+                                    <ClockIcon className="w-4 h-4 text-emerald-400" />
+                                    {e.time}
+                                  </span>
+                                )}
+                                {e.location && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPinIcon className="w-4 h-4 text-emerald-400" />
+                                    {e.location}
+                                  </span>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>
+
+        {/* Modals - Placed at root level for global accessibility */}
+        <CreateNoticeModal
+          isOpen={showCreateNoticeModal}
+          onClose={() => setShowCreateNoticeModal(false)}
+          onSubmit={async (data) => {
+            const form = new FormData();
+            form.append("title", data.title);
+            form.append("content", data.content);
+            form.append("audience", data.audience);
+            if (data.file) form.append("attachment", data.file);
+
+            await createNoticeApi(form);
+            toast.success("Notice submitted for review successfully!");
+            listNotices({ mine: "1" }).then(setMyNotices);
+          }}
+        />
+
+        <CreateBlogModal
+          isOpen={showCreateBlogModal}
+          onClose={() => setShowCreateBlogModal(false)}
+          onSubmit={async (data) => {
+            const form = new FormData();
+            form.append("title", data.title);
+            form.append("description", data.description);
+            form.append("content", data.content);
+            if (data.coverImage) form.append("cover_image", data.coverImage);
+
+            await createBlogApi(form);
+            toast.success("Blog submitted for review successfully!");
+            listBlogs({ mine: "1" }).then(setMyBlogs);
+          }}
+        />
+
+        <CreateProjectModal
+          isOpen={showCreateProjectModal}
+          onClose={() => setShowCreateProjectModal(false)}
+          onSubmit={async (data) => {
+            const form = new FormData();
+            form.append("title", data.title);
+            form.append("description", data.description);
+            form.append("repo_url", data.repo_url);
+            if (data.live_url) form.append("live_url", data.live_url);
+            if (data.image) form.append("image", data.image);
+
+            await createProjectApi(form);
+            toast.success("Project submitted for review successfully!");
+            listProjects({ mine: "1" }).then(setMyProjects);
+          }}
+        />
+
+        <CreateEventModal
+          isOpen={showCreateEventModal}
+          onClose={() => setShowCreateEventModal(false)}
+          onSubmit={async (data) => {
+            const form = new FormData();
+            form.append("title", data.title);
+            form.append("description", data.description);
+            form.append("date", data.date);
+            form.append("time", data.time);
+            form.append("location", data.location);
+            if (data.image) form.append("image", data.image);
+
+            await createEventApi(form);
+            toast.success("Event submitted for review successfully!");
+            listEvents({ mine: "1" }).then(setMyEvents);
+          }}
+        />
       </div>
       <Footer />
     </>
