@@ -38,7 +38,6 @@ export default function AlumniDashboard() {
   const [myBlogs, setMyBlogs] = useState<any[]>([]);
   const [showCreateBlogModal, setShowCreateBlogModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
   const toast = useToast();
   const {
@@ -77,17 +76,6 @@ export default function AlumniDashboard() {
       listBlogs({ mine: "1" })
         .then(setMyBlogs)
         .catch(() => {});
-
-      // Load leaderboard - alumni specific
-      authedFetch(`${base}/api/auth/leaderboard/alumni/`)
-        .then((r) => r.json())
-        .then((data) => {
-          console.log("Alumni leaderboard data:", data);
-          setLeaderboard(data);
-        })
-        .catch((err) => {
-          console.error("Failed to load leaderboard:", err);
-        });
     }
   }, []);
 
@@ -221,13 +209,6 @@ export default function AlumniDashboard() {
                   onClick: () => setActiveSection("blog"),
                 },
                 {
-                  id: "leaderboard",
-                  label: "Leaderboard",
-                  icon: TrophyIcon as any,
-                  active: activeSection === "leaderboard",
-                  onClick: () => setActiveSection("leaderboard"),
-                },
-                {
                   id: "submissions",
                   label: "My Submissions",
                   icon: DocumentTextIcon as any,
@@ -334,61 +315,6 @@ export default function AlumniDashboard() {
               onDelete={handleDeleteBlog}
               onRefresh={() => listBlogs({ mine: "1" }).then(setMyBlogs)}
             />
-          )}
-
-          {/* Leaderboard Section */}
-          {activeSection === "leaderboard" && (
-            <div className="max-w-4xl mx-auto">
-              <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                <TrophyIcon className="w-8 h-8 text-yellow-400" />
-                Leaderboard
-              </h1>
-              <div className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800">
-                <div className="space-y-3">
-                  {leaderboard.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">
-                      No leaderboard data available
-                    </p>
-                  ) : (
-                    leaderboard.map((user, index) => (
-                      <div
-                        key={user.id}
-                        className="flex items-center gap-4 p-4 bg-gray-950 rounded-lg border border-gray-800"
-                      >
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                            index === 0
-                              ? "bg-yellow-500 text-gray-900"
-                              : index === 1
-                              ? "bg-gray-400 text-gray-900"
-                              : index === 2
-                              ? "bg-orange-600 text-white"
-                              : "bg-gray-700 text-gray-300"
-                          }`}
-                        >
-                          {index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold">
-                            {user.full_name || user.username}
-                          </h3>
-                          <p className="text-sm text-gray-400">
-                            {user.blogs || 0} blog{user.blogs !== 1 ? "s" : ""}{" "}
-                            approved
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-yellow-400">
-                            {user.points || 0}
-                          </p>
-                          <p className="text-xs text-gray-400">points</p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
           )}
 
           {activeSection === "submissions" && (

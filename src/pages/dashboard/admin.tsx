@@ -52,6 +52,13 @@ export default function AdminDashboard() {
   const [tasks, setTasks] = useState<any[]>([]);
   const [showTaskModal, setShowTaskModal] = useState(false);
   const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [alumniLeaderboard, setAlumniLeaderboard] = useState<any[]>([]);
+  const [ambassadorsLeaderboard, setAmbassadorsLeaderboard] = useState<any[]>(
+    []
+  );
+  const [leaderboardTab, setLeaderboardTab] = useState<"alumni" | "ambassadors">(
+    "ambassadors"
+  );
   const [latestBlogs, setLatestBlogs] = useState<any[]>([]);
   const [role, setRole] = useState<string | null>(null);
 
@@ -165,9 +172,32 @@ export default function AdminDashboard() {
         .listAssigned()
         .then((d: any[]) => setTasks(Array.isArray(d) ? d : []))
         .catch(() => setTasks([]));
-      authedFetch(`${base}/api/auth/leaderboard/`)
+      
+      // Load alumni leaderboard (top 5)
+      authedFetch(`${base}/api/auth/leaderboard/alumni/`)
         .then((r) => r.json())
-        .then(setLeaderboard)
+        .then((data) => {
+          const top5 = Array.isArray(data) ? data.slice(0, 5) : [];
+          setAlumniLeaderboard(top5);
+        })
+        .catch(() => {});
+      
+      // Load ambassadors leaderboard (current batch year only)
+      const currentBatchYear = parseInt(
+        process.env.NEXT_PUBLIC_CURRENT_BATCH_YEAR || "2082",
+        10
+      );
+      authedFetch(`${base}/api/auth/leaderboard/ambassadors/`)
+        .then((r) => r.json())
+        .then((data) => {
+          const currentBatch = Array.isArray(data)
+            ? data.filter(
+                (user: any) =>
+                  user.batch_year_bs === currentBatchYear && user.is_active
+              )
+            : [];
+          setAmbassadorsLeaderboard(currentBatch);
+        })
         .catch(() => {});
     }
   }, []);
@@ -1004,48 +1034,149 @@ export default function AdminDashboard() {
                 <TrophyIcon className="w-8 h-8 text-yellow-400" />
                 Leaderboard
               </h1>
-              <div className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800">
-                <div className="space-y-3">
-                  {leaderboard.length === 0 ? (
-                    <p className="text-gray-400 text-center py-8">
-                      No leaderboard data available
-                    </p>
-                  ) : (
-                    leaderboard.map((user, index) => (
-                      <div
-                        key={user.id}
-                        className="flex items-center gap-4 p-4 bg-gray-950 rounded-lg border border-gray-800"
-                      >
-                        <div
-                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                            index === 0
-                              ? "bg-yellow-500 text-gray-900"
-                              : index === 1
-                              ? "bg-gray-400 text-gray-900"
-                              : index === 2
-                              ? "bg-orange-600 text-white"
-                              : "bg-gray-700 text-gray-300"
-                          }`}
-                        >
-                          {index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="font-semibold">
-                            {user.full_name || user.username}
-                          </h3>
-                          <p className="text-sm text-gray-400">{user.role}</p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-2xl font-bold text-yellow-400">
-                            {user.points || 0}
-                          </p>
-                          <p className="text-xs text-gray-400">points</p>
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
+
+              {/* Tab Navigation */}
+              <div className="flex gap-4 mb-6">
+                <button
+                  onClick={() => setLeaderboardTab("ambassadors")}
+                  className={`flex-1 py-3 px-6 rounded-lg font-semibold transition ${
+                    leaderboardTab === "ambassadors"
+                      ? "bg-green-600 text-white"
+                      : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                  }`}
+                >
+                  Ambassadors (Current Batch)
+                </button>
+                <button
+                  onClick={() => setLeaderboardTab("alumni")}
+                  className={`flex-1 py-3 px-6 rounded-lg font-semibold transition ${
+                    leaderboardTab === "alumni"
+                      ? "bg-purple-600 text-white"
+                      : "bg-gray-800 text-gray-400 hover:bg-gray-700"
+                  }`}
+                >
+                  Alumni (Top 5)
+                </button>
               </div>
+
+              {/* Ambassadors Tab */}
+              {leaderboardTab === "ambassadors" && (
+                <div className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800">
+                  <div className="space-y-3">
+                    {ambassadorsLeaderboard.length === 0 ? (
+                      <p className="text-gray-400 text-center py-8">
+                        No ambassadors in current batch
+                      </p>
+                    ) : (
+                      ambassadorsLeaderboard.map((user, index) => (
+                        <div
+                          key={user.id}
+                          className="flex items-center gap-4 p-4 bg-gray-950 rounded-lg border border-gray-800"
+                        >
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                              index === 0
+                                ? "bg-yellow-500 text-gray-900"
+                                : index === 1
+                                ? "bg-gray-400 text-gray-900"
+                                : index === 2
+                                ? "bg-orange-600 text-white"
+                                : "bg-gray-700 text-gray-300"
+                            }`}
+                          >
+                            {index + 1}
+                          </div>
+                          {user.photo && (
+                            <img
+                              src={
+                                user.photo.startsWith("http")
+                                  ? user.photo
+                                  : `${base}${user.photo}`
+                              }
+                              alt={user.full_name || user.username}
+                              className="w-12 h-12 rounded-full object-cover border-2 border-gray-700"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-semibold">
+                              {user.full_name || user.username}
+                            </h3>
+                            <p className="text-sm text-gray-400">
+                              {user.blogs || 0} blogs, {user.tasks_completed || 0}{" "}
+                              tasks
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-yellow-400">
+                              {user.points || 0}
+                            </p>
+                            <p className="text-xs text-gray-400">points</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Alumni Tab */}
+              {leaderboardTab === "alumni" && (
+                <div className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800">
+                  <div className="space-y-3">
+                    {alumniLeaderboard.length === 0 ? (
+                      <p className="text-gray-400 text-center py-8">
+                        No alumni data available
+                      </p>
+                    ) : (
+                      alumniLeaderboard.map((user, index) => (
+                        <div
+                          key={user.id}
+                          className="flex items-center gap-4 p-4 bg-gray-950 rounded-lg border border-gray-800"
+                        >
+                          <div
+                            className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                              index === 0
+                                ? "bg-yellow-500 text-gray-900"
+                                : index === 1
+                                ? "bg-gray-400 text-gray-900"
+                                : index === 2
+                                ? "bg-orange-600 text-white"
+                                : "bg-gray-700 text-gray-300"
+                            }`}
+                          >
+                            {index + 1}
+                          </div>
+                          {user.photo && (
+                            <img
+                              src={
+                                user.photo.startsWith("http")
+                                  ? user.photo
+                                  : `${base}${user.photo}`
+                              }
+                              alt={user.full_name || user.username}
+                              className="w-12 h-12 rounded-full object-cover border-2 border-gray-700"
+                            />
+                          )}
+                          <div className="flex-1">
+                            <h3 className="font-semibold">
+                              {user.full_name || user.username}
+                            </h3>
+                            <p className="text-sm text-gray-400">
+                              Batch {user.batch_year_bs} • {user.blogs || 0} blogs
+                            </p>
+                          </div>
+                          <div className="text-right">
+                            <p className="text-2xl font-bold text-yellow-400">
+                              {user.points || 0}
+                            </p>
+                            <p className="text-xs text-gray-400">points</p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>

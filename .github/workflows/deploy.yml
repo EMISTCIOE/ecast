@@ -1,0 +1,21 @@
+name: Deploy RAC Website
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    name: Build & Deploy to VPS
+    runs-on: self-hosted
+    env:
+      NEXT_PUBLIC_API_BASE: ${{ secrets.NEXT_PUBLIC_API_BASE }}
+      NEXT_PUBLIC_CURRENT_BATCH_YEAR: ${{ secrets.NEXT_PUBLIC_CURRENT_BATCH_YEAR }}
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Run Unified VPS Deployer
+        run: |
+          cd /srv/deployer
+          node deploy.js $GITHUB_REPOSITORY
