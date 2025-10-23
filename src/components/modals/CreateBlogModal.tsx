@@ -3,7 +3,6 @@ import Modal from "../Modal";
 import RichTextEditor from "../RichTextEditor";
 import {
   DocumentTextIcon,
-  ArrowUpTrayIcon,
   PaperAirplaneIcon,
   CheckCircleIcon,
   XCircleIcon,

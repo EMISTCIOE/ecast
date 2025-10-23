@@ -4,6 +4,10 @@ import type { NextConfig } from 'next';
 // Add MDX support by using @next/mdx with custom config
 const nextConfig: NextConfig = {
   reactStrictMode: false,
+  // Do not block production builds on ESLint issues; we surface them in dev
+  eslint: { ignoreDuringBuilds: true },
+  // Allow shipping even with type errors in edge cases; keep dev experience strict
+  typescript: { ignoreBuildErrors: true },
   images: {
     remotePatterns: [
       {

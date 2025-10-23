@@ -1068,7 +1068,7 @@ export default function AdminDashboard() {
                         No ambassadors in current batch
                       </p>
                     ) : (
-                      ambassadorsLeaderboard.map((user, index) => (
+                      ambassadorsLeaderboard.map((user, _index) => (
                         <div
                           key={user.id}
                           className="flex items-center gap-4 p-4 bg-gray-950 rounded-lg border border-gray-800"
@@ -1128,7 +1128,7 @@ export default function AdminDashboard() {
                         No alumni data available
                       </p>
                     ) : (
-                      alumniLeaderboard.map((user, index) => (
+                      alumniLeaderboard.map((user, _index) => (
                         <div
                           key={user.id}
                           className="flex items-center gap-4 p-4 bg-gray-950 rounded-lg border border-gray-800"

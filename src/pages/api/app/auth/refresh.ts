@@ -11,7 +11,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     });
     const data = await r.json();
     return res.status(r.status).json(data);
-  } catch (e) {
+  } catch (_e) {
     return res.status(500).json({ detail: 'backend error' });
   }
 }

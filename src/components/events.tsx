@@ -4,7 +4,6 @@ import Image from "next/image";
 interface IPROPS {
   image: string;
   topic: string;
-  eventId: string;
   formLink?: string | null;
   date?: string;
   time?: string;
@@ -15,7 +14,6 @@ interface IPROPS {
 const Events: React.FC<IPROPS> = ({
   image,
   topic,
-  eventId,
   formLink,
   date,
   time,

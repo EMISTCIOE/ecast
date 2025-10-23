@@ -74,7 +74,7 @@ export function ToastContainer({ toasts, removeToast }: ToastContainerProps) {
 
   return (
     <div className="fixed top-20 right-4 z-50 space-y-2">
-      {toasts.map((toast, index) => (
+      {toasts.map((toast, _index) => (
         <div
           key={toast.id}
           className="animate-slide-in-right"

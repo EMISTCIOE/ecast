@@ -266,7 +266,7 @@ export default function AlumniPage() {
                       Batch Year {batchYear}
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {batch.map((alumni, index) => (
+                      {batch.map((alumni, _index) => (
                         <Link
                           key={alumni.id}
                           href={`/alumni/${alumni.username}`}

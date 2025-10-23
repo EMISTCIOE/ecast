@@ -103,7 +103,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       modified: it.updated_at,
     }));
     return { props: { blogs } };
-  } catch (e) {
+  } catch (_e) {
     return { props: { blogs: [] } };
   }
 };

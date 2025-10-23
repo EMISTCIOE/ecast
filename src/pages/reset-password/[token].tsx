@@ -19,7 +19,7 @@ function decodeJwt(token: string): JwtClaims | null {
     const [, payload] = token.split(".");
     const json = atob(payload.replace(/-/g, "+").replace(/_/g, "/"));
     return JSON.parse(json);
-  } catch (e) {
+  } catch (_e) {
     return null;
   }
 }

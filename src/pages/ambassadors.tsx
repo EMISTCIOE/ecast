@@ -293,7 +293,7 @@ export default function AmbassadorsPage() {
                 All Ambassadors - Batch {currentBatchYear}
               </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {currentBatchAmbassadors.slice(3).map((ambassador, index) => (
+                {currentBatchAmbassadors.slice(3).map((ambassador, _index) => (
                   <Link
                     key={ambassador.id}
                     href={`/ambassadors/${ambassador.username}`}

@@ -1,5 +1,4 @@
 import React from "react";
-import Image from "next/image";
 
 // Notice Preview Component
 interface NoticePreviewProps {

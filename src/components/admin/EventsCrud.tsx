@@ -102,7 +102,7 @@ export default function EventsCrud({
       setComingSoon(false);
       toast.success("Event created successfully!");
       refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to create event");
     } finally {
       setIsCreating(false);
@@ -145,7 +145,7 @@ export default function EventsCrud({
       setEditSlug(null);
       toast.success("Event updated successfully!");
       refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to update event");
     } finally {
       setIsUpdating(false);
@@ -158,7 +158,7 @@ export default function EventsCrud({
       await approve(slug);
       toast.success("Event approved!");
       refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to approve event");
     } finally {
       setApprovingSlug(null);
@@ -171,7 +171,7 @@ export default function EventsCrud({
       await reject(slug);
       toast.success("Event rejected");
       refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to reject event");
     } finally {
       setRejectingSlug(null);
@@ -192,7 +192,7 @@ export default function EventsCrud({
       setSelectedEvent(null);
       toast.success("Event deleted successfully!");
       refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to delete event");
     } finally {
       setIsDeleting(false);

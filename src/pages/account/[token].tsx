@@ -1,4 +1,5 @@
 import { useRouter } from "next/router";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
@@ -27,7 +28,7 @@ export default function AccountFirstLogin() {
       setEmail(data.email || "");
       setName(data.name || "");
       setRole(data.role || "");
-    } catch (e) {
+    } catch (_e) {
       // ignore invalid token
     }
   }, [token]);
@@ -77,7 +78,7 @@ export default function AccountFirstLogin() {
       if (!r.ok) throw new Error("fail");
       setMessage("Password changed successfully. Redirecting to login...");
       setTimeout(() => router.push("/login"), 2000);
-    } catch (e) {
+    } catch (_e) {
       setError(
         "Password change failed. Please check your current password and try again."
       );
@@ -542,7 +543,7 @@ export default function AccountFirstLogin() {
 
             {/* Back to Login Link */}
             <div className="text-center">
-              <a
+              <Link
                 href="/login"
                 className="text-sm text-blue-400 hover:text-blue-300 transition-colors inline-flex items-center gap-1 group"
               >
@@ -560,7 +561,7 @@ export default function AccountFirstLogin() {
                   />
                 </svg>
                 <span>Back to login</span>
-              </a>
+              </Link>
             </div>
           </form>
         </div>

@@ -66,7 +66,7 @@ export default function NoticesCrud({
       setFile(null);
       toast.success("Notice published successfully!");
       refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to publish notice");
     } finally {
       setIsCreating(false);
@@ -79,7 +79,7 @@ export default function NoticesCrud({
       await approve(id);
       toast.success("Notice approved!");
       refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to approve notice");
     } finally {
       setApprovingId(null);
@@ -92,7 +92,7 @@ export default function NoticesCrud({
       await reject(id);
       toast.success("Notice rejected");
       refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to reject notice");
     } finally {
       setRejectingId(null);
@@ -113,7 +113,7 @@ export default function NoticesCrud({
       setNoticeToDelete(null);
       toast.success("Notice deleted successfully!");
       refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to delete notice");
     } finally {
       setIsDeleting(false);
@@ -150,7 +150,7 @@ export default function NoticesCrud({
       setShowEditModal(false);
       toast.success("Notice updated successfully!");
       refresh();
-    } catch (error) {
+    } catch (_error) {
       toast.error("Failed to update notice");
     } finally {
       setIsUpdating(false);

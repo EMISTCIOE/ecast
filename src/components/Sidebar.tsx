@@ -1,11 +1,6 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import {
-  ChevronDoubleLeftIcon,
-  ChevronDoubleRightIcon,
-  Bars3Icon,
-  XMarkIcon,
-} from "@heroicons/react/24/outline";
+import { ChevronDoubleLeftIcon, Bars3Icon } from "@heroicons/react/24/outline";
 
 type IconComp = (props: { className?: string }) => JSX.Element;
 
@@ -36,8 +31,6 @@ export default function Sidebar({
   user?: { name: string; role?: string; avatarUrl?: string };
   onProfileClick?: () => void;
 }) {
-  const [showProfileUpload, setShowProfileUpload] = useState(false);
-
   // Keyboard shortcut: Ctrl/Cmd + B to toggle sidebar
   useEffect(() => {
     const handleKeyPress = (e: KeyboardEvent) => {
@@ -126,9 +119,12 @@ export default function Sidebar({
                   <div className="text-xs text-purple-400 capitalize">
                     {(() => {
                       const role = user.role as string;
-                      const pos = (user as any).position || (user as any).committee_position;
-                      if ((role === 'ADMIN' || role === 'MEMBER') && pos) return pos;
-                      return role || 'Member';
+                      const pos =
+                        (user as any).position ||
+                        (user as any).committee_position;
+                      if ((role === "ADMIN" || role === "MEMBER") && pos)
+                        return pos;
+                      return role || "Member";
                     })()}
                   </div>
                 </div>

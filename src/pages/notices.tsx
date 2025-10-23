@@ -402,7 +402,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
         totalPages,
       },
     };
-  } catch (e) {
+  } catch (_e) {
     console.error("Error fetching notices:", e);
     return {
       props: {

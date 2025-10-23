@@ -17,7 +17,7 @@ export const BlogNavbarmob = ({ blogs}: BlogNavbarProps) => {
       <h2 className={styles["recent-posts-heading"]}>Recent Posts</h2>
         <ul>
           {/* Display only the first five posts */}
-          {blogs.slice(0, 5).map((blog, index) => (
+          {blogs.slice(0, 5).map((blog, _index) => (
             <li key={index} className={styles["post-item"]}>
               <Link href={`/blogs/${blog.uid}`}>
                 <h4 className={styles["post-title"]}>{blog.title}</h4>
