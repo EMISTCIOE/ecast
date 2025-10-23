@@ -1,4 +1,5 @@
 import { useCallback } from 'react';
+import { authedFetch } from '../apiClient';
 
 export function useAuth() {
   const login = useCallback(async (username: string, password: string) => {
@@ -16,11 +17,10 @@ export function useAuth() {
   }, []);
 
   const me = useCallback(async () => {
-    const res = await fetch('/api/app/auth/me', { headers: { 'Authorization': `Bearer ${localStorage.getItem('access')}` } });
+    const res = await authedFetch('/api/app/auth/me');
     if (!res.ok) throw new Error('me failed');
     return res.json();
   }, []);
 
   return { login, me };
 }
-

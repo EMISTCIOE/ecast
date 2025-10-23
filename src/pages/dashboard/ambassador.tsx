@@ -7,6 +7,7 @@ import Footer from "@/components/footar";
 import { useBlogs } from "@/lib/hooks/blogs";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useTasks } from "@/lib/hooks/tasks";
+import MySubmissions from "@/components/MySubmissions";
 import {
   DocumentTextIcon,
   ClipboardDocumentCheckIcon,
@@ -53,10 +54,12 @@ export default function AmbassadorDashboard() {
     if (userStr) {
       try {
         const u = JSON.parse(userStr);
+        const raw = u.user_photo || u.committee_member_photo || '';
+        const avatar = raw ? (raw.startsWith('http') ? raw : `${process.env.NEXT_PUBLIC_API_BASE || ''}${raw}`) : undefined;
         setSidebarUser({
           name: u.full_name || u.username,
           role: u.role,
-          avatarUrl: u.user_photo || u.committee_member_photo,
+          avatarUrl: avatar,
         });
       } catch {}
     }
@@ -99,6 +102,8 @@ export default function AmbassadorDashboard() {
   const submitTask = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubMsg("");
+    if (!selTask) { setSubMsg('Please select a task.'); return; }
+    if (!subText.trim() && !subFile) { setSubMsg('Please add notes or attach a file.'); return; }
     const form = new FormData();
     form.append("task", selTask);
     form.append("content", subText);
@@ -106,6 +111,9 @@ export default function AmbassadorDashboard() {
     try {
       await submit(form);
       setSubMsg("Submitted for review");
+      setSelTask('');
+      setSubText('');
+      setSubFile(null);
     } catch {
       setSubMsg("Submission failed");
     }
@@ -144,6 +152,7 @@ export default function AmbassadorDashboard() {
     { id: "overview", name: "Overview", icon: HomeIcon },
     { id: "publish", name: "Publish Blog", icon: DocumentTextIcon },
     { id: "submit", name: "Submit Task", icon: ClipboardDocumentCheckIcon },
+    { id: "submissions", name: "My Submissions", icon: ChartBarIcon },
     { id: "leaderboard", name: "Leaderboard", icon: TrophyIcon },
   ];
 
@@ -195,6 +204,13 @@ export default function AmbassadorDashboard() {
                   icon: ClipboardDocumentCheckIcon as any,
                   active: activeSection === "submit",
                   onClick: () => setActiveSection("submit"),
+                },
+                {
+                  id: "submissions",
+                  label: "My Submissions",
+                  icon: ChartBarIcon as any,
+                  active: activeSection === "submissions",
+                  onClick: () => setActiveSection("submissions"),
                 },
                 {
                   id: "leaderboard",
@@ -472,6 +488,14 @@ export default function AmbassadorDashboard() {
                   Submit Task
                 </button>
               </form>
+            </div>
+          )}
+
+          {/* My Submissions */}
+          {activeSection === "submissions" && (
+            <div>
+              <h1 className="text-3xl font-bold mb-6">My Submissions</h1>
+              <MySubmissions role={'AMBASSADOR'} showTasks={true} />
             </div>
           )}
 

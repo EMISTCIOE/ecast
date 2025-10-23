@@ -19,7 +19,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (token) auth = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
   }
   if (req.method === 'GET') {
-    const r = await fetch(`${base}/api/auth/unified/`, {
+    const qs = new URLSearchParams(req.query as any).toString();
+    const r = await fetch(`${base}/api/auth/unified/${qs ? `?${qs}` : ''}`, {
       headers: { 'Authorization': auth }
     });
     const data = await r.json();

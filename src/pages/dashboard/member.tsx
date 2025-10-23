@@ -9,6 +9,8 @@ import { useBlogs } from "@/lib/hooks/blogs";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useProjects } from "@/lib/hooks/projects";
 import { useEvents } from "@/lib/hooks/events";
+import { useTasks } from "@/lib/hooks/tasks";
+import MySubmissions from "@/components/MySubmissions";
 import {
   BellIcon,
   DocumentTextIcon,
@@ -18,7 +20,19 @@ import {
   Bars3Icon,
   XMarkIcon,
   PaperAirplaneIcon,
+  ClipboardDocumentCheckIcon,
+  CheckCircleIcon,
+  ClockIcon,
+  XCircleIcon,
+  ArrowUpTrayIcon,
+  SparklesIcon,
 } from "@heroicons/react/24/outline";
+import {
+  BellIcon as BellIconSolid,
+  DocumentTextIcon as DocumentTextIconSolid,
+  FolderIcon as FolderIconSolid,
+  CalendarIcon as CalendarIconSolid,
+} from "@heroicons/react/24/solid";
 
 const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
@@ -43,10 +57,21 @@ export default function MemberDashboard() {
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
   const [notices, setNotices] = useState<Notice[]>([]);
-  const { create: createNoticeApi, list: listNotices, update: updateNotice, remove: deleteNotice } = useNotices();
-  const { create: createBlogApi, list: listBlogs, update: updateBlog, remove: deleteBlog } = useBlogs();
+  const {
+    create: createNoticeApi,
+    list: listNotices,
+    update: updateNotice,
+    remove: deleteNotice,
+  } = useNotices();
+  const {
+    create: createBlogApi,
+    list: listBlogs,
+    update: updateBlog,
+    remove: deleteBlog,
+  } = useBlogs();
   const { create: createProjectApi } = useProjects();
   const { create: createEventApi } = useEvents();
+  const { listAssigned, submit } = useTasks();
   const [nTitle, setNTitle] = useState("");
   const [nContent, setNContent] = useState("");
   const [nAudience, setNAudience] = useState("ALL");
@@ -54,6 +79,7 @@ export default function MemberDashboard() {
   const [msg, setMsg] = useState("");
   const [myNotices, setMyNotices] = useState<any[]>([]);
   const [myBlogs, setMyBlogs] = useState<any[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Blog
   const [bTitle, setBTitle] = useState("");
@@ -75,6 +101,12 @@ export default function MemberDashboard() {
   const [eTime, setETime] = useState("");
   const [eLoc, setELoc] = useState("");
   const [eImage, setEImage] = useState<File | null>(null);
+  // Tasks
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [subMsg, setSubMsg] = useState("");
+  const [selTask, setSelTask] = useState("");
+  const [subText, setSubText] = useState("");
+  const [subFile, setSubFile] = useState<File | null>(null);
 
   useEffect(() => {
     const access = localStorage.getItem("access");
@@ -86,23 +118,41 @@ export default function MemberDashboard() {
       if (userStr) {
         try {
           const u = JSON.parse(userStr);
+          const raw = u.user_photo || u.committee_member_photo || "";
+          const avatar = raw
+            ? raw.startsWith("http")
+              ? raw
+              : `${process.env.NEXT_PUBLIC_API_BASE || ""}${raw}`
+            : undefined;
           setSidebarUser({
             name: u.full_name || u.username,
             role: u.role,
-            avatarUrl: u.user_photo || u.committee_member_photo,
+            avatarUrl: avatar,
           });
         } catch {}
       }
       // Fetch both ALL and MEMBERS notices for feed
-      listNotices({ audience: "ALL" }).then((d) => setNotices((prev) => [...prev, ...d]));
-      listNotices({ audience: "MEMBERS" }).then((d) => setNotices((prev) => [...prev, ...d]));
+      listNotices({ audience: "ALL" }).then((d) =>
+        setNotices((prev) => [...prev, ...d])
+      );
+      listNotices({ audience: "MEMBERS" }).then((d) =>
+        setNotices((prev) => [...prev, ...d])
+      );
       // Fetch my own items for CRUD
-      listNotices({ mine: '1' }).then(setMyNotices).catch(()=>{});
-      listBlogs({ mine: '1' }).then(setMyBlogs).catch(()=>{});
+      listNotices({ mine: "1" })
+        .then(setMyNotices)
+        .catch(() => {});
+      listBlogs({ mine: "1" })
+        .then(setMyBlogs)
+        .catch(() => {});
+      listAssigned()
+        .then(setTasks)
+        .catch(() => {});
     }
   }, []);
 
-  if (!authReady) return null;
+  // Note: Do not early-return before all hooks run.
+  // We gate rendering later to keep hooks order consistent across renders.
 
   const sorted = [...notices].sort(
     (a, b) =>
@@ -112,6 +162,7 @@ export default function MemberDashboard() {
   const createNotice = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg("");
+    setIsSubmitting(true);
     try {
       const form = new FormData();
       form.append("title", nTitle);
@@ -123,14 +174,19 @@ export default function MemberDashboard() {
       setNTitle("");
       setNContent("");
       setNFile(null);
+      // Refresh the list immediately
+      listNotices({ mine: "1" }).then(setMyNotices);
     } catch {
       setMsg("Failed to submit notice");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const createBlog = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg("");
+    setIsSubmitting(true);
     const form = new FormData();
     form.append("title", bTitle);
     form.append("description", bDesc);
@@ -143,24 +199,71 @@ export default function MemberDashboard() {
       setBDesc("");
       setBContent("");
       setBCover(null);
+      // Refresh the list immediately
+      listBlogs({ mine: "1" }).then(setMyBlogs);
     } catch {
       setMsg("Failed to submit blog");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   // Simple inline edit state for my items
-  const [editNoticeId, setEditNoticeId] = useState<string | null>(null);
-  const [editNoticeTitle, setEditNoticeTitle] = useState('');
-  const [editNoticeContent, setEditNoticeContent] = useState('');
-  const startEditNotice = (n:any) => { setEditNoticeId(n.id); setEditNoticeTitle(n.title); setEditNoticeContent(n.content); };
-  const saveEditNotice = async () => { if (!editNoticeId) return; const form = new FormData(); form.append('title', editNoticeTitle); form.append('content', editNoticeContent); await updateNotice(editNoticeId, form); setEditNoticeId(null); listNotices({ mine: '1' }).then(setMyNotices); };
+  const [editNoticeId, setEditNoticeId] = useState<string>("");
+  const [editNoticeTitle, setEditNoticeTitle] = useState("");
+  const [editNoticeContent, setEditNoticeContent] = useState("");
+  const [editNoticeAudience, setEditNoticeAudience] = useState("ALL");
+  const startEditNotice = (n: any) => {
+    setEditNoticeId(n.id);
+    setEditNoticeTitle(n.title);
+    setEditNoticeContent(n.content);
+    setEditNoticeAudience(n.audience || "ALL");
+  };
+  const saveEditNotice = async () => {
+    if (!editNoticeId) return;
+    setIsSubmitting(true);
+    try {
+      const form = new FormData();
+      form.append("title", editNoticeTitle);
+      form.append("content", editNoticeContent);
+      form.append("audience", editNoticeAudience);
+      await updateNotice(editNoticeId, form);
+      setEditNoticeId("");
+      listNotices({ mine: "1" }).then(setMyNotices);
+    } catch (error) {
+      console.error("Failed to update notice:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-  const [editBlogSlug, setEditBlogSlug] = useState<string | null>(null);
-  const [editBlogTitle, setEditBlogTitle] = useState('');
-  const [editBlogDesc, setEditBlogDesc] = useState('');
-  const [editBlogContent, setEditBlogContent] = useState('');
-  const startEditBlog = (b:any) => { setEditBlogSlug(b.slug); setEditBlogTitle(b.title); setEditBlogDesc(b.description || ''); setEditBlogContent(b.content || ''); };
-  const saveEditBlog = async () => { if (!editBlogSlug) return; const form = new FormData(); form.append('title', editBlogTitle); form.append('description', editBlogDesc); form.append('content', editBlogContent); await updateBlog(editBlogSlug, form); setEditBlogSlug(null); listBlogs({ mine: '1' }).then(setMyBlogs); };
+  const [editBlogSlug, setEditBlogSlug] = useState<string>("");
+  const [editBlogTitle, setEditBlogTitle] = useState("");
+  const [editBlogDesc, setEditBlogDesc] = useState("");
+  const [editBlogContent, setEditBlogContent] = useState("");
+  const startEditBlog = (b: any) => {
+    setEditBlogSlug(b.slug);
+    setEditBlogTitle(b.title);
+    setEditBlogDesc(b.description || "");
+    setEditBlogContent(b.content || "");
+  };
+  const saveEditBlog = async () => {
+    if (!editBlogSlug) return;
+    setIsSubmitting(true);
+    try {
+      const form = new FormData();
+      form.append("title", editBlogTitle);
+      form.append("description", editBlogDesc);
+      form.append("content", editBlogContent);
+      await updateBlog(editBlogSlug, form);
+      setEditBlogSlug("");
+      listBlogs({ mine: "1" }).then(setMyBlogs);
+    } catch (error) {
+      console.error("Failed to update blog:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleInsertImage = async (file: File) => {
     const form = new FormData();
@@ -180,6 +283,7 @@ export default function MemberDashboard() {
   const createProject = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg("");
+    setIsSubmitting(true);
     const form = new FormData();
     form.append("title", pTitle);
     form.append("description", pDesc);
@@ -196,12 +300,15 @@ export default function MemberDashboard() {
       setPImage(null);
     } catch {
       setMsg("Failed to submit project");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   const createEvent = async (e: React.FormEvent) => {
     e.preventDefault();
     setMsg("");
+    setIsSubmitting(true);
     const form = new FormData();
     form.append("title", eTitle);
     form.append("description", eDesc);
@@ -223,6 +330,8 @@ export default function MemberDashboard() {
       setEImage(null);
     } catch {
       setMsg("Failed to submit event");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -255,8 +364,8 @@ export default function MemberDashboard() {
     }
   };
 
-  const canEditOrDeleteNotice = (n:any) => n.status !== 'APPROVED';
-  const canEditOrDeleteBlog = (b:any) => b.status !== 'APPROVED';
+  const canEditOrDeleteNotice = (n: any) => n.status !== "APPROVED";
+  const canEditOrDeleteBlog = (b: any) => b.status !== "APPROVED";
 
   const menuItems = [
     { id: "overview", name: "Overview", icon: HomeIcon },
@@ -264,7 +373,25 @@ export default function MemberDashboard() {
     { id: "blog", name: "Create Blog", icon: DocumentTextIcon },
     { id: "project", name: "Create Project", icon: FolderIcon },
     { id: "event", name: "Create Event", icon: CalendarIcon },
+    { id: "submit", name: "Submit Task", icon: PaperAirplaneIcon },
+    { id: "submissions", name: "My Submissions", icon: DocumentTextIcon },
   ];
+
+  if (!authReady)
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="relative w-20 h-20 mx-auto mb-6">
+            <div className="absolute inset-0 border-4 border-purple-500/30 rounded-full"></div>
+            <div className="absolute inset-0 border-4 border-transparent border-t-purple-500 rounded-full animate-spin"></div>
+          </div>
+          <h2 className="text-xl font-semibold text-gray-300 mb-2">
+            Loading Dashboard
+          </h2>
+          <p className="text-gray-500">Please wait...</p>
+        </div>
+      </div>
+    );
 
   return (
     <>
@@ -329,6 +456,20 @@ export default function MemberDashboard() {
                   active: activeSection === "event",
                   onClick: () => setActiveSection("event"),
                 },
+                {
+                  id: "submit",
+                  label: "Submit Task",
+                  icon: PaperAirplaneIcon as any,
+                  active: activeSection === "submit",
+                  onClick: () => setActiveSection("submit"),
+                },
+                {
+                  id: "submissions",
+                  label: "My Submissions",
+                  icon: DocumentTextIcon as any,
+                  active: activeSection === "submissions",
+                  onClick: () => setActiveSection("submissions"),
+                },
               ],
             },
           ]}
@@ -351,199 +492,631 @@ export default function MemberDashboard() {
         >
           {/* Overview Section */}
           {activeSection === "overview" && (
-            <div className="space-y-6">
-              <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                Member Dashboard
-              </h1>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <button
-                  onClick={() => setActiveSection("notice")}
-                  className="bg-gradient-to-br from-purple-900/50 to-purple-600/30 p-6 rounded-xl border border-purple-500/20 shadow-xl hover:shadow-purple-500/20 transition hover:scale-105"
-                >
-                  <BellIcon className="w-10 h-10 mb-3 text-purple-400" />
-                  <h3 className="text-lg font-semibold">Create Notice</h3>
-                  <p className="text-sm text-gray-400 mt-2">
-                    Post announcements
+            <div className="space-y-8 animate-fade-in">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-5xl font-extrabold mb-2 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
+                    Welcome Back! 👋
+                  </h1>
+                  <p className="text-gray-400 text-lg">
+                    Let's make today productive
                   </p>
-                </button>
-
-                <button
-                  onClick={() => setActiveSection("blog")}
-                  className="bg-gradient-to-br from-pink-900/50 to-pink-600/30 p-6 rounded-xl border border-pink-500/20 shadow-xl hover:shadow-pink-500/20 transition hover:scale-105"
-                >
-                  <DocumentTextIcon className="w-10 h-10 mb-3 text-pink-400" />
-                  <h3 className="text-lg font-semibold">Write Blog</h3>
-                  <p className="text-sm text-gray-400 mt-2">
-                    Share your thoughts
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => setActiveSection("project")}
-                  className="bg-gradient-to-br from-blue-900/50 to-blue-600/30 p-6 rounded-xl border border-blue-500/20 shadow-xl hover:shadow-blue-500/20 transition hover:scale-105"
-                >
-                  <FolderIcon className="w-10 h-10 mb-3 text-blue-400" />
-                  <h3 className="text-lg font-semibold">Add Project</h3>
-                  <p className="text-sm text-gray-400 mt-2">
-                    Showcase your work
-                  </p>
-                </button>
-
-                <button
-                  onClick={() => setActiveSection("event")}
-                  className="bg-gradient-to-br from-green-900/50 to-green-600/30 p-6 rounded-xl border border-green-500/20 shadow-xl hover:shadow-green-500/20 transition hover:scale-105"
-                >
-                  <CalendarIcon className="w-10 h-10 mb-3 text-green-400" />
-                  <h3 className="text-lg font-semibold">Create Event</h3>
-                  <p className="text-sm text-gray-400 mt-2">
-                    Organize activities
-                  </p>
-                </button>
+                </div>
+                <SparklesIcon className="w-12 h-12 text-yellow-400 animate-pulse" />
               </div>
 
-              <div className="bg-gray-800/50 backdrop-blur p-6 rounded-xl border border-gray-700 shadow-xl">
-                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <BellIcon className="w-6 h-6 text-purple-400" />
-                  Recent Notices
-                </h3>
-                <div className="space-y-3">
-                  {sorted.slice(0, 5).map((n) => (
-                    <div
-                      key={n.id}
-                      className="bg-gray-900/50 p-4 rounded-lg border border-gray-700"
-                    >
-                      <h4 className="font-semibold text-purple-300">
-                        {n.title}
-                      </h4>
-                      <p className="text-sm text-gray-400 mt-1">
-                        {new Date(n.created_at).toLocaleDateString()} •{" "}
-                        {n.audience} • by {n.published_by_username}
-                      </p>
-                      <p className="text-sm text-gray-300 mt-2 line-clamp-2">
-                        {n.content}
-                      </p>
+              {/* Stats Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="relative group overflow-hidden bg-gradient-to-br from-purple-600/20 via-purple-500/10 to-transparent p-6 rounded-2xl border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <BellIconSolid className="w-8 h-8 text-purple-400" />
+                      <span className="px-3 py-1 bg-purple-500/20 rounded-full text-xs font-semibold text-purple-300">
+                        {myNotices.length}
+                      </span>
                     </div>
-                  ))}
+                    <h3 className="text-2xl font-bold text-white mb-1">
+                      {myNotices.length}
+                    </h3>
+                    <p className="text-sm text-gray-400">My Notices</p>
+                  </div>
+                </div>
+
+                <div className="relative group overflow-hidden bg-gradient-to-br from-pink-600/20 via-pink-500/10 to-transparent p-6 rounded-2xl border border-pink-500/30 hover:border-pink-400/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-pink-500/20">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl group-hover:bg-pink-500/20 transition-all"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <DocumentTextIconSolid className="w-8 h-8 text-pink-400" />
+                      <span className="px-3 py-1 bg-pink-500/20 rounded-full text-xs font-semibold text-pink-300">
+                        {myBlogs.length}
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-1">
+                      {myBlogs.length}
+                    </h3>
+                    <p className="text-sm text-gray-400">My Blogs</p>
+                  </div>
+                </div>
+
+                <div className="relative group overflow-hidden bg-gradient-to-br from-blue-600/20 via-blue-500/10 to-transparent p-6 rounded-2xl border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <ClipboardDocumentCheckIcon className="w-8 h-8 text-blue-400" />
+                      <span className="px-3 py-1 bg-blue-500/20 rounded-full text-xs font-semibold text-blue-300">
+                        {tasks.length}
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-1">
+                      {tasks.length}
+                    </h3>
+                    <p className="text-sm text-gray-400">Active Tasks</p>
+                  </div>
+                </div>
+
+                <div className="relative group overflow-hidden bg-gradient-to-br from-emerald-600/20 via-emerald-500/10 to-transparent p-6 rounded-2xl border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/20">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all"></div>
+                  <div className="relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                      <CheckCircleIcon className="w-8 h-8 text-emerald-400" />
+                      <span className="px-3 py-1 bg-emerald-500/20 rounded-full text-xs font-semibold text-emerald-300">
+                        New
+                      </span>
+                    </div>
+                    <h3 className="text-2xl font-bold text-white mb-1">
+                      Active
+                    </h3>
+                    <p className="text-sm text-gray-400">Status</p>
+                  </div>
                 </div>
               </div>
+
+              {/* Quick Actions */}
+              <div>
+                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <SparklesIcon className="w-7 h-7 text-yellow-400" />
+                  Quick Actions
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                  <button
+                    onClick={() => setActiveSection("notice")}
+                    className="group relative overflow-hidden bg-gradient-to-br from-purple-900/40 via-purple-800/20 to-purple-600/10 p-8 rounded-2xl border border-purple-500/30 hover:border-purple-400/60 shadow-xl hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-600/0 via-purple-500/0 to-purple-400/0 group-hover:from-purple-600/10 group-hover:via-purple-500/5 group-hover:to-purple-400/10 transition-all duration-500"></div>
+                    <div className="relative z-10">
+                      <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-purple-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
+                        <BellIcon className="w-7 h-7 text-purple-400 group-hover:text-purple-300" />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2 group-hover:text-purple-300 transition-colors">
+                        Create Notice
+                      </h3>
+                      <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                        Post important announcements
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveSection("blog")}
+                    className="group relative overflow-hidden bg-gradient-to-br from-pink-900/40 via-pink-800/20 to-pink-600/10 p-8 rounded-2xl border border-pink-500/30 hover:border-pink-400/60 shadow-xl hover:shadow-2xl hover:shadow-pink-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-pink-600/0 via-pink-500/0 to-pink-400/0 group-hover:from-pink-600/10 group-hover:via-pink-500/5 group-hover:to-pink-400/10 transition-all duration-500"></div>
+                    <div className="relative z-10">
+                      <div className="w-14 h-14 bg-pink-500/20 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-pink-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
+                        <DocumentTextIcon className="w-7 h-7 text-pink-400 group-hover:text-pink-300" />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2 group-hover:text-pink-300 transition-colors">
+                        Write Blog
+                      </h3>
+                      <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                        Share your thoughts & ideas
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveSection("project")}
+                    className="group relative overflow-hidden bg-gradient-to-br from-blue-900/40 via-blue-800/20 to-blue-600/10 p-8 rounded-2xl border border-blue-500/30 hover:border-blue-400/60 shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/0 via-blue-500/0 to-blue-400/0 group-hover:from-blue-600/10 group-hover:via-blue-500/5 group-hover:to-blue-400/10 transition-all duration-500"></div>
+                    <div className="relative z-10">
+                      <div className="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
+                        <FolderIcon className="w-7 h-7 text-blue-400 group-hover:text-blue-300" />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2 group-hover:text-blue-300 transition-colors">
+                        Add Project
+                      </h3>
+                      <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                        Showcase your amazing work
+                      </p>
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setActiveSection("event")}
+                    className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/40 via-emerald-800/20 to-emerald-600/10 p-8 rounded-2xl border border-emerald-500/30 hover:border-emerald-400/60 shadow-xl hover:shadow-2xl hover:shadow-emerald-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/0 via-emerald-500/0 to-emerald-400/0 group-hover:from-emerald-600/10 group-hover:via-emerald-500/5 group-hover:to-emerald-400/10 transition-all duration-500"></div>
+                    <div className="relative z-10">
+                      <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
+                        <CalendarIcon className="w-7 h-7 text-emerald-400 group-hover:text-emerald-300" />
+                      </div>
+                      <h3 className="text-xl font-bold mb-2 group-hover:text-emerald-300 transition-colors">
+                        Create Event
+                      </h3>
+                      <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
+                        Organize exciting activities
+                      </p>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Tasks Assigned Summary */}
+              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-2xl border border-gray-700/50 shadow-2xl hover:border-gray-600/50 transition-all duration-300">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-2xl font-bold flex items-center gap-3">
+                    <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
+                      <ClipboardDocumentCheckIcon className="w-6 h-6 text-blue-400" />
+                    </div>
+                    Tasks Assigned
+                  </h3>
+                  <button
+                    onClick={() => setActiveSection("submit")}
+                    className="group px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 flex items-center gap-2 hover:scale-105"
+                  >
+                    <PaperAirplaneIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                    Submit Task
+                  </button>
+                </div>
+                {tasks.length === 0 ? (
+                  <div className="text-center py-12">
+                    <ClockIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400 text-lg">
+                      No tasks assigned yet.
+                    </p>
+                    <p className="text-gray-500 text-sm mt-2">
+                      Check back later for new assignments
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {tasks.slice(0, 3).map((t: any) => (
+                      <div
+                        key={t.id}
+                        className="group flex items-center justify-between bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-5 rounded-xl border border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
+                      >
+                        <div className="flex-1">
+                          <div className="font-semibold text-lg text-white group-hover:text-blue-300 transition-colors">
+                            {t.title}
+                          </div>
+                          <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
+                            <ClockIcon className="w-4 h-4" />
+                            Due: {t.due_date || "No deadline"}
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setSelTask(t.id);
+                            setActiveSection("submit");
+                          }}
+                          className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 hover:text-blue-300 rounded-lg font-medium transition-all duration-300 hover:scale-105 border border-blue-500/30"
+                        >
+                          Submit →
+                        </button>
+                      </div>
+                    ))}
+                    {tasks.length > 3 && (
+                      <div className="text-center pt-2">
+                        <button
+                          onClick={() => setActiveSection("submit")}
+                          className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+                        >
+                          +{tasks.length - 3} more tasks • View all →
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Recent Notices */}
+              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-2xl border border-gray-700/50 shadow-2xl hover:border-gray-600/50 transition-all duration-300">
+                <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                    <BellIcon className="w-6 h-6 text-purple-400" />
+                  </div>
+                  Recent Notices
+                </h3>
+                {sorted.length === 0 ? (
+                  <div className="text-center py-12">
+                    <BellIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400 text-lg">No notices yet</p>
+                    <p className="text-gray-500 text-sm mt-2">
+                      Stay tuned for important announcements
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {sorted.slice(0, 5).map((n) => (
+                      <div
+                        key={n.id}
+                        className="group bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-6 rounded-xl border border-gray-700/50 hover:border-purple-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h4 className="font-bold text-lg text-purple-300 group-hover:text-purple-200 transition-colors mb-2">
+                              {n.title}
+                            </h4>
+                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400 mb-3">
+                              <span className="flex items-center gap-1">
+                                <ClockIcon className="w-4 h-4" />
+                                {new Date(n.created_at).toLocaleDateString()}
+                              </span>
+                              <span className="px-2 py-1 bg-purple-500/20 rounded-md text-purple-300 text-xs font-semibold">
+                                {n.audience}
+                              </span>
+                              <span>by {n.published_by_username}</span>
+                            </div>
+                            <p className="text-sm text-gray-300 line-clamp-2 leading-relaxed">
+                              {n.content}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Submit Task Section */}
+          {activeSection === "submit" && (
+            <div className="max-w-3xl mx-auto animate-fade-in">
+              <div className="mb-8">
+                <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <PaperAirplaneIcon className="w-7 h-7 text-white" />
+                  </div>
+                  Submit Task
+                </h1>
+                <p className="text-gray-400 text-lg">
+                  Complete your assigned tasks
+                </p>
+              </div>
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  if (!selTask) {
+                    setSubMsg("Please select a task.");
+                    return;
+                  }
+                  if (!subText.trim() && !subFile) {
+                    setSubMsg("Please add notes or attach a file.");
+                    return;
+                  }
+                  const form = new FormData();
+                  form.append("task", selTask);
+                  form.append("content", subText);
+                  if (subFile) form.append("attachment", subFile);
+                  try {
+                    await submit(form);
+                    setSubMsg("Submitted for review");
+                    setSelTask("");
+                    setSubText("");
+                    setSubFile(null);
+                  } catch {
+                    setSubMsg("Submission failed");
+                  }
+                }}
+                className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-10 rounded-3xl border border-gray-700/50 shadow-2xl space-y-6"
+              >
+                {subMsg && (
+                  <div
+                    className={`p-5 rounded-2xl font-medium flex items-center gap-3 ${
+                      subMsg.includes("fail")
+                        ? "bg-red-900/30 border border-red-500/50 text-red-300"
+                        : "bg-green-900/30 border border-green-500/50 text-green-300"
+                    }`}
+                  >
+                    {subMsg.includes("fail") ? (
+                      <XCircleIcon className="w-6 h-6" />
+                    ) : (
+                      <CheckCircleIcon className="w-6 h-6" />
+                    )}
+                    {subMsg}
+                  </div>
+                )}
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <ClipboardDocumentCheckIcon className="w-5 h-5 text-blue-400" />
+                    Select Task
+                  </label>
+                  <select
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 font-medium"
+                    value={selTask}
+                    onChange={(e) => setSelTask(e.target.value)}
+                    required
+                  >
+                    <option value="">Choose a task to submit...</option>
+                    {tasks.map((t: any) => (
+                      <option key={t.id} value={t.id}>
+                        {t.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5 text-blue-400" />
+                    Submission Notes
+                  </label>
+                  <textarea
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 resize-none font-medium"
+                    rows={5}
+                    placeholder="Add details about your submission, challenges faced, or any notes for reviewers..."
+                    value={subText}
+                    onChange={(e) => setSubText(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <ArrowUpTrayIcon className="w-5 h-5 text-blue-400" />
+                    Attachment{" "}
+                    {subFile && (
+                      <span className="text-green-400 text-xs">
+                        ({subFile.name})
+                      </span>
+                    )}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      onChange={(e) => setSubFile(e.target.files?.[0] || null)}
+                      className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-blue-600 file:to-cyan-600 file:text-white file:font-semibold hover:file:from-blue-700 hover:file:to-cyan-700 file:shadow-lg file:transition-all cursor-pointer"
+                    />
+                  </div>
+                </div>
+                <button className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-700 hover:via-blue-800 hover:to-cyan-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group">
+                  <PaperAirplaneIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                  Submit Task
+                </button>
+              </form>
+            </div>
+          )}
+
+          {/* My Submissions */}
+          {activeSection === "submissions" && (
+            <div className="animate-fade-in">
+              <div className="mb-8">
+                <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                  My Submissions
+                </h1>
+                <p className="text-gray-400 text-lg">
+                  Track all your submissions and their status
+                </p>
+              </div>
+              <MySubmissions role={"MEMBER"} showTasks={true} />
             </div>
           )}
 
           {/* Create Notice Section */}
           {activeSection === "notice" && (
-            <div className="max-w-2xl">
-              <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                <BellIcon className="w-8 h-8 text-purple-400" />
-                Create Notice
-              </h1>
+            <div className="max-w-3xl mx-auto animate-fade-in">
+              <div className="mb-8">
+                <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <BellIcon className="w-7 h-7 text-white" />
+                  </div>
+                  Create Notice
+                </h1>
+                <p className="text-gray-400 text-lg">
+                  Share important announcements with the community
+                </p>
+              </div>
               <form
                 onSubmit={createNotice}
-                className="bg-gray-800/50 backdrop-blur p-8 rounded-xl border border-gray-700 shadow-xl space-y-5"
+                className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-10 rounded-3xl border border-gray-700/50 shadow-2xl space-y-6"
               >
                 {msg && (
                   <div
-                    className={`p-4 rounded-lg ${
+                    className={`p-5 rounded-2xl font-medium flex items-center gap-3 ${
                       msg.includes("Failed")
-                        ? "bg-red-900/50 text-red-300"
-                        : "bg-green-900/50 text-green-300"
+                        ? "bg-red-900/30 border border-red-500/50 text-red-300"
+                        : "bg-green-900/30 border border-green-500/50 text-green-300"
                     }`}
                   >
+                    {msg.includes("Failed") ? (
+                      <XCircleIcon className="w-6 h-6" />
+                    ) : (
+                      <CheckCircleIcon className="w-6 h-6" />
+                    )}
                     {msg}
                   </div>
                 )}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Title
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5 text-purple-400" />
+                    Notice Title
                   </label>
                   <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
-                    placeholder="Enter notice title"
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 font-medium text-lg"
+                    placeholder="Enter a clear and concise title..."
                     value={nTitle}
                     onChange={(e) => setNTitle(e.target.value)}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Content
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5 text-purple-400" />
+                    Notice Content
                   </label>
                   <textarea
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg h-32 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
-                    placeholder="Enter notice content"
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 resize-none font-medium"
+                    placeholder="Write your notice content here. Be clear and informative..."
+                    rows={6}
                     value={nContent}
                     onChange={(e) => setNContent(e.target.value)}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Audience
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <BellIcon className="w-5 h-5 text-purple-400" />
+                    Target Audience
                   </label>
                   <select
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 font-medium"
                     value={nAudience}
                     onChange={(e) => setNAudience(e.target.value)}
                   >
-                    <option value="ALL">All</option>
-                    <option value="MEMBERS">Members</option>
-                    <option value="AMBASSADORS">Ambassadors</option>
+                    <option value="ALL">All Members</option>
+                    <option value="MEMBERS">Members Only</option>
+                    <option value="AMBASSADORS">Ambassadors Only</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Attachment (PDF or Image)
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <ArrowUpTrayIcon className="w-5 h-5 text-purple-400" />
+                    Attachment (Optional){" "}
+                    {nFile && (
+                      <span className="text-green-400 text-xs">
+                        ({nFile.name})
+                      </span>
+                    )}
                   </label>
                   <input
                     type="file"
                     accept="application/pdf,image/*"
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition"
+                    className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-purple-600 file:to-pink-600 file:text-white file:font-semibold hover:file:from-purple-700 hover:file:to-pink-700 file:shadow-lg file:transition-all cursor-pointer"
                     onChange={(e) => setNFile(e.target.files?.[0] || null)}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported: PDF, JPG, PNG (Max 10MB)
+                  </p>
                 </div>
-                <button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 p-4 rounded-lg font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2">
-                  <PaperAirplaneIcon className="w-5 h-5" />
-                  Submit Notice
+                <button 
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-700 hover:via-purple-800 hover:to-pink-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-purple-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <PaperAirplaneIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                      Submit Notice for Review
+                    </>
+                  )}
                 </button>
               </form>
 
               {/* My Notices CRUD */}
-              <div className="mt-8 bg-gray-800/50 backdrop-blur p-6 rounded-xl border border-gray-700 shadow-xl">
-                <h3 className="text-xl font-semibold mb-4">My Notices</h3>
-                <div className="overflow-x-auto rounded border border-gray-800">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-gray-900">
-                      <tr>
-                        <th className="text-left p-3">Title</th>
-                        <th className="text-left p-3">Status</th>
-                        <th className="text-left p-3">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {myNotices.map((n:any)=> (
-                        <tr key={n.id} className="border-t border-gray-800">
-                          <td className="p-3">{editNoticeId===n.id ? (<input className="bg-gray-900 p-2 rounded w-full" value={editNoticeTitle} onChange={e=>setEditNoticeTitle(e.target.value)} />) : n.title}</td>
-                          <td className="p-3">{n.status}</td>
-                          <td className="p-3 flex gap-2">
-                            {canEditOrDeleteNotice(n) && (
-                              editNoticeId===n.id ? (
+              <div className="mt-10 bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
+                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <BellIcon className="w-7 h-7 text-purple-400" />
+                  My Notices
+                </h3>
+                {myNotices.length === 0 ? (
+                  <div className="text-center py-12">
+                    <BellIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400 text-lg">
+                      No notices created yet
+                    </p>
+                    <p className="text-gray-500 text-sm mt-2">
+                      Your submitted notices will appear here
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {myNotices.map((n: any) => (
+                      <div
+                        key={n.id}
+                        className="group bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-6 rounded-2xl border border-gray-700/50 hover:border-purple-500/30 transition-all duration-300"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            {editNoticeId === n.id ? (
+                              <input
+                                className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 font-semibold text-lg mb-2"
+                                value={editNoticeTitle}
+                                onChange={(e) =>
+                                  setEditNoticeTitle(e.target.value)
+                                }
+                              />
+                            ) : (
+                              <h4 className="font-bold text-lg text-white mb-2">
+                                {n.title}
+                              </h4>
+                            )}
+                            <div className="flex items-center gap-2 mb-3">
+                              <span
+                                className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                                  n.status === "APPROVED"
+                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                    : n.status === "REJECTED"
+                                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                    : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                }`}
+                              >
+                                {n.status}
+                              </span>
+                              <span className="text-sm text-gray-400">
+                                {new Date(n.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-2">
+                            {canEditOrDeleteNotice(n) &&
+                              (editNoticeId === n.id ? (
                                 <>
-                                  <button onClick={saveEditNotice} className="text-blue-400">Save</button>
-                                  <button onClick={()=>setEditNoticeId(null)} className="text-gray-400">Cancel</button>
+                                  <button
+                                    onClick={saveEditNotice}
+                                    className="px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg font-medium transition-all border border-green-500/30"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditNoticeId("")}
+                                    className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 text-gray-400 rounded-lg font-medium transition-all border border-gray-500/30"
+                                  >
+                                    Cancel
+                                  </button>
                                 </>
                               ) : (
                                 <>
-                                  <button onClick={()=>startEditNotice(n)} className="text-blue-400">Edit</button>
-                                  <button onClick={()=>deleteNotice(n.id).then(()=>listNotices({ mine: '1' }).then(setMyNotices))} className="text-red-400">Delete</button>
+                                  <button
+                                    onClick={() => startEditNotice(n)}
+                                    className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg font-medium transition-all border border-blue-500/30"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      deleteNotice(n.id).then(() =>
+                                        listNotices({ mine: "1" }).then(
+                                          setMyNotices
+                                        )
+                                      )
+                                    }
+                                    className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg font-medium transition-all border border-red-500/30"
+                                  >
+                                    Delete
+                                  </button>
                                 </>
-                              )
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}
@@ -641,42 +1214,110 @@ export default function MemberDashboard() {
               </form>
 
               {/* My Blogs CRUD */}
-              <div className="mt-8 bg-gray-800/50 backdrop-blur p-6 rounded-xl border border-gray-700 shadow-xl">
-                <h3 className="text-xl font-semibold mb-4">My Blogs</h3>
-                <div className="overflow-x-auto rounded border border-gray-800">
-                  <table className="min-w-full text-sm">
-                    <thead className="bg-gray-900">
-                      <tr>
-                        <th className="text-left p-3">Title</th>
-                        <th className="text-left p-3">Status</th>
-                        <th className="text-left p-3">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {myBlogs.map((b:any)=> (
-                        <tr key={b.id} className="border-t border-gray-800">
-                          <td className="p-3">{editBlogSlug===b.slug ? (<input className="bg-gray-900 p-2 rounded w-full" value={editBlogTitle} onChange={e=>setEditBlogTitle(e.target.value)} />) : b.title}</td>
-                          <td className="p-3">{b.status}</td>
-                          <td className="p-3 flex gap-2">
-                            {canEditOrDeleteBlog(b) && (
-                              editBlogSlug===b.slug ? (
+              <div className="mt-10 bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
+                <h3 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                  <DocumentTextIcon className="w-7 h-7 text-pink-400" />
+                  My Blogs
+                </h3>
+                {myBlogs.length === 0 ? (
+                  <div className="text-center py-12">
+                    <DocumentTextIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+                    <p className="text-gray-400 text-lg">
+                      No blogs created yet
+                    </p>
+                    <p className="text-gray-500 text-sm mt-2">
+                      Your submitted blogs will appear here
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {myBlogs.map((b: any) => (
+                      <div
+                        key={b.id}
+                        className="group bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-6 rounded-2xl border border-gray-700/50 hover:border-pink-500/30 transition-all duration-300"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            {editBlogSlug === b.slug ? (
+                              <input
+                                className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 font-semibold text-lg mb-2"
+                                value={editBlogTitle}
+                                onChange={(e) =>
+                                  setEditBlogTitle(e.target.value)
+                                }
+                              />
+                            ) : (
+                              <h4 className="font-bold text-lg text-white mb-2">
+                                {b.title}
+                              </h4>
+                            )}
+                            <div className="flex items-center gap-2 mb-3">
+                              <span
+                                className={`px-3 py-1 rounded-lg text-xs font-bold ${
+                                  b.status === "APPROVED"
+                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                    : b.status === "REJECTED"
+                                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                                    : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                                }`}
+                              >
+                                {b.status}
+                              </span>
+                              <span className="text-sm text-gray-400">
+                                {new Date(b.created_at).toLocaleDateString()}
+                              </span>
+                            </div>
+                            {b.description && (
+                              <p className="text-sm text-gray-400 line-clamp-2">
+                                {b.description}
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex gap-2">
+                            {canEditOrDeleteBlog(b) &&
+                              (editBlogSlug === b.slug ? (
                                 <>
-                                  <button onClick={saveEditBlog} className="text-blue-400">Save</button>
-                                  <button onClick={()=>setEditBlogSlug(null)} className="text-gray-400">Cancel</button>
+                                  <button
+                                    onClick={saveEditBlog}
+                                    className="px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg font-medium transition-all border border-green-500/30"
+                                  >
+                                    Save
+                                  </button>
+                                  <button
+                                    onClick={() => setEditBlogSlug("")}
+                                    className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 text-gray-400 rounded-lg font-medium transition-all border border-gray-500/30"
+                                  >
+                                    Cancel
+                                  </button>
                                 </>
                               ) : (
                                 <>
-                                  <button onClick={()=>startEditBlog(b)} className="text-blue-400">Edit</button>
-                                  <button onClick={()=>deleteBlog(b.slug).then(()=>listBlogs({ mine: '1' }).then(setMyBlogs))} className="text-red-400">Delete</button>
+                                  <button
+                                    onClick={() => startEditBlog(b)}
+                                    className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg font-medium transition-all border border-blue-500/30"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      deleteBlog(b.slug).then(() =>
+                                        listBlogs({ mine: "1" }).then(
+                                          setMyBlogs
+                                        )
+                                      )
+                                    }
+                                    className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg font-medium transition-all border border-red-500/30"
+                                  >
+                                    Delete
+                                  </button>
                                 </>
-                              )
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                              ))}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </div>
           )}

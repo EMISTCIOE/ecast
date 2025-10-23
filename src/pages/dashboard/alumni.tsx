@@ -4,6 +4,7 @@ import NavBar from "@/components/nav";
 import Sidebar from "@/components/Sidebar";
 import ProfilePictureModal from "@/components/ProfilePictureModal";
 import Footer from "@/components/footar";
+import MySubmissions from "@/components/MySubmissions";
 import {
   DocumentTextIcon,
   TrophyIcon,
@@ -165,6 +166,13 @@ export default function AlumniDashboard() {
                   icon: TrophyIcon as any,
                   active: activeSection === "leaderboard",
                   onClick: () => setActiveSection("leaderboard"),
+                },
+                {
+                  id: "submissions",
+                  label: "My Submissions",
+                  icon: DocumentTextIcon as any,
+                  active: activeSection === "submissions",
+                  onClick: () => setActiveSection("submissions"),
                 },
               ],
             },
@@ -350,6 +358,13 @@ export default function AlumniDashboard() {
                   Go to Leaderboard
                 </button>
               </div>
+            </div>
+          )}
+
+          {activeSection === "submissions" && (
+            <div>
+              <h1 className="text-3xl font-bold mb-6">My Submissions</h1>
+              <MySubmissions role={'ALUMNI'} showTasks={false} />
             </div>
           )}
         </div>

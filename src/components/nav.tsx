@@ -64,6 +64,13 @@ const NavBar: React.FC = () => {
     return roleMap[role] || role;
   };
 
+  const roleLabel = () => {
+    if (!me) return '';
+    const pos = me?.committee_position || me?.committee?.position;
+    const role = me?.role;
+    return (pos && (role === 'ADMIN' || role === 'MEMBER')) ? pos : getRoleDisplay(role);
+  };
+
   return (
     <nav className="sticky top-0 left-0 z-50 w-full h-20 bg-slate-900 backdrop-filter backdrop-blur-lg opacity-95 shadow-2xl flex">
       <div className="flex w-[100%] items-center justify-between m-auto">
@@ -130,10 +137,24 @@ const NavBar: React.FC = () => {
                 className="flex items-center gap-3 bg-gradient-to-r from-purple-600/20 to-blue-600/20 hover:from-purple-600/30 hover:to-blue-600/30 border border-purple-500/30 px-5 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg min-w-[180px]"
               >
                 {me.user_photo || me.committee_member_photo ? (
-                  <img
-                    src={me.user_photo || me.committee_member_photo}
-                    className="w-10 h-10 rounded-full object-cover border-2 border-purple-500"
-                  />
+                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-purple-500 flex-shrink-0">
+                    <Image
+                      src={
+                        (me.user_photo || me.committee_member_photo).startsWith(
+                          "http"
+                        )
+                          ? me.user_photo || me.committee_member_photo
+                          : `${process.env.NEXT_PUBLIC_API_BASE || ""}${
+                              me.user_photo || me.committee_member_photo
+                            }`
+                      }
+                      alt={me.full_name || me.username || "User"}
+                      width={40}
+                      height={40}
+                      className="w-full h-full object-cover"
+                      unoptimized
+                    />
+                  </div>
                 ) : (
                   <span className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 text-white flex items-center justify-center text-base font-bold border-2 border-purple-500">
                     {(me.full_name || me.username || "?")
@@ -143,7 +164,7 @@ const NavBar: React.FC = () => {
                   </span>
                 )}
                 <span className="text-sm font-medium flex-1 text-left truncate">
-                  {me.full_name || me.username}
+                  {(me.full_name || me.username) + (roleLabel() ? ` · ${roleLabel()}` : '')}
                 </span>
                 <ChevronDownIcon
                   className={`w-4 h-4 transition-transform flex-shrink-0 ${
@@ -157,10 +178,24 @@ const NavBar: React.FC = () => {
                   <div className="px-4 py-4 bg-gradient-to-r from-purple-600/10 to-blue-600/10 border-b border-gray-700/50">
                     <div className="flex items-center gap-3 mb-2">
                       {me.user_photo || me.committee_member_photo ? (
-                        <img
-                          src={me.user_photo || me.committee_member_photo}
-                          className="w-14 h-14 rounded-full object-cover border-2 border-purple-500 shadow-lg"
-                        />
+                        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-purple-500 shadow-lg flex-shrink-0">
+                          <Image
+                            src={
+                              (
+                                me.user_photo || me.committee_member_photo
+                              ).startsWith("http")
+                                ? me.user_photo || me.committee_member_photo
+                                : `${process.env.NEXT_PUBLIC_API_BASE || ""}${
+                                    me.user_photo || me.committee_member_photo
+                                  }`
+                            }
+                            alt={me.full_name || me.username || "User"}
+                            width={56}
+                            height={56}
+                            className="w-full h-full object-cover"
+                            unoptimized
+                          />
+                        </div>
                       ) : (
                         <span className="w-14 h-14 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 text-white flex items-center justify-center text-xl font-bold border-2 border-purple-500 shadow-lg">
                           {(me.full_name || me.username || "?")
@@ -174,7 +209,7 @@ const NavBar: React.FC = () => {
                           {me.full_name || me.username}
                         </div>
                         <div className="text-xs text-purple-400 capitalize">
-                          {getRoleDisplay(me.role)}
+                          {roleLabel()}
                         </div>
                       </div>
                     </div>

@@ -65,7 +65,8 @@ export default function RichTextEditor({ value, onChange, uploadPath = '/api/app
       </div>
       <div
         ref={editorRef}
-        className="min-h-[200px] p-3 focus:outline-none prose prose-invert max-w-none"
+        className="min-h-[200px] p-3 focus:outline-none prose prose-invert max-w-none text-left"
+        style={{ direction: 'ltr' as any }}
         contentEditable
         suppressContentEditableWarning
         onInput={emitChange}
@@ -74,4 +75,3 @@ export default function RichTextEditor({ value, onChange, uploadPath = '/api/app
     </div>
   );
 }
-

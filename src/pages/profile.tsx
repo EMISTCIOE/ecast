@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import NavBar from '@/components/nav';
 import Footer from '@/components/footar';
 
@@ -10,6 +10,8 @@ export default function ProfilePage() {
   const [github, setGithub] = useState('');
   const [photo, setPhoto] = useState<File | null>(null);
   const [msg, setMsg] = useState('');
+  const base = process.env.NEXT_PUBLIC_API_BASE || '';
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMe = async () => {
@@ -44,6 +46,20 @@ export default function ProfilePage() {
     } else setMsg('Update failed');
   };
 
+  const currentPhoto: string | undefined = useMemo(() => {
+    if (!user) return undefined;
+    const raw = user.user_photo || user.committee_member_photo;
+    if (!raw) return undefined;
+    return String(raw).startsWith('http') ? raw : `${base}${raw}`;
+  }, [user, base]);
+
+  useEffect(() => {
+    if (!photo) { setPreviewUrl(null); return; }
+    const url = URL.createObjectURL(photo);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [photo]);
+
   return (
     <>
       <NavBar />
@@ -52,6 +68,18 @@ export default function ProfilePage() {
           <h1 className="text-2xl font-semibold mb-4">My Profile</h1>
           {msg && <div className="mb-3 text-sm text-gray-300">{msg}</div>}
           <form onSubmit={save} className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div>
+                {(previewUrl || currentPhoto) ? (
+                  <img src={previewUrl || currentPhoto} alt="Current profile" className="w-20 h-20 rounded-full object-cover border border-gray-700" />
+                ) : (
+                  <div className="w-20 h-20 rounded-full bg-gray-800 border border-gray-700" />
+                )}
+              </div>
+              <div className="text-sm text-gray-400">
+                {previewUrl ? 'New photo selected' : 'Current profile photo'}
+              </div>
+            </div>
             <div className="flex gap-4">
               <div className="flex-1">
                 <label className="block text-sm mb-1">First name</label>

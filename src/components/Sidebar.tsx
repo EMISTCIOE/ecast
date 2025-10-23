@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import {
   ChevronDoubleLeftIcon,
   ChevronDoubleRightIcon,
@@ -82,12 +83,26 @@ export default function Sidebar({
               title="Click to change profile picture"
             >
               {user.avatarUrl ? (
-                <img
-                  src={user.avatarUrl}
+                <div
                   className={`${
                     expanded ? "w-12 h-12" : "w-10 h-10"
-                  } rounded-full object-cover border-2 border-purple-500 shadow-lg`}
-                />
+                  } rounded-full overflow-hidden border-2 border-purple-500 shadow-lg flex-shrink-0`}
+                >
+                  <Image
+                    src={
+                      user.avatarUrl.startsWith("http")
+                        ? user.avatarUrl
+                        : `${process.env.NEXT_PUBLIC_API_BASE || ""}${
+                            user.avatarUrl
+                          }`
+                    }
+                    alt={user.name || "User"}
+                    width={expanded ? 48 : 40}
+                    height={expanded ? 48 : 40}
+                    className="w-full h-full object-cover"
+                    unoptimized
+                  />
+                </div>
               ) : (
                 <div
                   className={`${
@@ -109,7 +124,12 @@ export default function Sidebar({
                     {user.name}
                   </div>
                   <div className="text-xs text-purple-400 capitalize">
-                    {user.role || "Member"}
+                    {(() => {
+                      const role = user.role as string;
+                      const pos = (user as any).position || (user as any).committee_position;
+                      if ((role === 'ADMIN' || role === 'MEMBER') && pos) return pos;
+                      return role || 'Member';
+                    })()}
                   </div>
                 </div>
               )}
