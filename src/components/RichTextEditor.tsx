@@ -415,31 +415,29 @@ export default function RichTextEditor({
 
       {/* Content Area */}
       <div className={`flex ${viewMode === "split" ? "gap-2" : ""}`}>
-        {/* Editor */}
-        {(viewMode === "edit" || viewMode === "split") && (
+        {/* Editor - Always mounted but hidden when not needed */}
+        <div
+          className={`${
+            viewMode === "split" ? "w-1/2 border-r border-gray-700" : viewMode === "edit" ? "w-full" : "hidden"
+          }`}
+        >
           <div
-            className={`${
-              viewMode === "split" ? "w-1/2 border-r border-gray-700" : "w-full"
-            }`}
-          >
-            <div
-              ref={editorRef}
-              className="min-h-[300px] p-3 focus:outline-none prose prose-invert max-w-none [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_blockquote]:border-l-4 [&_blockquote]:border-gray-600 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-300 [&_a]:text-pink-400 [&_a]:underline [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mt-3 [&_h3]:mb-2 [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-2"
-              style={{
-                direction: "ltr",
-                textAlign: "left",
-                unicodeBidi: "normal",
-              }}
-              contentEditable
-              suppressContentEditableWarning
-              onInput={emitChange}
-              onBlur={emitChange}
-              onMouseUp={updateActiveFormats}
-              onKeyUp={updateActiveFormats}
-              onClick={updateActiveFormats}
-            />
-          </div>
-        )}
+            ref={editorRef}
+            className="min-h-[300px] p-3 focus:outline-none prose prose-invert max-w-none [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_blockquote]:border-l-4 [&_blockquote]:border-gray-600 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-300 [&_a]:text-pink-400 [&_a]:underline [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mt-3 [&_h3]:mb-2 [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-2"
+            style={{
+              direction: "ltr",
+              textAlign: "left",
+              unicodeBidi: "normal",
+            }}
+            contentEditable
+            suppressContentEditableWarning
+            onInput={emitChange}
+            onBlur={emitChange}
+            onMouseUp={updateActiveFormats}
+            onKeyUp={updateActiveFormats}
+            onClick={updateActiveFormats}
+          />
+        </div>
 
         {/* Preview */}
         {(viewMode === "preview" || viewMode === "split") && (
