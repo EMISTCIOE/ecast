@@ -259,7 +259,9 @@ export default function AdminDashboard() {
   ) => {
     await reviewApi(id, decision);
     // Refresh both the pending submissions and the tasks list so status reflects immediately
-    pendingSubsApi().then(setPendingSubs).catch(() => {});
+    pendingSubsApi()
+      .then(setPendingSubs)
+      .catch(() => {});
     tasksApi
       .listAssigned()
       .then((d: any[]) => setTasks(Array.isArray(d) ? d : []))
@@ -648,7 +650,9 @@ export default function AdminDashboard() {
                       >
                         <div className="min-w-0">
                           <div className="font-semibold truncate">
-                            {s.task?.title || s.task_title || `Submission ${s.id}`}
+                            {s.task?.title ||
+                              s.task_title ||
+                              `Submission ${s.id}`}
                           </div>
                           <div className="text-xs text-gray-400 truncate">
                             by {s.submitted_by_username}
@@ -660,10 +664,18 @@ export default function AdminDashboard() {
                             onClick={async () => {
                               try {
                                 // If task is not expanded, fetch details for richer preview
-                                if (!s.task || (typeof s.task === 'string' && s.task)) {
-                                  const taskId = typeof s.task === 'string' ? s.task : s.task?.id;
+                                if (
+                                  !s.task ||
+                                  (typeof s.task === "string" && s.task)
+                                ) {
+                                  const taskId =
+                                    typeof s.task === "string"
+                                      ? s.task
+                                      : s.task?.id;
                                   if (taskId) {
-                                    const r = await authedFetch(`${base}/api/tasks/tasks/${taskId}/`);
+                                    const r = await authedFetch(
+                                      `${base}/api/tasks/tasks/${taskId}/`
+                                    );
                                     if (r.ok) {
                                       const task = await r.json();
                                       setPreviewSub({ ...s, task });
@@ -743,10 +755,13 @@ export default function AdminDashboard() {
                     <div className="flex items-start justify-between mb-4">
                       <div>
                         <h3 className="text-xl font-semibold mb-1">
-                          {previewSub.task?.title || previewSub.task_title || `Submission ${previewSub.id}`}
+                          {previewSub.task?.title ||
+                            previewSub.task_title ||
+                            `Submission ${previewSub.id}`}
                         </h3>
                         <p className="text-xs text-gray-400">
-                          by {previewSub.submitted_by_username} • {new Date(previewSub.created_at).toLocaleString()}
+                          by {previewSub.submitted_by_username} •{" "}
+                          {new Date(previewSub.created_at).toLocaleString()}
                         </p>
                       </div>
                       <button
@@ -758,20 +773,27 @@ export default function AdminDashboard() {
                     </div>
 
                     {(() => {
-                      const taskDesc = previewSub.task?.description || previewSub.task_description;
-                      const taskDue = previewSub.task?.due_date || previewSub.task_due_date;
+                      const taskDesc =
+                        previewSub.task?.description ||
+                        previewSub.task_description;
+                      const taskDue =
+                        previewSub.task?.due_date || previewSub.task_due_date;
                       if (!taskDesc && !taskDue) return null;
                       return (
                         <div className="mb-4 text-sm text-gray-300 space-y-1">
                           {taskDesc && (
                             <div>
-                              <span className="text-gray-400">Task Description:</span>{" "}
+                              <span className="text-gray-400">
+                                Task Description:
+                              </span>{" "}
                               {taskDesc}
                             </div>
                           )}
                           {taskDue && (
                             <div>
-                              <span className="text-gray-400">Assigned Deadline:</span>{" "}
+                              <span className="text-gray-400">
+                                Assigned Deadline:
+                              </span>{" "}
                               {new Date(taskDue).toLocaleDateString()}
                             </div>
                           )}
@@ -781,7 +803,9 @@ export default function AdminDashboard() {
 
                     {previewSub.content && (
                       <div className="mb-4">
-                        <div className="text-sm text-gray-400 mb-1">Submission Notes</div>
+                        <div className="text-sm text-gray-400 mb-1">
+                          Submission Notes
+                        </div>
                         <div className="whitespace-pre-wrap bg-gray-950 border border-gray-800 rounded p-3 text-gray-200 text-sm">
                           {previewSub.content}
                         </div>
@@ -790,13 +814,22 @@ export default function AdminDashboard() {
 
                     {previewSub.attachment && (
                       <div className="mb-4">
-                        <div className="text-sm text-gray-400 mb-1">Attachment</div>
+                        <div className="text-sm text-gray-400 mb-1">
+                          Attachment
+                        </div>
                         {(() => {
-                          const raw = String(previewSub.attachment || '');
-                          const pathOnly = raw.split('?')[0];
-                          const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(pathOnly);
+                          const raw = String(previewSub.attachment || "");
+                          const pathOnly = raw.split("?")[0];
+                          const isImage = /\.(png|jpe?g|gif|webp|svg)$/i.test(
+                            pathOnly
+                          );
                           const isPdf = /\.(pdf)$/i.test(pathOnly);
-                          const url = raw.startsWith('http') ? raw : `${process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000'}${raw}`;
+                          const url = raw.startsWith("http")
+                            ? raw
+                            : `${
+                                process.env.NEXT_PUBLIC_API_BASE ||
+                                "http://localhost:8000"
+                              }${raw}`;
                           if (isImage) {
                             return (
                               <img
@@ -809,7 +842,10 @@ export default function AdminDashboard() {
                           if (isPdf) {
                             return (
                               <div className="border border-gray-800 rounded overflow-hidden">
-                                <iframe src={`${url}#toolbar=1`} className="w-full h-96 bg-white"></iframe>
+                                <iframe
+                                  src={`${url}#toolbar=1`}
+                                  className="w-full h-96 bg-white"
+                                ></iframe>
                               </div>
                             );
                           }
@@ -831,7 +867,7 @@ export default function AdminDashboard() {
                       <button
                         className="bg-green-600 hover:bg-green-700 px-4 py-2 rounded"
                         onClick={async () => {
-                          await reviewSubmission(previewSub.id, 'approve');
+                          await reviewSubmission(previewSub.id, "approve");
                           setPreviewSub(null);
                         }}
                       >
@@ -840,7 +876,7 @@ export default function AdminDashboard() {
                       <button
                         className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded"
                         onClick={async () => {
-                          await reviewSubmission(previewSub.id, 'reject');
+                          await reviewSubmission(previewSub.id, "reject");
                           setPreviewSub(null);
                         }}
                       >
@@ -1086,6 +1122,18 @@ function UsersCrud({
   const [editAlumYear, setEditAlumYear] = useState<string>("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Auto-assign role based on committee position in edit mode
+  useEffect(() => {
+    if (
+      editCommitteePos === "President" ||
+      editCommitteePos === "Vice President"
+    ) {
+      setEditRole("ADMIN");
+    } else if (editCommitteePos) {
+      setEditRole("MEMBER");
+    }
+  }, [editCommitteePos]);
 
   const startEdit = (u: any) => {
     setEditId(u.id);
@@ -1431,6 +1479,61 @@ function UsersCrud({
             </div>
             <form onSubmit={createUser} className="p-6 space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
+                {/* Committee Position - FIRST */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Committee Position
+                  </label>
+                  <select
+                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                    value={cm.cmPosition}
+                    onChange={(e) => cm.setCmPosition(e.target.value)}
+                  >
+                    <option value="">Select Position</option>
+                    <option value="President">President</option>
+                    <option value="Vice President">Vice President</option>
+                    <option value="Secretary">Secretary</option>
+                    <option value="Vice Secretary/Treasurer">
+                      Vice Secretary/Treasurer
+                    </option>
+                    <option value="Vice Treasurer">Vice Treasurer</option>
+                    <option value="Technical Team">Technical Team</option>
+                    <option value="Graphics Designer">Graphics Designer</option>
+                    <option value="Communication,Events & HR">
+                      Communication, Events & HR
+                    </option>
+                    <option value="Social Media Manager">
+                      Social Media Manager
+                    </option>
+                    <option value="Consultant">Consultant</option>
+                    <option value="Research and Development Team">
+                      Research and Development Team
+                    </option>
+                    <option value="Editor In Chief">Editor In Chief</option>
+                  </select>
+                </div>
+                {/* Role - LOCKED based on committee position */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Role (Auto-assigned)
+                  </label>
+                  <select
+                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white opacity-60 cursor-not-allowed"
+                    value={cm.cmRole}
+                    disabled
+                  >
+                    <option value="MEMBER">MEMBER</option>
+                    <option value="AMBASSADOR">AMBASSADOR</option>
+                    <option value="ALUMNI">ALUMNI</option>
+                    <option value="ADMIN">ADMIN</option>
+                  </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {cm.cmPosition === "President" ||
+                    cm.cmPosition === "Vice President"
+                      ? "President & Vice President are automatically assigned ADMIN role"
+                      : "Other positions are assigned MEMBER role"}
+                  </p>
+                </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Username
@@ -1482,32 +1585,6 @@ function UsersCrud({
                     className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
                     value={cm.cmPhone}
                     onChange={(e) => cm.setCmPhone(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Role
-                  </label>
-                  <select
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
-                    value={cm.cmRole}
-                    onChange={(e) => cm.setCmRole(e.target.value)}
-                  >
-                    <option value="MEMBER">MEMBER</option>
-                    <option value="AMBASSADOR">AMBASSADOR</option>
-                    <option value="ALUMNI">ALUMNI</option>
-                    <option value="ADMIN">ADMIN</option>
-                  </select>
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Committee Position
-                  </label>
-                  <input
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
-                    value={cm.cmPosition}
-                    onChange={(e) => cm.setCmPosition(e.target.value)}
-                    placeholder="President, VP, …"
                   />
                 </div>
                 <div>
@@ -1605,20 +1682,60 @@ function UsersCrud({
             </div>
             <form onSubmit={doEdit} className="p-6 space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
-                <div>
+                {/* Committee Position - FIRST */}
+                <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Role
+                    Committee Position
                   </label>
                   <select
                     className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                    value={editCommitteePos}
+                    onChange={(e) => setEditCommitteePos(e.target.value)}
+                  >
+                    <option value="">Select Position</option>
+                    <option value="President">President</option>
+                    <option value="Vice President">Vice President</option>
+                    <option value="Secretary">Secretary</option>
+                    <option value="Vice Secretary/Treasurer">
+                      Vice Secretary/Treasurer
+                    </option>
+                    <option value="Vice Treasurer">Vice Treasurer</option>
+                    <option value="Technical Team">Technical Team</option>
+                    <option value="Graphics Designer">Graphics Designer</option>
+                    <option value="Communication,Events & HR">
+                      Communication, Events & HR
+                    </option>
+                    <option value="Social Media Manager">
+                      Social Media Manager
+                    </option>
+                    <option value="Consultant">Consultant</option>
+                    <option value="Research and Development Team">
+                      Research and Development Team
+                    </option>
+                    <option value="Editor In Chief">Editor In Chief</option>
+                  </select>
+                </div>
+                {/* Role - LOCKED based on committee position */}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Role (Auto-assigned)
+                  </label>
+                  <select
+                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white opacity-60 cursor-not-allowed"
                     value={editRole}
-                    onChange={(e) => setEditRole(e.target.value)}
+                    disabled
                   >
                     <option value="MEMBER">MEMBER</option>
                     <option value="AMBASSADOR">AMBASSADOR</option>
                     <option value="ALUMNI">ALUMNI</option>
                     <option value="ADMIN">ADMIN</option>
                   </select>
+                  <p className="text-xs text-gray-400 mt-1">
+                    {editCommitteePos === "President" ||
+                    editCommitteePos === "Vice President"
+                      ? "President & Vice President are automatically assigned ADMIN role"
+                      : "Other positions are assigned MEMBER role"}
+                  </p>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -1671,16 +1788,6 @@ function UsersCrud({
                     onChange={(e) =>
                       setEditPhotoFile(e.target.files?.[0] || null)
                     }
-                  />
-                </div>
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Committee Position
-                  </label>
-                  <input
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
-                    value={editCommitteePos}
-                    onChange={(e) => setEditCommitteePos(e.target.value)}
                   />
                 </div>
                 <div>

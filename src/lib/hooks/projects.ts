@@ -34,7 +34,13 @@ export function useProjects() {
       method: "POST",
       body: form,
     } as any);
-    if (!res.ok) throw new Error("create project failed");
+    if (!res.ok) {
+      const errorData = await res
+        .json()
+        .catch(() => ({ detail: "Unknown error" }));
+      console.error("Project creation failed:", errorData);
+      throw new Error(JSON.stringify(errorData));
+    }
     return res.json();
   }, []);
 

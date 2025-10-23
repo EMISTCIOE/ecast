@@ -1,19 +1,79 @@
+import { useState } from "react";
 import {
   CalendarIcon,
   PlusIcon,
   MapPinIcon,
   ClockIcon,
+  PencilSquareIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
+import EditEventModal from "../modals/EditEventModal";
 
 interface EventsSectionProps {
   myEvents: any[];
   onCreateClick: () => void;
+  onUpdate: (slug: string, formData: FormData) => Promise<void>;
+  onDelete: (slug: string) => Promise<void>;
+  onRefresh: () => void;
 }
 
 export default function EventsSection({
   myEvents,
   onCreateClick,
+  onUpdate,
+  onDelete,
+  onRefresh,
 }: EventsSectionProps) {
+  const [editingEvent, setEditingEvent] = useState<any>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleEditClick = (event: any) => {
+    setEditingEvent(event);
+    setShowEditModal(true);
+  };
+
+  const handleSaveEdit = async (formData: FormData) => {
+    if (editingEvent) {
+      setIsSubmitting(true);
+      try {
+        await onUpdate(editingEvent.slug, formData);
+        setShowEditModal(false);
+        setEditingEvent(null);
+        onRefresh();
+      } catch (error) {
+        console.error("Failed to update event:", error);
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+  };
+
+  const handleDelete = async (slug: string) => {
+    if (confirm("Are you sure you want to delete this event?")) {
+      await onDelete(slug);
+      onRefresh();
+    }
+  };
+
+  const canEdit = (event: any) => {
+    // Can only edit if status is PENDING
+    return event.status === "PENDING";
+  };
+
+  const isEventPast = (event: any) => {
+    if (!event.date) return false;
+    try {
+      const eventDate = new Date(event.date);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      eventDate.setHours(0, 0, 0, 0);
+      return eventDate < today;
+    } catch {
+      return false;
+    }
+  };
+
   return (
     <div className="animate-fade-in">
       {/* Header with Create Button */}
@@ -79,9 +139,29 @@ export default function EventsSection({
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-lg text-white mb-2">
-                      {e.title}
-                    </h4>
+                    <div className="flex items-start justify-between gap-3 mb-2">
+                      <h4 className="font-bold text-lg text-white flex-1">
+                        {e.title}
+                      </h4>
+                      {canEdit(e) && (
+                        <div className="flex gap-2">
+                          <button
+                            onClick={() => handleEditClick(e)}
+                            className="p-2 hover:bg-emerald-600/20 rounded-lg transition-colors group/btn"
+                            title="Edit Event"
+                          >
+                            <PencilSquareIcon className="w-5 h-5 text-emerald-400 group-hover/btn:text-emerald-300" />
+                          </button>
+                          <button
+                            onClick={() => handleDelete(e.slug)}
+                            className="p-2 hover:bg-red-600/20 rounded-lg transition-colors group/btn"
+                            title="Delete Event"
+                          >
+                            <TrashIcon className="w-5 h-5 text-red-400 group-hover/btn:text-red-300" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
                     {e.description && (
                       <p className="text-sm text-gray-400 line-clamp-2 mb-2">
                         {e.description}
@@ -99,16 +179,27 @@ export default function EventsSection({
                       >
                         {e.status}
                       </span>
-                      <span className="text-sm text-gray-400">
-                        {new Date(e.created_at).toLocaleDateString()}
-                      </span>
+                      {e.created_at && (
+                        <span className="text-sm text-gray-400">
+                          {new Date(e.created_at).toLocaleDateString()}
+                        </span>
+                      )}
                     </div>
                     {(e.date || e.time || e.location) && (
                       <div className="flex flex-wrap gap-3 mt-2 text-sm">
                         {e.date && (
                           <div className="flex items-center gap-1 text-emerald-400">
                             <CalendarIcon className="w-4 h-4" />
-                            {new Date(e.date).toLocaleDateString()}
+                            {(() => {
+                              try {
+                                const dateObj = new Date(e.date);
+                                return !isNaN(dateObj.getTime())
+                                  ? dateObj.toLocaleDateString()
+                                  : "Invalid Date";
+                              } catch {
+                                return "Invalid Date";
+                              }
+                            })()}
                           </div>
                         )}
                         {e.time && (
@@ -125,6 +216,34 @@ export default function EventsSection({
                         )}
                       </div>
                     )}
+
+                    {/* Form Link Button - Show only if not past event and link exists */}
+                    {e.form_link && !isEventPast(e) && (
+                      <div className="mt-3">
+                        <a
+                          href={e.form_link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 rounded-lg text-white font-semibold text-sm transition-all duration-300 hover:scale-105 shadow-lg"
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 24 24"
+                            strokeWidth={2}
+                            stroke="currentColor"
+                            className="w-4 h-4"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              d="M13.5 6H5.25A2.25 2.25 0 0 0 3 8.25v10.5A2.25 2.25 0 0 0 5.25 21h10.5A2.25 2.25 0 0 0 18 18.75V10.5m-10.5 6L21 3m0 0h-5.25M21 3v5.25"
+                            />
+                          </svg>
+                          Register / View Form
+                        </a>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -132,6 +251,18 @@ export default function EventsSection({
           </div>
         )}
       </div>
+
+      {/* Edit Event Modal */}
+      <EditEventModal
+        event={editingEvent}
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setEditingEvent(null);
+        }}
+        onSave={handleSaveEdit}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 }

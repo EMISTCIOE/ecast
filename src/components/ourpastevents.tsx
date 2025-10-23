@@ -1,10 +1,18 @@
-
 import { useEffect, useState } from "react";
 import PastEventComp from "./pasteventcomp";
 import styles from "./css/file2.module.css";
 
-type EventItem = { slug: string; title: string; image: string; coming_soon: boolean; status: string };
-const base = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
+type EventItem = {
+  slug: string;
+  title: string;
+  image: string;
+  coming_soon: boolean;
+  status: string;
+  date?: string;
+  location?: string;
+  description?: string;
+};
+const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
 const OurPastEvents = () => {
   const [items, setItems] = useState<EventItem[]>([]);
@@ -12,15 +20,20 @@ const OurPastEvents = () => {
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch('/api/app/event/list?status=APPROVED');
+        const r = await fetch("/api/app/event/list?status=APPROVED");
         const data = await r.json();
-        const mapped: EventItem[] = (data || []).filter((e: any) => !e.coming_soon).map((e: any) => ({
-          slug: e.slug,
-          title: e.title,
-          image: e.image?.startsWith('http') ? e.image : `${base}${e.image}`,
-          coming_soon: e.coming_soon,
-          status: e.status,
-        }));
+        const mapped: EventItem[] = (data || [])
+          .filter((e: any) => !e.coming_soon)
+          .map((e: any) => ({
+            slug: e.slug,
+            title: e.title,
+            image: e.image?.startsWith("http") ? e.image : `${base}${e.image}`,
+            coming_soon: e.coming_soon,
+            status: e.status,
+            date: e.date,
+            location: e.location,
+            description: e.description,
+          }));
         setItems(mapped);
       } catch {}
     })();
@@ -40,7 +53,9 @@ const OurPastEvents = () => {
               <PastEventComp
                 image={ev.image}
                 topic={ev.title}
-                loadLink="#"
+                date={ev.date}
+                location={ev.location}
+                description={ev.description}
               />
             </div>
           ))}

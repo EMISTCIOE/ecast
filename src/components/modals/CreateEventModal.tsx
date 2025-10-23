@@ -21,6 +21,9 @@ interface CreateEventModalProps {
     time: string;
     location: string;
     image: File | null;
+    contact_email: string;
+    coming_soon: boolean;
+    form_link?: string;
   }) => Promise<void>;
 }
 
@@ -35,6 +38,9 @@ export default function CreateEventModal({
   const [time, setTime] = useState("");
   const [location, setLocation] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [contactEmail, setContactEmail] = useState("");
+  const [comingSoon, setComingSoon] = useState(false);
+  const [formLink, setFormLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -44,7 +50,17 @@ export default function CreateEventModal({
     setMessage("");
 
     try {
-      await onSubmit({ title, description, date, time, location, image });
+      await onSubmit({
+        title,
+        description,
+        date,
+        time,
+        location,
+        image,
+        contact_email: contactEmail,
+        coming_soon: comingSoon,
+        form_link: formLink.trim() || undefined,
+      });
       setMessage("Event submitted successfully!");
       setTimeout(() => {
         setTitle("");
@@ -53,6 +69,9 @@ export default function CreateEventModal({
         setTime("");
         setLocation("");
         setImage(null);
+        setContactEmail("");
+        setComingSoon(false);
+        setFormLink("");
         setMessage("");
         onClose();
       }, 1500);
@@ -71,6 +90,9 @@ export default function CreateEventModal({
       setTime("");
       setLocation("");
       setImage(null);
+      setContactEmail("");
+      setComingSoon(false);
+      setFormLink("");
       setMessage("");
       onClose();
     }
@@ -171,6 +193,85 @@ export default function CreateEventModal({
             onChange={(e) => setLocation(e.target.value)}
             required
           />
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-5 h-5 text-emerald-400"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M21.75 6.75v10.5a2.25 2.25 0 0 1-2.25 2.25h-15a2.25 2.25 0 0 1-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25m19.5 0v.243a2.25 2.25 0 0 1-1.07 1.916l-7.5 4.615a2.25 2.25 0 0 1-2.36 0L3.32 8.91a2.25 2.25 0 0 1-1.07-1.916V6.75"
+              />
+            </svg>
+            Contact Email
+          </label>
+          <input
+            type="email"
+            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white"
+            placeholder="Contact email for inquiries"
+            value={contactEmail}
+            onChange={(e) => setContactEmail(e.target.value)}
+            required
+          />
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-5 h-5 text-emerald-400"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244"
+              />
+            </svg>
+            Registration/Form Link
+            <span className="text-xs text-gray-500 font-normal">
+              (Optional)
+            </span>
+          </label>
+          <input
+            type="url"
+            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white"
+            placeholder="Google Forms, registration link, etc."
+            value={formLink}
+            onChange={(e) => setFormLink(e.target.value)}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Add a link for registration forms or event details (e.g., Google
+            Forms)
+          </p>
+        </div>
+
+        <div className="space-y-3">
+          <label className="flex items-center gap-3 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={comingSoon}
+              onChange={(e) => setComingSoon(e.target.checked)}
+              className="w-5 h-5 rounded border-gray-700 bg-gray-900/80 text-emerald-600 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-0 cursor-pointer"
+            />
+            <span className="text-sm font-medium text-gray-300 group-hover:text-emerald-400 transition-colors">
+              Mark as "Coming Soon"
+            </span>
+          </label>
+          <p className="text-xs text-gray-500 ml-8">
+            Enable this if the event date is not finalized yet
+          </p>
         </div>
 
         <div className="space-y-2">

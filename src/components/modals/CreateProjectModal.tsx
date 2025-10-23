@@ -135,14 +135,14 @@ export default function CreateProjectModal({
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
             <LinkIcon className="w-5 h-5 text-blue-400" />
-            Repository URL
+            Repository URL{" "}
+            <span className="text-xs text-gray-500">(optional)</span>
           </label>
           <input
             className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 font-medium text-white"
             placeholder="https://github.com/username/repo"
             value={repoUrl}
             onChange={(e) => setRepoUrl(e.target.value)}
-            required
           />
         </div>
 

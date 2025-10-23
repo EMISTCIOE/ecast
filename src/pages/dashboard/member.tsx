@@ -180,7 +180,12 @@ export default function MemberDashboard() {
     remove: deleteBlog,
   } = useBlogs();
   const { create: createProjectApi, list: listProjects } = useProjects();
-  const { create: createEventApi, list: listEvents } = useEvents();
+  const {
+    create: createEventApi,
+    list: listEvents,
+    update: updateEvent,
+    remove: deleteEvent,
+  } = useEvents();
   const {
     create: createGalleryApi,
     list: listGallery,
@@ -292,7 +297,13 @@ export default function MemberDashboard() {
         .then(setMyGallery)
         .catch(() => {});
       listAssigned()
-        .then(setTasks)
+        .then((data: any[]) => {
+          // Filter to show only OPEN tasks (backend should handle this, but just in case)
+          const openTasks = Array.isArray(data)
+            ? data.filter((t: any) => t.status !== "CLOSED")
+            : [];
+          setTasks(openTasks);
+        })
         .catch(() => {});
     }
   }, []);
@@ -673,11 +684,13 @@ export default function MemberDashboard() {
                     required
                   >
                     <option value="">Choose a task to submit...</option>
-                    {tasks.map((t: any) => (
-                      <option key={t.id} value={t.id}>
-                        {t.title}
-                      </option>
-                    ))}
+                    {tasks
+                      .filter((t: any) => t.status !== "CLOSED")
+                      .map((t: any) => (
+                        <option key={t.id} value={t.id}>
+                          {t.title}
+                        </option>
+                      ))}
                   </select>
                 </div>
                 <div className="space-y-2">
@@ -787,6 +800,11 @@ export default function MemberDashboard() {
             <EventsSection
               myEvents={myEvents}
               onCreateClick={() => setShowCreateEventModal(true)}
+              onUpdate={updateEvent}
+              onDelete={async (slug: string) => {
+                await deleteEvent(slug);
+              }}
+              onRefresh={() => listEvents({ mine: "1" }).then(setMyEvents)}
             />
           )}
 
@@ -840,16 +858,28 @@ export default function MemberDashboard() {
           isOpen={showCreateProjectModal}
           onClose={() => setShowCreateProjectModal(false)}
           onSubmit={async (data) => {
-            const form = new FormData();
-            form.append("title", data.title);
-            form.append("description", data.description);
-            form.append("repo_link", data.repo_link);
-            if (data.live_link) form.append("live_link", data.live_link);
-            if (data.image) form.append("image", data.image);
+            try {
+              const form = new FormData();
+              form.append("title", data.title.trim());
+              form.append("description", data.description.trim());
+              if (data.repo_link && data.repo_link.trim()) {
+                form.append("repo_link", data.repo_link.trim());
+              }
+              if (data.live_link && data.live_link.trim()) {
+                form.append("live_link", data.live_link.trim());
+              }
+              if (data.image) form.append("image", data.image);
 
-            await createProjectApi(form);
-            toast.success("Project submitted for review successfully!");
-            listProjects({ mine: "1" }).then(setMyProjects);
+              await createProjectApi(form);
+              toast.success("Project submitted for review successfully!");
+              listProjects({ mine: "1" }).then(setMyProjects);
+            } catch (error) {
+              console.error("Project creation error:", error);
+              toast.error(
+                "Failed to create project. Please check your inputs."
+              );
+              throw error;
+            }
           }}
         />
 
@@ -863,6 +893,9 @@ export default function MemberDashboard() {
             form.append("date", data.date);
             form.append("time", data.time);
             form.append("location", data.location);
+            form.append("contact_email", data.contact_email);
+            form.append("coming_soon", String(data.coming_soon));
+            if (data.form_link) form.append("form_link", data.form_link);
             if (data.image) form.append("image", data.image);
 
             await createEventApi(form);
