@@ -25,22 +25,22 @@ type User = {
   role: string;
 };
 
-export default function AmbassadorDetail() {
+export default function AlumniDetail() {
   const router = useRouter();
-  const { id } = router.query as { id?: string };
+  const { username } = router.query as { username?: string };
   const [user, setUser] = useState<User | null>(null);
   const [blogs, setBlogs] = useState<Blog[]>([]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!username) return;
 
     // Fetch user details
     (async () => {
       try {
-        const r = await fetch(`/api/app/users/public?role=AMBASSADOR`);
+        const r = await fetch(`/api/app/users/public?role=ALUMNI`);
         const data = await r.json();
         const foundUser = Array.isArray(data)
-          ? data.find((u: any) => u.id === id)
+          ? data.find((u: any) => u.username === username)
           : null;
         setUser(foundUser);
       } catch {}
@@ -49,12 +49,12 @@ export default function AmbassadorDetail() {
     // Fetch user's blogs
     (async () => {
       try {
-        const r = await fetch(`/api/app/blog/by-author?author=${id}`);
+        const r = await fetch(`/api/app/blog/by-author?author=${username}`);
         const data = await r.json();
         setBlogs(Array.isArray(data) ? data : []);
       } catch {}
     })();
-  }, [id]);
+  }, [username]);
 
   if (!user) {
     return (
@@ -86,7 +86,7 @@ export default function AmbassadorDetail() {
                   {user.full_name || user.username}
                 </h1>
                 <p className="text-gray-400 mb-3">
-                  Ambassador{" "}
+                  Alumni{" "}
                   {user.batch_year_bs ? `• Batch ${user.batch_year_bs}` : ""}
                 </p>
                 <div className="flex items-center gap-4">

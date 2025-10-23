@@ -8,6 +8,10 @@ import { useBlogs } from "@/lib/hooks/blogs";
 import RichTextEditor from "@/components/RichTextEditor";
 import { useTasks } from "@/lib/hooks/tasks";
 import MySubmissions from "@/components/MySubmissions";
+import { useToast } from "@/hooks/useToast";
+import { ToastContainer } from "@/components/Toast";
+import BlogsSection from "@/components/dashboard/sections/BlogsSection";
+import CreateBlogModal from "@/components/modals/CreateBlogModal";
 import {
   DocumentTextIcon,
   ClipboardDocumentCheckIcon,
@@ -18,6 +22,7 @@ import {
   ChartBarIcon,
   PaperAirplaneIcon,
 } from "@heroicons/react/24/outline";
+import { authedFetch } from "@/lib/apiClient";
 
 const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
@@ -32,19 +37,24 @@ export default function AmbassadorDashboard() {
   }>();
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
-  const [msg, setMsg] = useState("");
-  const [title, setTitle] = useState("");
-  const [desc, setDesc] = useState("");
-  const [content, setContent] = useState("");
-  const [cover, setCover] = useState<File | null>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [subMsg, setSubMsg] = useState("");
   const [selTask, setSelTask] = useState("");
   const [subText, setSubText] = useState("");
   const [subFile, setSubFile] = useState<File | null>(null);
   const [stats, setStats] = useState<any>(null);
+  const [myBlogs, setMyBlogs] = useState<any[]>([]);
+  const [showCreateBlogModal, setShowCreateBlogModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
 
-  const { create: createBlog } = useBlogs();
+  const toast = useToast();
+  const {
+    list: listBlogs,
+    create: createBlog,
+    update: updateBlog,
+    remove: deleteBlog,
+  } = useBlogs();
   const { listAssigned, submit } = useTasks();
 
   useEffect(() => {
@@ -80,32 +90,85 @@ export default function AmbassadorDashboard() {
         .then((r) => r.json())
         .then(setStats)
         .catch(() => {});
+
+      // Load user's blogs
+      listBlogs({ mine: "1" })
+        .then(setMyBlogs)
+        .catch(() => {});
+
+      // Load leaderboard - ambassadors specific
+      authedFetch(`${base}/api/auth/leaderboard/ambassadors/`)
+        .then((r) => r.json())
+        .then((data) => {
+          console.log("Ambassador leaderboard data:", data);
+          setLeaderboard(data);
+        })
+        .catch((err) => {
+          console.error("Failed to load leaderboard:", err);
+        });
     }
   }, []);
 
   // Clear messages when switching sections
   useEffect(() => {
-    setMsg("");
     setSubMsg("");
   }, [activeSection]);
 
-  const publish = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setMsg("");
-    const form = new FormData();
-    form.append("title", title);
-    form.append("description", desc);
-    form.append("content", content);
-    if (cover) form.append("cover_image", cover);
+  const handleCreateBlog = async (data: {
+    title: string;
+    description: string;
+    content: string;
+    coverImage: File | null;
+  }) => {
+    setIsSubmitting(true);
     try {
-      await createBlog(form);
-      setMsg("Blog submitted for approval");
-    } catch {
-      setMsg("Failed to publish");
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("description", data.description);
+      formData.append("content", data.content);
+      if (data.coverImage) {
+        formData.append("cover_image", data.coverImage);
+      }
+      await createBlog(formData);
+      toast.success("Blog submitted for approval!");
+      setShowCreateBlogModal(false);
+      // Refresh blogs list
+      listBlogs({ mine: "1" }).then(setMyBlogs);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to create blog");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  // Rich text editor handles image uploads via its toolbar
+  const handleUpdateBlog = async (slug: string, formData: FormData) => {
+    setIsSubmitting(true);
+    try {
+      await updateBlog(slug, formData);
+      toast.success("Blog updated successfully!");
+      listBlogs({ mine: "1" }).then(setMyBlogs);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update blog");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteBlog = async (slug: string): Promise<boolean> => {
+    try {
+      await deleteBlog(slug);
+      toast.success("Blog deleted successfully!");
+      listBlogs({ mine: "1" }).then(setMyBlogs);
+      return true;
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete blog");
+      return false;
+    }
+  };
+
+  const canEditOrDeleteBlog = (blog: any) => {
+    return blog.status === "PENDING" || blog.status === "REJECTED";
+  };
 
   if (!authReady) return null;
 
@@ -208,11 +271,11 @@ export default function AmbassadorDashboard() {
                   onClick: () => setActiveSection("overview"),
                 },
                 {
-                  id: "publish",
-                  label: "Publish Blog",
+                  id: "blog",
+                  label: "My Blogs",
                   icon: DocumentTextIcon as any,
-                  active: activeSection === "publish",
-                  onClick: () => setActiveSection("publish"),
+                  active: activeSection === "blog",
+                  onClick: () => setActiveSection("blog"),
                 },
                 {
                   id: "submit",
@@ -343,98 +406,17 @@ export default function AmbassadorDashboard() {
             </div>
           )}
 
-          {/* Publish Blog Section */}
-          {activeSection === "publish" && (
-            <div className="max-w-2xl">
-              <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                <DocumentTextIcon className="w-8 h-8 text-green-400" />
-                Publish Blog
-              </h1>
-              <form
-                onSubmit={publish}
-                className="bg-gray-800/50 backdrop-blur p-8 rounded-xl border border-gray-700 shadow-xl space-y-5"
-              >
-                {msg && (
-                  <div
-                    className={`p-4 rounded-lg ${
-                      msg.includes("Failed")
-                        ? "bg-red-900/50 text-red-300"
-                        : "bg-green-900/50 text-green-300"
-                    }`}
-                  >
-                    {msg}
-                  </div>
-                )}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Title
-                  </label>
-                  <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                    placeholder="Enter blog title"
-                    value={title}
-                    onChange={(e) => setTitle(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Short Description
-                  </label>
-                  <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                    placeholder="Brief description"
-                    value={desc}
-                    onChange={(e) => setDesc(e.target.value)}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Content
-                  </label>
-                  <RichTextEditor value={content} onChange={setContent} />
-                  <div className="mt-3">
-                    <label className="text-sm text-gray-400 flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        onChange={(e) => {
-                          const el =
-                            document.getElementById("amb-blog-preview");
-                          if (!el) return;
-                          el.classList.toggle("hidden", !e.target.checked);
-                        }}
-                      />
-                      Preview
-                    </label>
-                  </div>
-                  <div
-                    id="amb-blog-preview"
-                    className="hidden mt-3 p-4 bg-gray-950 border border-gray-800 rounded"
-                  >
-                    <div
-                      className="prose prose-invert max-w-none"
-                      dangerouslySetInnerHTML={{ __html: content }}
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Cover Image
-                  </label>
-                  <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-600 file:text-white hover:file:bg-green-700 transition"
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setCover(e.target.files?.[0] || null)}
-                  />
-                </div>
-                <button className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 p-4 rounded-lg font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2">
-                  <PaperAirplaneIcon className="w-5 h-5" />
-                  Publish Blog
-                </button>
-              </form>
-            </div>
+          {/* My Blogs Section */}
+          {activeSection === "blog" && (
+            <BlogsSection
+              myBlogs={myBlogs}
+              isSubmitting={isSubmitting}
+              canEditOrDeleteBlog={canEditOrDeleteBlog}
+              onCreateClick={() => setShowCreateBlogModal(true)}
+              onUpdate={handleUpdateBlog}
+              onDelete={handleDeleteBlog}
+              onRefresh={() => listBlogs({ mine: "1" }).then(setMyBlogs)}
+            />
           )}
 
           {/* Submit Task Section */}
@@ -517,26 +499,70 @@ export default function AmbassadorDashboard() {
 
           {/* Leaderboard Section */}
           {activeSection === "leaderboard" && (
-            <div>
+            <div className="max-w-4xl mx-auto">
               <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
                 <TrophyIcon className="w-8 h-8 text-yellow-400" />
                 Leaderboard
               </h1>
-              <div className="bg-gray-800/50 backdrop-blur p-6 rounded-xl border border-gray-700 shadow-xl">
-                <p className="text-gray-400">
-                  Redirecting to leaderboard page...
-                </p>
-                <button
-                  onClick={() => Router.push("/leaderboard")}
-                  className="mt-4 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 px-6 py-3 rounded-lg font-semibold shadow-lg transition"
-                >
-                  Go to Leaderboard
-                </button>
+              <div className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800">
+                <div className="space-y-3">
+                  {leaderboard.length === 0 ? (
+                    <p className="text-gray-400 text-center py-8">
+                      No leaderboard data available
+                    </p>
+                  ) : (
+                    leaderboard.map((user, index) => (
+                      <div
+                        key={user.id}
+                        className="flex items-center gap-4 p-4 bg-gray-950 rounded-lg border border-gray-800"
+                      >
+                        <div
+                          className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
+                            index === 0
+                              ? "bg-yellow-500 text-gray-900"
+                              : index === 1
+                              ? "bg-gray-400 text-gray-900"
+                              : index === 2
+                              ? "bg-orange-600 text-white"
+                              : "bg-gray-700 text-gray-300"
+                          }`}
+                        >
+                          {index + 1}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-semibold">
+                            {user.full_name || user.username}
+                          </h3>
+                          <p className="text-sm text-gray-400">
+                            {user.blogs || 0} blog{user.blogs !== 1 ? "s" : ""},{" "}
+                            {user.tasks_completed || 0} task
+                            {user.tasks_completed !== 1 ? "s" : ""}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-2xl font-bold text-yellow-400">
+                            {user.points || 0}
+                          </p>
+                          <p className="text-xs text-gray-400">points</p>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
               </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Create Blog Modal */}
+      <CreateBlogModal
+        isOpen={showCreateBlogModal}
+        onClose={() => setShowCreateBlogModal(false)}
+        onSubmit={handleCreateBlog}
+      />
+
+      <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
       <Footer />
     </>
   );

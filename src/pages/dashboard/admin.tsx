@@ -108,15 +108,6 @@ export default function AdminDashboard() {
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [userMsg, setUserMsg] = useState("");
 
-  // Derive role from committee position per rules
-  useEffect(() => {
-    if (cmPosition === "President" || cmPosition === "Vice President") {
-      setCmRole("ADMIN");
-    } else if (cmPosition) {
-      setCmRole("MEMBER");
-    }
-  }, [cmPosition]);
-
   useEffect(() => {
     const userStr = localStorage.getItem("user");
     const access = localStorage.getItem("access");
@@ -210,6 +201,24 @@ export default function AdminDashboard() {
         await usersApi.create(form);
         setUserMsg("User created (email sent if configured).");
         toast.success("User created successfully!");
+
+        // Reset form fields
+        setCmUsername("");
+        setCmEmail("");
+        setCmFirst("");
+        setCmLast("");
+        setCmPhone("");
+        setCmPosition("");
+        setCmStart("");
+        setCmTenure("");
+        setCmPhotoFile(null);
+        setCmLinkedIn("");
+        setCmGithub("");
+        setCmAmbYear("");
+        setCmAlumYear("");
+
+        // Small delay before clearing message to let user see it
+        setTimeout(() => setUserMsg(""), 3000);
       } catch (err: any) {
         setUserMsg(err?.message || "Failed to create user");
         toast.error(err?.message || "Failed to create user");
@@ -1073,6 +1082,10 @@ function UsersCrud({
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [userToDelete, setUserToDelete] = useState<any>(null);
+  const [showAlumniModal, setShowAlumniModal] = useState(false);
+  const [userToMakeAlumni, setUserToMakeAlumni] = useState<any>(null);
+  const [alumniBatchYear, setAlumniBatchYear] = useState<string>("");
+  const [isMakingAlumni, setIsMakingAlumni] = useState(false);
 
   const refresh = async () => {
     try {
@@ -1090,14 +1103,28 @@ function UsersCrud({
       }
     } catch {}
   };
+
   useEffect(() => {
     refresh();
   }, []);
+
+  // Watch for successful user creation to close modal and refresh
+  useEffect(() => {
+    if (userMsg.includes("User created") && showCreateModal) {
+      const timer = setTimeout(() => {
+        setShowCreateModal(false);
+        refresh();
+      }, 1500); // Close modal after 1.5 seconds to let user see the success message
+      return () => clearTimeout(timer);
+    }
+  }, [userMsg, showCreateModal]);
 
   useEffect(() => {
     if (mode === "ambassadors-alumni") {
       cm.setCmRole("AMBASSADOR");
       cm.setCmPosition("");
+      cm.setCmStart("");
+      cm.setCmTenure("");
     } else if (mode === "committee") {
       cm.setCmRole("MEMBER");
       cm.setCmPosition("President");
@@ -1123,17 +1150,19 @@ function UsersCrud({
   const [isUpdating, setIsUpdating] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Auto-assign role based on committee position in edit mode
+  // Auto-assign role based on committee position in edit mode (only for committee mode)
   useEffect(() => {
-    if (
-      editCommitteePos === "President" ||
-      editCommitteePos === "Vice President"
-    ) {
-      setEditRole("ADMIN");
-    } else if (editCommitteePos) {
-      setEditRole("MEMBER");
+    if (mode === "committee") {
+      if (
+        editCommitteePos === "President" ||
+        editCommitteePos === "Vice President"
+      ) {
+        setEditRole("ADMIN");
+      } else if (editCommitteePos) {
+        setEditRole("MEMBER");
+      }
     }
-  }, [editCommitteePos]);
+  }, [editCommitteePos, mode]);
 
   const startEdit = (u: any) => {
     setEditId(u.id);
@@ -1210,6 +1239,59 @@ function UsersCrud({
       toast.error(e?.message || "Failed to delete user");
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const confirmMakeAlumni = (user: any) => {
+    setUserToMakeAlumni(user);
+    setAlumniBatchYear("");
+    setShowAlumniModal(true);
+  };
+
+  const makeAlumni = async () => {
+    if (!userToMakeAlumni) return;
+
+    if (!alumniBatchYear || !alumniBatchYear.trim()) {
+      toast.error("Batch year is required");
+      return;
+    }
+
+    const batchYearNum = parseInt(alumniBatchYear);
+    if (isNaN(batchYearNum) || batchYearNum < 2000 || batchYearNum > 2100) {
+      toast.error("Please enter a valid batch year (e.g., 2078)");
+      return;
+    }
+
+    setIsMakingAlumni(true);
+    try {
+      const response = await authedFetch(`${base}/api/auth/transform/`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userToMakeAlumni.id,
+          role: "ALUMNI",
+          alumni_batch_year_bs: batchYearNum,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.detail || "Failed to convert to alumni");
+      }
+
+      toast.success(
+        `${
+          userToMakeAlumni.full_name || userToMakeAlumni.username
+        } converted to Alumni successfully!`
+      );
+      setShowAlumniModal(false);
+      setUserToMakeAlumni(null);
+      setAlumniBatchYear("");
+      refresh();
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to convert to alumni");
+    } finally {
+      setIsMakingAlumni(false);
     }
   };
 
@@ -1443,6 +1525,18 @@ function UsersCrud({
 
                   {/* Actions */}
                   <div className="flex gap-2 flex-shrink-0">
+                    {/* Make Alumni button - only show for non-alumni users in committee mode */}
+                    {mode === "committee" && u.role !== "ALUMNI" && (
+                      <button
+                        onClick={() => confirmMakeAlumni(u)}
+                        className="p-2 hover:bg-green-600/20 rounded-lg transition-colors"
+                        title="Make Alumni"
+                      >
+                        <span className="text-green-400 text-sm font-semibold px-2">
+                          🎓 Change to Alumni
+                        </span>
+                      </button>
+                    )}
                     <button
                       onClick={() => startEdit(u)}
                       className="p-2 hover:bg-blue-600/20 rounded-lg transition-colors"
@@ -1479,61 +1573,88 @@ function UsersCrud({
             </div>
             <form onSubmit={createUser} className="p-6 space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
-                {/* Committee Position - FIRST */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Committee Position
-                  </label>
-                  <select
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
-                    value={cm.cmPosition}
-                    onChange={(e) => cm.setCmPosition(e.target.value)}
-                  >
-                    <option value="">Select Position</option>
-                    <option value="President">President</option>
-                    <option value="Vice President">Vice President</option>
-                    <option value="Secretary">Secretary</option>
-                    <option value="Vice Secretary/Treasurer">
-                      Vice Secretary/Treasurer
-                    </option>
-                    <option value="Vice Treasurer">Vice Treasurer</option>
-                    <option value="Technical Team">Technical Team</option>
-                    <option value="Graphics Designer">Graphics Designer</option>
-                    <option value="Communication,Events & HR">
-                      Communication, Events & HR
-                    </option>
-                    <option value="Social Media Manager">
-                      Social Media Manager
-                    </option>
-                    <option value="Consultant">Consultant</option>
-                    <option value="Research and Development Team">
-                      Research and Development Team
-                    </option>
-                    <option value="Editor In Chief">Editor In Chief</option>
-                  </select>
-                </div>
-                {/* Role - LOCKED based on committee position */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Role (Auto-assigned)
-                  </label>
-                  <select
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white opacity-60 cursor-not-allowed"
-                    value={cm.cmRole}
-                    disabled
-                  >
-                    <option value="MEMBER">MEMBER</option>
-                    <option value="AMBASSADOR">AMBASSADOR</option>
-                    <option value="ALUMNI">ALUMNI</option>
-                    <option value="ADMIN">ADMIN</option>
-                  </select>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {cm.cmPosition === "President" ||
-                    cm.cmPosition === "Vice President"
-                      ? "President & Vice President are automatically assigned ADMIN role"
-                      : "Other positions are assigned MEMBER role"}
-                  </p>
-                </div>
+                {/* For Committee Mode: Show committee position and locked role */}
+                {mode === "committee" && (
+                  <>
+                    {/* Committee Position - FIRST */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Committee Position
+                      </label>
+                      <select
+                        className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                        value={cm.cmPosition}
+                        onChange={(e) => cm.setCmPosition(e.target.value)}
+                      >
+                        <option value="">Select Position</option>
+                        <option value="President">President</option>
+                        <option value="Vice President">Vice President</option>
+                        <option value="Secretary">Secretary</option>
+                        <option value="Vice Secretary/Treasurer">
+                          Vice Secretary/Treasurer
+                        </option>
+                        <option value="Vice Treasurer">Vice Treasurer</option>
+                        <option value="Technical Team">Technical Team</option>
+                        <option value="Graphics Designer">
+                          Graphics Designer
+                        </option>
+                        <option value="Communication,Events & HR">
+                          Communication, Events & HR
+                        </option>
+                        <option value="Social Media Manager">
+                          Social Media Manager
+                        </option>
+                        <option value="Consultant">Consultant</option>
+                        <option value="Research and Development Team">
+                          Research and Development Team
+                        </option>
+                        <option value="Editor In Chief">Editor In Chief</option>
+                      </select>
+                    </div>
+                    {/* Role - LOCKED based on committee position */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Role (Auto-assigned)
+                      </label>
+                      <select
+                        className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white opacity-60 cursor-not-allowed"
+                        value={cm.cmRole}
+                        disabled
+                      >
+                        <option value="MEMBER">MEMBER</option>
+                        <option value="AMBASSADOR">AMBASSADOR</option>
+                        <option value="ALUMNI">ALUMNI</option>
+                        <option value="ADMIN">ADMIN</option>
+                      </select>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {cm.cmPosition === "President" ||
+                        cm.cmPosition === "Vice President"
+                          ? "President & Vice President are automatically assigned ADMIN role"
+                          : "Other positions are assigned MEMBER role"}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* For Ambassadors/Alumni Mode: Show role selector (not locked) */}
+                {mode === "ambassadors-alumni" && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Role
+                    </label>
+                    <select
+                      className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                      value={cm.cmRole}
+                      onChange={(e) => cm.setCmRole(e.target.value)}
+                    >
+                      <option value="AMBASSADOR">AMBASSADOR</option>
+                      <option value="ALUMNI">ALUMNI</option>
+                    </select>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Choose between Ambassador or Alumni role
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Username
@@ -1587,28 +1708,64 @@ function UsersCrud({
                     onChange={(e) => cm.setCmPhone(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Committee Start
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
-                    value={cm.cmStart}
-                    onChange={(e) => cm.setCmStart(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Committee Tenure
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
-                    value={cm.cmTenure as any}
-                    onChange={(e) => cm.setCmTenure(e.target.value)}
-                  />
-                </div>
+
+                {/* Committee-specific fields */}
+                {mode === "committee" && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Committee Start
+                      </label>
+                      <input
+                        type="date"
+                        className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                        value={cm.cmStart}
+                        onChange={(e) => cm.setCmStart(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Committee Tenure
+                      </label>
+                      <input
+                        type="number"
+                        className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                        value={cm.cmTenure as any}
+                        onChange={(e) => cm.setCmTenure(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Batch year for Ambassadors/Alumni */}
+                {mode === "ambassadors-alumni" && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Batch Year (Nepali BS)
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                      placeholder="e.g., 2078"
+                      value={
+                        cm.cmRole === "AMBASSADOR"
+                          ? cm.cmAmbYear
+                          : cm.cmAlumYear
+                      }
+                      onChange={(e) => {
+                        if (cm.cmRole === "AMBASSADOR") {
+                          cm.setCmAmbYear(e.target.value);
+                        } else {
+                          cm.setCmAlumYear(e.target.value);
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Enter the batch year in Nepali calendar (BS)
+                    </p>
+                  </div>
+                )}
+
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     LinkedIn URL
@@ -1682,61 +1839,88 @@ function UsersCrud({
             </div>
             <form onSubmit={doEdit} className="p-6 space-y-4">
               <div className="grid md:grid-cols-2 gap-4">
-                {/* Committee Position - FIRST */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Committee Position
-                  </label>
-                  <select
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
-                    value={editCommitteePos}
-                    onChange={(e) => setEditCommitteePos(e.target.value)}
-                  >
-                    <option value="">Select Position</option>
-                    <option value="President">President</option>
-                    <option value="Vice President">Vice President</option>
-                    <option value="Secretary">Secretary</option>
-                    <option value="Vice Secretary/Treasurer">
-                      Vice Secretary/Treasurer
-                    </option>
-                    <option value="Vice Treasurer">Vice Treasurer</option>
-                    <option value="Technical Team">Technical Team</option>
-                    <option value="Graphics Designer">Graphics Designer</option>
-                    <option value="Communication,Events & HR">
-                      Communication, Events & HR
-                    </option>
-                    <option value="Social Media Manager">
-                      Social Media Manager
-                    </option>
-                    <option value="Consultant">Consultant</option>
-                    <option value="Research and Development Team">
-                      Research and Development Team
-                    </option>
-                    <option value="Editor In Chief">Editor In Chief</option>
-                  </select>
-                </div>
-                {/* Role - LOCKED based on committee position */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Role (Auto-assigned)
-                  </label>
-                  <select
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white opacity-60 cursor-not-allowed"
-                    value={editRole}
-                    disabled
-                  >
-                    <option value="MEMBER">MEMBER</option>
-                    <option value="AMBASSADOR">AMBASSADOR</option>
-                    <option value="ALUMNI">ALUMNI</option>
-                    <option value="ADMIN">ADMIN</option>
-                  </select>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {editCommitteePos === "President" ||
-                    editCommitteePos === "Vice President"
-                      ? "President & Vice President are automatically assigned ADMIN role"
-                      : "Other positions are assigned MEMBER role"}
-                  </p>
-                </div>
+                {/* For Committee Mode: Show committee position and locked role */}
+                {mode === "committee" && (
+                  <>
+                    {/* Committee Position - FIRST */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Committee Position
+                      </label>
+                      <select
+                        className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                        value={editCommitteePos}
+                        onChange={(e) => setEditCommitteePos(e.target.value)}
+                      >
+                        <option value="">Select Position</option>
+                        <option value="President">President</option>
+                        <option value="Vice President">Vice President</option>
+                        <option value="Secretary">Secretary</option>
+                        <option value="Vice Secretary/Treasurer">
+                          Vice Secretary/Treasurer
+                        </option>
+                        <option value="Vice Treasurer">Vice Treasurer</option>
+                        <option value="Technical Team">Technical Team</option>
+                        <option value="Graphics Designer">
+                          Graphics Designer
+                        </option>
+                        <option value="Communication,Events & HR">
+                          Communication, Events & HR
+                        </option>
+                        <option value="Social Media Manager">
+                          Social Media Manager
+                        </option>
+                        <option value="Consultant">Consultant</option>
+                        <option value="Research and Development Team">
+                          Research and Development Team
+                        </option>
+                        <option value="Editor In Chief">Editor In Chief</option>
+                      </select>
+                    </div>
+                    {/* Role - LOCKED based on committee position */}
+                    <div className="md:col-span-2">
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Role (Auto-assigned)
+                      </label>
+                      <select
+                        className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white opacity-60 cursor-not-allowed"
+                        value={editRole}
+                        disabled
+                      >
+                        <option value="MEMBER">MEMBER</option>
+                        <option value="AMBASSADOR">AMBASSADOR</option>
+                        <option value="ALUMNI">ALUMNI</option>
+                        <option value="ADMIN">ADMIN</option>
+                      </select>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {editCommitteePos === "President" ||
+                        editCommitteePos === "Vice President"
+                          ? "President & Vice President are automatically assigned ADMIN role"
+                          : "Other positions are assigned MEMBER role"}
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {/* For Ambassadors/Alumni Mode: Show role selector (not locked) */}
+                {mode === "ambassadors-alumni" && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Role
+                    </label>
+                    <select
+                      className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                      value={editRole}
+                      onChange={(e) => setEditRole(e.target.value)}
+                    >
+                      <option value="AMBASSADOR">AMBASSADOR</option>
+                      <option value="ALUMNI">ALUMNI</option>
+                    </select>
+                    <p className="text-xs text-gray-400 mt-1">
+                      Choose between Ambassador or Alumni role
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     First Name
@@ -1790,28 +1974,62 @@ function UsersCrud({
                     }
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Committee Start
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
-                    value={editCommitteeStart}
-                    onChange={(e) => setEditCommitteeStart(e.target.value)}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Committee Tenure
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
-                    value={editCommitteeTenure as any}
-                    onChange={(e) => setEditCommitteeTenure(e.target.value)}
-                  />
-                </div>
+
+                {/* Committee-specific fields */}
+                {mode === "committee" && (
+                  <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Committee Start
+                      </label>
+                      <input
+                        type="date"
+                        className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                        value={editCommitteeStart}
+                        onChange={(e) => setEditCommitteeStart(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Committee Tenure
+                      </label>
+                      <input
+                        type="number"
+                        className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                        value={editCommitteeTenure as any}
+                        onChange={(e) => setEditCommitteeTenure(e.target.value)}
+                      />
+                    </div>
+                  </>
+                )}
+
+                {/* Batch year for Ambassadors/Alumni */}
+                {mode === "ambassadors-alumni" && (
+                  <div className="md:col-span-2">
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Batch Year (Nepali BS)
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                      placeholder="e.g., 2078"
+                      value={
+                        editRole === "AMBASSADOR" ? editAmbYear : editAlumYear
+                      }
+                      onChange={(e) => {
+                        if (editRole === "AMBASSADOR") {
+                          setEditAmbYear(e.target.value);
+                        } else {
+                          setEditAlumYear(e.target.value);
+                        }
+                      }}
+                    />
+                    <p className="text-xs text-gray-400 mt-1">
+                      Enter the batch year in Nepali calendar (BS)
+                    </p>
+                  </div>
+                )}
+
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     LinkedIn URL
@@ -1887,6 +2105,75 @@ function UsersCrud({
                     setUserToDelete(null);
                   }}
                   disabled={isDeleting}
+                  className="px-6 py-3 rounded-xl border-2 border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showAlumniModal && userToMakeAlumni && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a1f3a] rounded-2xl shadow-2xl max-w-md w-full border border-green-700">
+            <div className="p-6 border-b border-gray-700">
+              <h2 className="text-2xl font-bold text-green-400 flex items-center gap-2">
+                🎓 Make Alumni
+              </h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <p className="text-gray-300">
+                Convert{" "}
+                <span className="font-bold text-white">
+                  {userToMakeAlumni.full_name || userToMakeAlumni.username}
+                </span>{" "}
+                to Alumni?
+              </p>
+              <p className="text-sm text-yellow-400 bg-yellow-500/10 p-3 rounded-lg border border-yellow-500/30">
+                ⚠️ This will clear their committee position, start date, and
+                tenure.
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Alumni Batch Year (Nepali BS){" "}
+                  <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="number"
+                  className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                  placeholder="e.g., 2078"
+                  value={alumniBatchYear}
+                  onChange={(e) => setAlumniBatchYear(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !isMakingAlumni) {
+                      e.preventDefault();
+                      makeAlumni();
+                    }
+                  }}
+                  autoFocus
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Enter the batch year in Nepali calendar (BS)
+                </p>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={makeAlumni}
+                  disabled={isMakingAlumni}
+                  className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                >
+                  <CheckIcon className="w-5 h-5" />{" "}
+                  {isMakingAlumni ? "Converting..." : "Confirm & Make Alumni"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowAlumniModal(false);
+                    setUserToMakeAlumni(null);
+                    setAlumniBatchYear("");
+                  }}
+                  disabled={isMakingAlumni}
                   className="px-6 py-3 rounded-xl border-2 border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold"
                 >
                   Cancel
