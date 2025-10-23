@@ -14,10 +14,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const slug = (req.headers['x-event-slug'] as string) || (req.query.slug as string);
   if (!slug) return res.status(400).json({ detail: 'slug required' });
   const body = await readBuffer(req);
+  let auth = (req.headers['authorization'] as string) || '';
+  if (!auth) {
+    const token = (req.headers['x-access-token'] as string) || '';
+    if (token) auth = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+  }
   const r = await fetch(`${base}/api/event/events/${slug}/`, {
     method: req.method,
     headers: {
-      'Authorization': (req.headers['authorization'] as string) || '',
+      'Authorization': auth,
       'Content-Type': (req.headers['content-type'] as string) || '',
       'Content-Length': String(body.length),
     },
@@ -26,4 +31,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const data = await r.json();
   return res.status(r.status).json(data);
 }
-

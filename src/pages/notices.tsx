@@ -384,6 +384,9 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       allNotices = data.results;
     }
 
+    // Filter to only show notices with audience "ALL"
+    allNotices = allNotices.filter((notice) => notice.audience === "ALL");
+
     // Client-side pagination
     const total = allNotices.length;
     const totalPages = Math.ceil(total / pageSize);

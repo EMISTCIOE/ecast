@@ -12,10 +12,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'POST') return res.status(405).end();
   const base = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
   const body = await readBuffer(req);
+  let auth = (req.headers['authorization'] as string) || '';
+  if (!auth) {
+    const token = (req.headers['x-access-token'] as string) || '';
+    if (token) auth = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+  }
   const r = await fetch(`${base}/api/event/events/`, {
     method: 'POST',
     headers: {
-      'Authorization': (req.headers['authorization'] as string) || '',
+      'Authorization': auth,
       'Content-Type': (req.headers['content-type'] as string) || '',
       'Content-Length': String(body.length),
     },
@@ -24,4 +29,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const data = await r.json();
   return res.status(r.status).json(data);
 }
-

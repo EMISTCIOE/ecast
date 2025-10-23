@@ -23,10 +23,19 @@ const LoginPage = () => {
       const role = user?.role || "MEMBER";
       const isChanged = !!user?.is_password_changed;
       if (!isChanged) {
+        // For members/admins with committee positions, show that instead of just role
+        let displayRole = role;
+        if (
+          (role === "MEMBER" || role === "ADMIN") &&
+          user?.committee_position
+        ) {
+          displayRole = user.committee_position;
+        }
+
         const payload = {
           email: user?.email,
           name: user?.first_name || user?.username,
-          role,
+          role: displayRole,
         };
         const token =
           typeof window !== "undefined" ? btoa(JSON.stringify(payload)) : "";

@@ -54,8 +54,12 @@ export default function AmbassadorDashboard() {
     if (userStr) {
       try {
         const u = JSON.parse(userStr);
-        const raw = u.user_photo || u.committee_member_photo || '';
-        const avatar = raw ? (raw.startsWith('http') ? raw : `${process.env.NEXT_PUBLIC_API_BASE || ''}${raw}`) : undefined;
+        const raw = u.user_photo || u.committee_member_photo || "";
+        const avatar = raw
+          ? raw.startsWith("http")
+            ? raw
+            : `${process.env.NEXT_PUBLIC_API_BASE || ""}${raw}`
+          : undefined;
         setSidebarUser({
           name: u.full_name || u.username,
           role: u.role,
@@ -78,6 +82,12 @@ export default function AmbassadorDashboard() {
         .catch(() => {});
     }
   }, []);
+
+  // Clear messages when switching sections
+  useEffect(() => {
+    setMsg("");
+    setSubMsg("");
+  }, [activeSection]);
 
   const publish = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,8 +112,14 @@ export default function AmbassadorDashboard() {
   const submitTask = async (e: React.FormEvent) => {
     e.preventDefault();
     setSubMsg("");
-    if (!selTask) { setSubMsg('Please select a task.'); return; }
-    if (!subText.trim() && !subFile) { setSubMsg('Please add notes or attach a file.'); return; }
+    if (!selTask) {
+      setSubMsg("Please select a task.");
+      return;
+    }
+    if (!subText.trim() && !subFile) {
+      setSubMsg("Please add notes or attach a file.");
+      return;
+    }
     const form = new FormData();
     form.append("task", selTask);
     form.append("content", subText);
@@ -111,8 +127,8 @@ export default function AmbassadorDashboard() {
     try {
       await submit(form);
       setSubMsg("Submitted for review");
-      setSelTask('');
-      setSubText('');
+      setSelTask("");
+      setSubText("");
       setSubFile(null);
     } catch {
       setSubMsg("Submission failed");
@@ -121,10 +137,10 @@ export default function AmbassadorDashboard() {
 
   const handleProfileUpload = async (file: File) => {
     const formData = new FormData();
-    formData.append("user_photo", file);
+    formData.append("photo", file);
 
     const access = localStorage.getItem("access");
-    const response = await fetch(`${base}/api/auth/profile/update/`, {
+    const response = await fetch(`${base}/api/auth/me/profile/`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${access}` },
       body: formData,
@@ -495,7 +511,7 @@ export default function AmbassadorDashboard() {
           {activeSection === "submissions" && (
             <div>
               <h1 className="text-3xl font-bold mb-6">My Submissions</h1>
-              <MySubmissions role={'AMBASSADOR'} showTasks={true} />
+              <MySubmissions role={"AMBASSADOR"} showTasks={true} />
             </div>
           )}
 

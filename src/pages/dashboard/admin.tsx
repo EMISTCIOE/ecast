@@ -16,6 +16,12 @@ import { authedFetch } from "@/lib/apiClient";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/Toast";
 import {
+  NoticePreview,
+  BlogPreview,
+  ProjectPreview,
+  EventPreview,
+} from "@/components/ContentPreviews";
+import {
   BellIcon,
   DocumentTextIcon,
   UserGroupIcon,
@@ -46,6 +52,7 @@ export default function AdminDashboard() {
     name: string;
     role?: string;
     avatarUrl?: string;
+    position?: string;
   }>();
   const [activeSection, setActiveSection] = useState("overview");
   const toast = useToast();
@@ -537,6 +544,13 @@ export default function AdminDashboard() {
                 title: "General",
                 items: [
                   {
+                    id: "approvals",
+                    label: "Approvals",
+                    icon: CheckCircleIcon,
+                    active: activeSection === "approvals",
+                    onClick: () => setActiveSection("approvals"),
+                  },
+                  {
                     id: "tasks",
                     label: "Assign Task",
                     icon: ClipboardDocumentCheckIcon,
@@ -596,7 +610,10 @@ export default function AdminDashboard() {
               </h1>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="bg-gradient-to-br from-purple-900/30 to-purple-600/20 p-6 rounded-xl border border-purple-500/20 hover:border-purple-500/40 transition cursor-pointer">
+                <div
+                  onClick={() => setActiveSection("approvals")}
+                  className="bg-gradient-to-br from-purple-900/30 to-purple-600/20 p-6 rounded-xl border border-purple-500/20 hover:border-purple-500/40 transition cursor-pointer"
+                >
                   <BellIcon className="w-10 h-10 mb-3 text-purple-400" />
                   <h3 className="text-lg font-semibold mb-1">
                     Pending Notices
@@ -606,7 +623,10 @@ export default function AdminDashboard() {
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-pink-900/30 to-pink-600/20 p-6 rounded-xl border border-pink-500/20 hover:border-pink-500/40 transition cursor-pointer">
+                <div
+                  onClick={() => setActiveSection("approvals")}
+                  className="bg-gradient-to-br from-pink-900/30 to-pink-600/20 p-6 rounded-xl border border-pink-500/20 hover:border-pink-500/40 transition cursor-pointer"
+                >
                   <DocumentTextIcon className="w-10 h-10 mb-3 text-pink-400" />
                   <h3 className="text-lg font-semibold mb-1">Pending Blogs</h3>
                   <p className="text-3xl font-bold text-pink-300">
@@ -614,7 +634,10 @@ export default function AdminDashboard() {
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-900/30 to-blue-600/20 p-6 rounded-xl border border-blue-500/20 hover:border-blue-500/40 transition cursor-pointer">
+                <div
+                  onClick={() => setActiveSection("approvals")}
+                  className="bg-gradient-to-br from-blue-900/30 to-blue-600/20 p-6 rounded-xl border border-blue-500/20 hover:border-blue-500/40 transition cursor-pointer"
+                >
                   <CalendarIcon className="w-10 h-10 mb-3 text-blue-400" />
                   <h3 className="text-lg font-semibold mb-1">Pending Events</h3>
                   <p className="text-3xl font-bold text-blue-300">
@@ -622,7 +645,10 @@ export default function AdminDashboard() {
                   </p>
                 </div>
 
-                <div className="bg-gradient-to-br from-green-900/30 to-green-600/20 p-6 rounded-xl border border-green-500/20 hover:border-green-500/40 transition cursor-pointer">
+                <div
+                  onClick={() => setActiveSection("approvals")}
+                  className="bg-gradient-to-br from-green-900/30 to-green-600/20 p-6 rounded-xl border border-green-500/20 hover:border-green-500/40 transition cursor-pointer"
+                >
                   <FolderIcon className="w-10 h-10 mb-3 text-green-400" />
                   <h3 className="text-lg font-semibold mb-1">
                     Pending Projects
@@ -735,34 +761,73 @@ export default function AdminDashboard() {
                 <FolderIcon className="w-8 h-8 text-green-400" />
                 Publish Project
               </h1>
-              <form onSubmit={createProject} className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800 space-y-4">
+              <form
+                onSubmit={createProject}
+                className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800 space-y-4"
+              >
                 {projectMsg && (
-                  <div className={`p-3 rounded ${projectMsg.includes('Failed') ? 'bg-red-900/50 text-red-300' : 'bg-green-900/50 text-green-300'}`}>{projectMsg}</div>
+                  <div
+                    className={`p-3 rounded ${
+                      projectMsg.includes("Failed")
+                        ? "bg-red-900/50 text-red-300"
+                        : "bg-green-900/50 text-green-300"
+                    }`}
+                  >
+                    {projectMsg}
+                  </div>
                 )}
                 <div>
                   <label className="block text-sm mb-1">Title</label>
-                  <input className="w-full p-3 bg-gray-950 border border-gray-800 rounded" value={pTitle} onChange={(e)=>setPTitle(e.target.value)} required />
+                  <input
+                    className="w-full p-3 bg-gray-950 border border-gray-800 rounded"
+                    value={pTitle}
+                    onChange={(e) => setPTitle(e.target.value)}
+                    required
+                  />
                 </div>
                 <div>
                   <label className="block text-sm mb-1">Description</label>
-                  <textarea className="w-full p-3 bg-gray-950 border border-gray-800 rounded" rows={4} value={pDesc} onChange={(e)=>setPDesc(e.target.value)} />
+                  <textarea
+                    className="w-full p-3 bg-gray-950 border border-gray-800 rounded"
+                    rows={4}
+                    value={pDesc}
+                    onChange={(e) => setPDesc(e.target.value)}
+                  />
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-sm mb-1">Repository Link</label>
-                    <input className="w-full p-3 bg-gray-950 border border-gray-800 rounded" placeholder="https://github.com/..." value={pRepo} onChange={(e)=>setPRepo(e.target.value)} />
+                    <label className="block text-sm mb-1">
+                      Repository Link
+                    </label>
+                    <input
+                      className="w-full p-3 bg-gray-950 border border-gray-800 rounded"
+                      placeholder="https://github.com/..."
+                      value={pRepo}
+                      onChange={(e) => setPRepo(e.target.value)}
+                    />
                   </div>
                   <div>
                     <label className="block text-sm mb-1">Live Link</label>
-                    <input className="w-full p-3 bg-gray-950 border border-gray-800 rounded" placeholder="https://..." value={pLive} onChange={(e)=>setPLive(e.target.value)} />
+                    <input
+                      className="w-full p-3 bg-gray-950 border border-gray-800 rounded"
+                      placeholder="https://..."
+                      value={pLive}
+                      onChange={(e) => setPLive(e.target.value)}
+                    />
                   </div>
                 </div>
                 <div>
                   <label className="block text-sm mb-1">Image</label>
-                  <input type="file" onChange={(e)=>setPImage(e.target.files?.[0] || null)} />
+                  <input
+                    type="file"
+                    onChange={(e) => setPImage(e.target.files?.[0] || null)}
+                  />
                 </div>
-                <button disabled={isCreatingProject} className="w-full bg-green-600 hover:bg-green-700 p-4 rounded-lg font-semibold">
-                  {isCreatingProject ? 'Publishing...' : 'Publish Project'}
+                <button
+                  disabled={isCreatingProject}
+                  className="w-full bg-green-600 hover:bg-green-700 p-4 rounded-lg font-semibold"
+                >
+                  {isCreatingProject ? "Publishing..." : "Publish Project"}
                 </button>
               </form>
             </div>
@@ -877,6 +942,160 @@ export default function AdminDashboard() {
               userMsg={userMsg}
               mode="ambassadors-alumni" // Only ambassadors and alumni
             />
+          )}
+
+          {/* Approvals Section */}
+          {activeSection === "approvals" && (
+            <div className="max-w-7xl mx-auto space-y-8">
+              <h1 className="text-4xl font-bold mb-8 flex items-center gap-3 bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                <CheckCircleIcon className="w-10 h-10 text-green-400" />
+                Content Approvals
+              </h1>
+
+              {/* Pending Notices */}
+              {pendingNotices.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-semibold flex items-center gap-2">
+                    <BellIcon className="w-6 h-6 text-purple-400" />
+                    Pending Notices ({pendingNotices.length})
+                  </h2>
+                  <div className="grid grid-cols-1 gap-6">
+                    {pendingNotices.map((notice: any) => (
+                      <NoticePreview
+                        key={notice.id}
+                        notice={notice}
+                        onApprove={async () => {
+                          await approve("notice", notice.id);
+                          const updated = await listNotices({
+                            status: "PENDING",
+                          });
+                          setPendingNotices(updated);
+                        }}
+                        onReject={async () => {
+                          await reject("notice", notice.id);
+                          const updated = await listNotices({
+                            status: "PENDING",
+                          });
+                          setPendingNotices(updated);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pending Blogs */}
+              {pendingBlogs.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-semibold flex items-center gap-2">
+                    <DocumentTextIcon className="w-6 h-6 text-pink-400" />
+                    Pending Blogs ({pendingBlogs.length})
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {pendingBlogs.map((blog: any) => (
+                      <BlogPreview
+                        key={blog.id}
+                        blog={blog}
+                        onApprove={async () => {
+                          await approve("blog", blog.slug);
+                          const updated = await listBlogs({
+                            status: "PENDING",
+                          });
+                          setPendingBlogs(updated);
+                        }}
+                        onReject={async () => {
+                          await reject("blog", blog.slug);
+                          const updated = await listBlogs({
+                            status: "PENDING",
+                          });
+                          setPendingBlogs(updated);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pending Events */}
+              {pendingEvents.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-semibold flex items-center gap-2">
+                    <CalendarIcon className="w-6 h-6 text-blue-400" />
+                    Pending Events ({pendingEvents.length})
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {pendingEvents.map((event: any) => (
+                      <EventPreview
+                        key={event.id}
+                        event={event}
+                        onApprove={async () => {
+                          await approve("event", event.id);
+                          const updated = await listEvents({
+                            status: "PENDING",
+                          });
+                          setPendingEvents(updated);
+                        }}
+                        onReject={async () => {
+                          await reject("event", event.id);
+                          const updated = await listEvents({
+                            status: "PENDING",
+                          });
+                          setPendingEvents(updated);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Pending Projects */}
+              {pendingProjects.length > 0 && (
+                <div className="space-y-4">
+                  <h2 className="text-2xl font-semibold flex items-center gap-2">
+                    <FolderIcon className="w-6 h-6 text-green-400" />
+                    Pending Projects ({pendingProjects.length})
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {pendingProjects.map((project: any) => (
+                      <ProjectPreview
+                        key={project.id}
+                        project={project}
+                        onApprove={async () => {
+                          await approve("project", project.id);
+                          const updated = await listProjects({
+                            status: "PENDING",
+                          });
+                          setPendingProjects(updated);
+                        }}
+                        onReject={async () => {
+                          await reject("project", project.id);
+                          const updated = await listProjects({
+                            status: "PENDING",
+                          });
+                          setPendingProjects(updated);
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {pendingNotices.length === 0 &&
+                pendingBlogs.length === 0 &&
+                pendingEvents.length === 0 &&
+                pendingProjects.length === 0 && (
+                  <div className="text-center py-16 bg-gray-900/30 rounded-xl border border-gray-800">
+                    <CheckCircleIcon className="w-16 h-16 text-green-400 mx-auto mb-4" />
+                    <h3 className="text-2xl font-semibold text-gray-300 mb-2">
+                      All Caught Up!
+                    </h3>
+                    <p className="text-gray-400">
+                      There are no pending items to approve at the moment.
+                    </p>
+                  </div>
+                )}
+            </div>
           )}
 
           {/* Tasks Section with list + modal */}
@@ -3938,11 +4157,13 @@ function UsersCrud({
     form.append("email", editEmail);
     form.append("phone_number", editPhone);
     if (editPhotoFile) form.append("photo", editPhotoFile);
-    if (editCommitteePos) form.append("committee.position", editCommitteePos);
-    if (editCommitteeStart)
-      form.append("committee.started_from", editCommitteeStart);
-    if (editCommitteeTenure !== "" && editCommitteeTenure !== null)
-      form.append("committee.tenure", String(editCommitteeTenure));
+    if (mode === "committee") {
+      if (editCommitteePos) form.append("committee.position", editCommitteePos);
+      if (editCommitteeStart)
+        form.append("committee.started_from", editCommitteeStart);
+      if (editCommitteeTenure !== "" && editCommitteeTenure !== null)
+        form.append("committee.tenure", String(editCommitteeTenure));
+    }
     if (editLinkedIn) form.append("linkedin_url", editLinkedIn);
     if (editGithub) form.append("github_url", editGithub);
     if (editAmbYear) form.append("ambassador_batch_year_bs", editAmbYear);
@@ -4093,15 +4314,19 @@ function UsersCrud({
                     Batch Year (BS)
                   </th>
                 )}
-                <th className="text-left p-4 text-gray-300 font-semibold">
-                  Committee Position
-                </th>
-                <th className="text-left p-4 text-gray-300 font-semibold">
-                  Committee Start
-                </th>
-                <th className="text-left p-4 text-gray-300 font-semibold">
-                  Tenure
-                </th>
+                {mode === "committee" && (
+                  <>
+                    <th className="text-left p-4 text-gray-300 font-semibold">
+                      Committee Position
+                    </th>
+                    <th className="text-left p-4 text-gray-300 font-semibold">
+                      Committee Start
+                    </th>
+                    <th className="text-left p-4 text-gray-300 font-semibold">
+                      Tenure
+                    </th>
+                  </>
+                )}
                 <th className="text-left p-4 text-gray-300 font-semibold">
                   Social Links
                 </th>
@@ -4173,22 +4398,28 @@ function UsersCrud({
                           : "—"}
                       </td>
                     )}
-                    <td className="p-4 text-gray-300">
-                      {u.committee?.position || u.committee_position || "—"}
-                    </td>
-                    <td className="p-4 text-gray-300">
-                      {u.committee?.started_from || u.committee_started_from
-                        ? new Date(
-                            u.committee?.started_from ||
-                              u.committee_started_from
-                          ).toLocaleDateString()
-                        : "—"}
-                    </td>
-                    <td className="p-4 text-gray-300">
-                      {u.committee?.tenure || u.committee_tenure
-                        ? `${u.committee?.tenure || u.committee_tenure} year(s)`
-                        : "—"}
-                    </td>
+                    {mode === "committee" && (
+                      <>
+                        <td className="p-4 text-gray-300">
+                          {u.committee?.position || u.committee_position || "—"}
+                        </td>
+                        <td className="p-4 text-gray-300">
+                          {u.committee?.started_from || u.committee_started_from
+                            ? new Date(
+                                u.committee?.started_from ||
+                                  u.committee_started_from
+                              ).toLocaleDateString()
+                            : "—"}
+                        </td>
+                        <td className="p-4 text-gray-300">
+                          {u.committee?.tenure || u.committee_tenure
+                            ? `${
+                                u.committee?.tenure || u.committee_tenure
+                              } year(s)`
+                            : "—"}
+                        </td>
+                      </>
+                    )}
                     <td className="p-4">
                       <div className="flex gap-2">
                         {u.linkedin_url && (
@@ -4469,29 +4700,33 @@ function UsersCrud({
                     onChange={(e) => cm.setCmGithub(e.target.value)}
                   />
                 </div>
-                <div className={cm.cmRole === "ALUMNI" ? "hidden" : ""}>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Committee Start Date
-                  </label>
-                  <input
-                    type="date"
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
-                    value={cm.cmStart}
-                    onChange={(e) => cm.setCmStart(e.target.value)}
-                  />
-                </div>
-                <div className={cm.cmRole === "ALUMNI" ? "hidden" : ""}>
-                  <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Tenure (years)
-                  </label>
-                  <input
-                    type="number"
-                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
-                    placeholder="Tenure (years)"
-                    value={cm.cmTenure}
-                    onChange={(e) => cm.setCmTenure(e.target.value as any)}
-                  />
-                </div>
+                {mode === "committee" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Committee Start Date
+                    </label>
+                    <input
+                      type="date"
+                      className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
+                      value={cm.cmStart}
+                      onChange={(e) => cm.setCmStart(e.target.value)}
+                    />
+                  </div>
+                )}
+                {mode === "committee" && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Tenure (years)
+                    </label>
+                    <input
+                      type="number"
+                      className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 text-white"
+                      placeholder="Tenure (years)"
+                      value={cm.cmTenure}
+                      onChange={(e) => cm.setCmTenure(e.target.value as any)}
+                    />
+                  </div>
+                )}
                 {mode === "ambassadors-alumni" && (
                   <>
                     {cm.cmRole === "AMBASSADOR" && (
@@ -4682,7 +4917,13 @@ function UsersCrud({
                     placeholder="Phone"
                   />
                 </div>
-                <div className={editRole === "ALUMNI" ? "hidden" : ""}>
+                <div
+                  className={
+                    editRole === "ALUMNI" || editRole === "AMBASSADOR"
+                      ? "hidden"
+                      : ""
+                  }
+                >
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Committee Start Date
                   </label>
@@ -4693,7 +4934,13 @@ function UsersCrud({
                     onChange={(e) => setEditCommitteeStart(e.target.value)}
                   />
                 </div>
-                <div className={editRole === "ALUMNI" ? "hidden" : ""}>
+                <div
+                  className={
+                    editRole === "ALUMNI" || editRole === "AMBASSADOR"
+                      ? "hidden"
+                      : ""
+                  }
+                >
                   <label className="block text-sm font-medium text-gray-300 mb-2">
                     Committee Tenure (years)
                   </label>

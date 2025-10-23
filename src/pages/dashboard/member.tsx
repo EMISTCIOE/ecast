@@ -26,6 +26,9 @@ import {
   XCircleIcon,
   ArrowUpTrayIcon,
   SparklesIcon,
+  LinkIcon,
+  GlobeAltIcon,
+  MapPinIcon,
 } from "@heroicons/react/24/outline";
 import {
   BellIcon as BellIconSolid,
@@ -35,6 +38,8 @@ import {
 } from "@heroicons/react/24/solid";
 
 const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const isImagePath = (p?: string) =>
+  /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(p || "");
 
 type Notice = {
   id: string;
@@ -52,6 +57,7 @@ export default function MemberDashboard() {
   const [sidebarUser, setSidebarUser] = useState<{
     name: string;
     role?: string;
+    committee_position?: string;
     avatarUrl?: string;
   }>();
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -127,6 +133,7 @@ export default function MemberDashboard() {
           setSidebarUser({
             name: u.full_name || u.username,
             role: u.role,
+            committee_position: u.committee_position,
             avatarUrl: avatar,
           });
         } catch {}
@@ -151,6 +158,12 @@ export default function MemberDashboard() {
     }
   }, []);
 
+  // Clear messages when switching sections
+  useEffect(() => {
+    setMsg("");
+    setSubMsg("");
+  }, [activeSection]);
+
   // Note: Do not early-return before all hooks run.
   // We gate rendering later to keep hooks order consistent across renders.
 
@@ -173,6 +186,7 @@ export default function MemberDashboard() {
       setMsg("Notice submitted for approval");
       setNTitle("");
       setNContent("");
+      setNAudience("ALL");
       setNFile(null);
       // Refresh the list immediately
       listNotices({ mine: "1" }).then(setMyNotices);
@@ -213,11 +227,13 @@ export default function MemberDashboard() {
   const [editNoticeTitle, setEditNoticeTitle] = useState("");
   const [editNoticeContent, setEditNoticeContent] = useState("");
   const [editNoticeAudience, setEditNoticeAudience] = useState("ALL");
+  const [editNoticeFile, setEditNoticeFile] = useState<File | null>(null);
   const startEditNotice = (n: any) => {
     setEditNoticeId(n.id);
     setEditNoticeTitle(n.title);
     setEditNoticeContent(n.content);
     setEditNoticeAudience(n.audience || "ALL");
+    setEditNoticeFile(null);
   };
   const saveEditNotice = async () => {
     if (!editNoticeId) return;
@@ -227,8 +243,12 @@ export default function MemberDashboard() {
       form.append("title", editNoticeTitle);
       form.append("content", editNoticeContent);
       form.append("audience", editNoticeAudience);
+      if (editNoticeFile) {
+        form.append("attachment", editNoticeFile);
+      }
       await updateNotice(editNoticeId, form);
       setEditNoticeId("");
+      setEditNoticeFile(null);
       listNotices({ mine: "1" }).then(setMyNotices);
     } catch (error) {
       console.error("Failed to update notice:", error);
@@ -241,11 +261,13 @@ export default function MemberDashboard() {
   const [editBlogTitle, setEditBlogTitle] = useState("");
   const [editBlogDesc, setEditBlogDesc] = useState("");
   const [editBlogContent, setEditBlogContent] = useState("");
+  const [editBlogCover, setEditBlogCover] = useState<File | null>(null);
   const startEditBlog = (b: any) => {
     setEditBlogSlug(b.slug);
     setEditBlogTitle(b.title);
     setEditBlogDesc(b.description || "");
     setEditBlogContent(b.content || "");
+    setEditBlogCover(null);
   };
   const saveEditBlog = async () => {
     if (!editBlogSlug) return;
@@ -255,8 +277,12 @@ export default function MemberDashboard() {
       form.append("title", editBlogTitle);
       form.append("description", editBlogDesc);
       form.append("content", editBlogContent);
+      if (editBlogCover) {
+        form.append("cover_image", editBlogCover);
+      }
       await updateBlog(editBlogSlug, form);
       setEditBlogSlug("");
+      setEditBlogCover(null);
       listBlogs({ mine: "1" }).then(setMyBlogs);
     } catch (error) {
       console.error("Failed to update blog:", error);
@@ -337,10 +363,10 @@ export default function MemberDashboard() {
 
   const handleProfileUpload = async (file: File) => {
     const formData = new FormData();
-    formData.append("user_photo", file);
+    formData.append("photo", file);
 
     const access = localStorage.getItem("access");
-    const response = await fetch(`${base}/api/auth/profile/update/`, {
+    const response = await fetch(`${base}/api/auth/me/profile/`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${access}` },
       body: formData,
@@ -501,74 +527,6 @@ export default function MemberDashboard() {
                   <p className="text-gray-400 text-lg">
                     Let's make today productive
                   </p>
-                </div>
-                <SparklesIcon className="w-12 h-12 text-yellow-400 animate-pulse" />
-              </div>
-
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <div className="relative group overflow-hidden bg-gradient-to-br from-purple-600/20 via-purple-500/10 to-transparent p-6 rounded-2xl border border-purple-500/30 hover:border-purple-400/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/20">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all"></div>
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <BellIconSolid className="w-8 h-8 text-purple-400" />
-                      <span className="px-3 py-1 bg-purple-500/20 rounded-full text-xs font-semibold text-purple-300">
-                        {myNotices.length}
-                      </span>
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-1">
-                      {myNotices.length}
-                    </h3>
-                    <p className="text-sm text-gray-400">My Notices</p>
-                  </div>
-                </div>
-
-                <div className="relative group overflow-hidden bg-gradient-to-br from-pink-600/20 via-pink-500/10 to-transparent p-6 rounded-2xl border border-pink-500/30 hover:border-pink-400/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-pink-500/20">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-pink-500/10 rounded-full blur-3xl group-hover:bg-pink-500/20 transition-all"></div>
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <DocumentTextIconSolid className="w-8 h-8 text-pink-400" />
-                      <span className="px-3 py-1 bg-pink-500/20 rounded-full text-xs font-semibold text-pink-300">
-                        {myBlogs.length}
-                      </span>
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-1">
-                      {myBlogs.length}
-                    </h3>
-                    <p className="text-sm text-gray-400">My Blogs</p>
-                  </div>
-                </div>
-
-                <div className="relative group overflow-hidden bg-gradient-to-br from-blue-600/20 via-blue-500/10 to-transparent p-6 rounded-2xl border border-blue-500/30 hover:border-blue-400/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-blue-500/20">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all"></div>
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <ClipboardDocumentCheckIcon className="w-8 h-8 text-blue-400" />
-                      <span className="px-3 py-1 bg-blue-500/20 rounded-full text-xs font-semibold text-blue-300">
-                        {tasks.length}
-                      </span>
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-1">
-                      {tasks.length}
-                    </h3>
-                    <p className="text-sm text-gray-400">Active Tasks</p>
-                  </div>
-                </div>
-
-                <div className="relative group overflow-hidden bg-gradient-to-br from-emerald-600/20 via-emerald-500/10 to-transparent p-6 rounded-2xl border border-emerald-500/30 hover:border-emerald-400/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-emerald-500/20">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-all"></div>
-                  <div className="relative z-10">
-                    <div className="flex items-center justify-between mb-4">
-                      <CheckCircleIcon className="w-8 h-8 text-emerald-400" />
-                      <span className="px-3 py-1 bg-emerald-500/20 rounded-full text-xs font-semibold text-emerald-300">
-                        New
-                      </span>
-                    </div>
-                    <h3 className="text-2xl font-bold text-white mb-1">
-                      Active
-                    </h3>
-                    <p className="text-sm text-gray-400">Status</p>
-                  </div>
                 </div>
               </div>
 
@@ -873,15 +831,29 @@ export default function MemberDashboard() {
                   </label>
                   <div className="relative">
                     <input
+                      key={subFile ? "has-subfile" : "no-subfile"}
                       type="file"
                       onChange={(e) => setSubFile(e.target.files?.[0] || null)}
                       className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-blue-600 file:to-cyan-600 file:text-white file:font-semibold hover:file:from-blue-700 hover:file:to-cyan-700 file:shadow-lg file:transition-all cursor-pointer"
                     />
                   </div>
                 </div>
-                <button className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-700 hover:via-blue-800 hover:to-cyan-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group">
-                  <PaperAirplaneIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
-                  Submit Task
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-700 hover:via-blue-800 hover:to-cyan-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <PaperAirplaneIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                      Submit Task
+                    </>
+                  )}
                 </button>
               </form>
             </div>
@@ -989,16 +961,26 @@ export default function MemberDashboard() {
                     )}
                   </label>
                   <input
+                    key={nFile ? "has-file" : "no-file"}
                     type="file"
                     accept="application/pdf,image/*"
                     className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-purple-600 file:to-pink-600 file:text-white file:font-semibold hover:file:from-purple-700 hover:file:to-pink-700 file:shadow-lg file:transition-all cursor-pointer"
                     onChange={(e) => setNFile(e.target.files?.[0] || null)}
                   />
+                  {nFile && nFile.type?.startsWith("image/") && (
+                    <div className="mt-3">
+                      <img
+                        src={URL.createObjectURL(nFile)}
+                        alt="Attachment preview"
+                        className="max-h-48 rounded-lg border border-purple-500/30"
+                      />
+                    </div>
+                  )}
                   <p className="text-xs text-gray-500 mt-1">
                     Supported: PDF, JPG, PNG (Max 10MB)
                   </p>
                 </div>
-                <button 
+                <button
                   type="submit"
                   disabled={isSubmitting}
                   className="w-full bg-gradient-to-r from-purple-600 via-purple-700 to-pink-600 hover:from-purple-700 hover:via-purple-800 hover:to-pink-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-purple-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
@@ -1043,17 +1025,104 @@ export default function MemberDashboard() {
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             {editNoticeId === n.id ? (
-                              <input
-                                className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 font-semibold text-lg mb-2"
-                                value={editNoticeTitle}
-                                onChange={(e) =>
-                                  setEditNoticeTitle(e.target.value)
-                                }
-                              />
+                              <div className="space-y-3">
+                                <input
+                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 font-semibold text-lg"
+                                  placeholder="Notice Title"
+                                  value={editNoticeTitle}
+                                  onChange={(e) =>
+                                    setEditNoticeTitle(e.target.value)
+                                  }
+                                />
+                                <textarea
+                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 resize-none"
+                                  placeholder="Notice Content"
+                                  rows={4}
+                                  value={editNoticeContent}
+                                  onChange={(e) =>
+                                    setEditNoticeContent(e.target.value)
+                                  }
+                                />
+                                <select
+                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500"
+                                  value={editNoticeAudience}
+                                  onChange={(e) =>
+                                    setEditNoticeAudience(e.target.value)
+                                  }
+                                >
+                                  <option value="ALL">All Members</option>
+                                  <option value="MEMBERS">Members Only</option>
+                                  <option value="AMBASSADORS">
+                                    Ambassadors Only
+                                  </option>
+                                </select>
+                                <div>
+                                  <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                                    <ArrowUpTrayIcon className="w-4 h-4 text-purple-400" />
+                                    Update Attachment{" "}
+                                    {editNoticeFile && (
+                                      <span className="text-green-400 text-xs">
+                                        ({editNoticeFile.name})
+                                      </span>
+                                    )}
+                                    {n.attachment && !editNoticeFile && (
+                                      <span className="text-gray-500 text-xs">
+                                        (Current:{" "}
+                                        {n.attachment.split("/").pop()})
+                                      </span>
+                                    )}
+                                  </label>
+                                  <input
+                                    type="file"
+                                    accept="application/pdf,image/*"
+                                    className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-purple-500/30 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600/20 file:text-purple-300 hover:file:bg-purple-600/30 file:transition-all cursor-pointer text-sm"
+                                    onChange={(e) =>
+                                      setEditNoticeFile(
+                                        e.target.files?.[0] || null
+                                      )
+                                    }
+                                  />
+                                  {/* Preview new image or existing image attachment */}
+                                  {editNoticeFile &&
+                                    editNoticeFile.type?.startsWith(
+                                      "image/"
+                                    ) && (
+                                      <div className="mt-3">
+                                        <img
+                                          src={URL.createObjectURL(
+                                            editNoticeFile
+                                          )}
+                                          alt="New attachment preview"
+                                          className="max-h-48 rounded-lg border border-purple-500/30"
+                                        />
+                                      </div>
+                                    )}
+                                  {!editNoticeFile &&
+                                    n.attachment &&
+                                    isImagePath(n.attachment) && (
+                                      <div className="mt-3">
+                                        <img
+                                          src={
+                                            n.attachment.startsWith("http")
+                                              ? n.attachment
+                                              : `${base}${n.attachment}`
+                                          }
+                                          alt="Current attachment preview"
+                                          className="max-h-48 rounded-lg border border-purple-500/30"
+                                        />
+                                      </div>
+                                    )}
+                                </div>
+                              </div>
                             ) : (
-                              <h4 className="font-bold text-lg text-white mb-2">
-                                {n.title}
-                              </h4>
+                              <>
+                                <h4 className="font-bold text-lg text-white mb-2">
+                                  {n.title}
+                                </h4>
+                                <p className="text-sm text-gray-300 mb-3 line-clamp-2">
+                                  {n.content}
+                                </p>
+                              </>
                             )}
                             <div className="flex items-center gap-2 mb-3">
                               <span
@@ -1067,9 +1136,18 @@ export default function MemberDashboard() {
                               >
                                 {n.status}
                               </span>
-                              <span className="text-sm text-gray-400">
-                                {new Date(n.created_at).toLocaleDateString()}
-                              </span>
+                              {editNoticeId !== n.id && (
+                                <>
+                                  <span className="px-2 py-1 bg-purple-500/20 rounded-md text-purple-300 text-xs font-semibold">
+                                    {n.audience}
+                                  </span>
+                                  <span className="text-sm text-gray-400">
+                                    {new Date(
+                                      n.created_at
+                                    ).toLocaleDateString()}
+                                  </span>
+                                </>
+                              )}
                             </div>
                           </div>
                           <div className="flex gap-2">
@@ -1078,13 +1156,15 @@ export default function MemberDashboard() {
                                 <>
                                   <button
                                     onClick={saveEditNotice}
-                                    className="px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg font-medium transition-all border border-green-500/30"
+                                    disabled={isSubmitting}
+                                    className="px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg font-medium transition-all border border-green-500/30 disabled:opacity-50"
                                   >
-                                    Save
+                                    {isSubmitting ? "Saving..." : "Save"}
                                   </button>
                                   <button
                                     onClick={() => setEditNoticeId("")}
-                                    className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 text-gray-400 rounded-lg font-medium transition-all border border-gray-500/30"
+                                    disabled={isSubmitting}
+                                    className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 text-gray-400 rounded-lg font-medium transition-all border border-gray-500/30 disabled:opacity-50"
                                   >
                                     Cancel
                                   </button>
@@ -1123,93 +1203,117 @@ export default function MemberDashboard() {
 
           {/* Create Blog Section */}
           {activeSection === "blog" && (
-            <div className="max-w-2xl">
-              <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                <DocumentTextIcon className="w-8 h-8 text-pink-400" />
-                Create Blog
-              </h1>
+            <div className="max-w-3xl mx-auto animate-fade-in">
+              <div className="mb-8">
+                <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+                  <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/30">
+                    <DocumentTextIcon className="w-7 h-7 text-white" />
+                  </div>
+                  Create Blog
+                </h1>
+                <p className="text-gray-400 text-lg">
+                  Share your thoughts and ideas with the community
+                </p>
+              </div>
               <form
                 onSubmit={createBlog}
-                className="bg-gray-800/50 backdrop-blur p-8 rounded-xl border border-gray-700 shadow-xl space-y-5"
+                className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-10 rounded-3xl border border-gray-700/50 shadow-2xl space-y-6"
               >
                 {msg && (
                   <div
-                    className={`p-4 rounded-lg ${
+                    className={`p-5 rounded-2xl font-medium flex items-center gap-3 ${
                       msg.includes("Failed")
-                        ? "bg-red-900/50 text-red-300"
-                        : "bg-green-900/50 text-green-300"
+                        ? "bg-red-900/30 border border-red-500/50 text-red-300"
+                        : "bg-green-900/30 border border-green-500/50 text-green-300"
                     }`}
                   >
+                    {msg.includes("Failed") ? (
+                      <XCircleIcon className="w-6 h-6" />
+                    ) : (
+                      <CheckCircleIcon className="w-6 h-6" />
+                    )}
                     {msg}
                   </div>
                 )}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Title
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5 text-pink-400" />
+                    Blog Title
                   </label>
                   <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition"
-                    placeholder="Enter blog title"
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-300 hover:border-pink-500/50 font-medium text-lg"
+                    placeholder="Enter an engaging blog title..."
                     value={bTitle}
                     onChange={(e) => setBTitle(e.target.value)}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5 text-pink-400" />
                     Short Description
                   </label>
                   <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-pink-500 focus:border-transparent transition"
-                    placeholder="Brief description"
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-pink-500 focus:border-transparent transition-all duration-300 hover:border-pink-500/50 font-medium"
+                    placeholder="A brief summary of your blog post..."
                     value={bDesc}
                     onChange={(e) => setBDesc(e.target.value)}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Content
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5 text-pink-400" />
+                    Blog Content
                   </label>
                   <RichTextEditor value={bContent} onChange={setBContent} />
-                  <div className="mt-3">
-                    <label className="text-sm text-gray-400 flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        onChange={(e) => {
-                          const el =
-                            document.getElementById("mem-blog-preview");
-                          if (!el) return;
-                          el.classList.toggle("hidden", !e.target.checked);
-                        }}
-                      />
-                      Preview
-                    </label>
-                  </div>
-                  <div
-                    id="mem-blog-preview"
-                    className="hidden mt-3 p-4 bg-gray-950 border border-gray-800 rounded"
-                  >
-                    <div
-                      className="prose prose-invert max-w-none"
-                      dangerouslySetInnerHTML={{ __html: bContent }}
-                    />
-                  </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Cover Image
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <ArrowUpTrayIcon className="w-5 h-5 text-pink-400" />
+                    Cover Image{" "}
+                    {bCover && (
+                      <span className="text-green-400 text-xs">
+                        ({bCover.name})
+                      </span>
+                    )}
                   </label>
                   <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-pink-600 file:text-white hover:file:bg-pink-700 transition"
+                    key={bCover ? "has-cover" : "no-cover"}
                     type="file"
                     accept="image/*"
+                    className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-pink-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-pink-600 file:to-purple-600 file:text-white file:font-semibold hover:file:from-pink-700 hover:file:to-purple-700 file:shadow-lg file:transition-all cursor-pointer"
                     onChange={(e) => setBCover(e.target.files?.[0] || null)}
                   />
+                  {bCover && bCover.type?.startsWith("image/") && (
+                    <div className="mt-3">
+                      <img
+                        src={URL.createObjectURL(bCover)}
+                        alt="Cover preview"
+                        className="max-h-48 rounded-lg border border-pink-500/30"
+                      />
+                    </div>
+                  )}
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported: JPG, PNG, GIF (Max 5MB)
+                  </p>
                 </div>
-                <button className="w-full bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 p-4 rounded-lg font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2">
-                  <PaperAirplaneIcon className="w-5 h-5" />
-                  Submit Blog
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-pink-600 via-pink-700 to-purple-600 hover:from-pink-700 hover:via-pink-800 hover:to-purple-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-pink-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <PaperAirplaneIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                      Submit Blog for Review
+                    </>
+                  )}
                 </button>
               </form>
 
@@ -1239,17 +1343,93 @@ export default function MemberDashboard() {
                         <div className="flex items-start justify-between gap-4">
                           <div className="flex-1">
                             {editBlogSlug === b.slug ? (
-                              <input
-                                className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 font-semibold text-lg mb-2"
-                                value={editBlogTitle}
-                                onChange={(e) =>
-                                  setEditBlogTitle(e.target.value)
-                                }
-                              />
+                              <div className="space-y-3">
+                                <input
+                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 font-semibold text-lg"
+                                  placeholder="Blog Title"
+                                  value={editBlogTitle}
+                                  onChange={(e) =>
+                                    setEditBlogTitle(e.target.value)
+                                  }
+                                />
+                                <input
+                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500"
+                                  placeholder="Short Description"
+                                  value={editBlogDesc}
+                                  onChange={(e) =>
+                                    setEditBlogDesc(e.target.value)
+                                  }
+                                />
+                                <textarea
+                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 resize-none"
+                                  placeholder="Blog Content (HTML supported)"
+                                  rows={6}
+                                  value={editBlogContent}
+                                  onChange={(e) =>
+                                    setEditBlogContent(e.target.value)
+                                  }
+                                />
+                                <div>
+                                  <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
+                                    <ArrowUpTrayIcon className="w-4 h-4 text-pink-400" />
+                                    Update Cover Image{" "}
+                                    {editBlogCover && (
+                                      <span className="text-green-400 text-xs">
+                                        ({editBlogCover.name})
+                                      </span>
+                                    )}
+                                    {b.cover_image && !editBlogCover && (
+                                      <span className="text-gray-500 text-xs">
+                                        (Current cover set)
+                                      </span>
+                                    )}
+                                  </label>
+                                  <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-pink-500/30 rounded-xl hover:border-pink-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-pink-600/20 file:text-pink-300 hover:file:bg-pink-600/30 file:transition-all cursor-pointer text-sm"
+                                    onChange={(e) =>
+                                      setEditBlogCover(
+                                        e.target.files?.[0] || null
+                                      )
+                                    }
+                                  />
+                                  {editBlogCover &&
+                                    editBlogCover.type?.startsWith(
+                                      "image/"
+                                    ) && (
+                                      <div className="mt-3">
+                                        <img
+                                          src={URL.createObjectURL(
+                                            editBlogCover
+                                          )}
+                                          alt="New cover preview"
+                                          className="max-h-48 rounded-lg border border-pink-500/30"
+                                        />
+                                      </div>
+                                    )}
+                                  {!editBlogCover && b.cover_image && (
+                                    <div className="mt-3">
+                                      <img
+                                        src={b.cover_image}
+                                        alt="Current cover preview"
+                                        className="max-h-48 rounded-lg border border-pink-500/30"
+                                      />
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
                             ) : (
-                              <h4 className="font-bold text-lg text-white mb-2">
-                                {b.title}
-                              </h4>
+                              <>
+                                <h4 className="font-bold text-lg text-white mb-2">
+                                  {b.title}
+                                </h4>
+                                {b.description && (
+                                  <p className="text-sm text-gray-400 line-clamp-2 mb-2">
+                                    {b.description}
+                                  </p>
+                                )}
+                              </>
                             )}
                             <div className="flex items-center gap-2 mb-3">
                               <span
@@ -1263,15 +1443,12 @@ export default function MemberDashboard() {
                               >
                                 {b.status}
                               </span>
-                              <span className="text-sm text-gray-400">
-                                {new Date(b.created_at).toLocaleDateString()}
-                              </span>
+                              {editBlogSlug !== b.slug && (
+                                <span className="text-sm text-gray-400">
+                                  {new Date(b.created_at).toLocaleDateString()}
+                                </span>
+                              )}
                             </div>
-                            {b.description && (
-                              <p className="text-sm text-gray-400 line-clamp-2">
-                                {b.description}
-                              </p>
-                            )}
                           </div>
                           <div className="flex gap-2">
                             {canEditOrDeleteBlog(b) &&
@@ -1279,13 +1456,15 @@ export default function MemberDashboard() {
                                 <>
                                   <button
                                     onClick={saveEditBlog}
-                                    className="px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg font-medium transition-all border border-green-500/30"
+                                    disabled={isSubmitting}
+                                    className="px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg font-medium transition-all border border-green-500/30 disabled:opacity-50"
                                   >
-                                    Save
+                                    {isSubmitting ? "Saving..." : "Save"}
                                   </button>
                                   <button
                                     onClick={() => setEditBlogSlug("")}
-                                    className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 text-gray-400 rounded-lg font-medium transition-all border border-gray-500/30"
+                                    disabled={isSubmitting}
+                                    className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 text-gray-400 rounded-lg font-medium transition-all border border-gray-500/30 disabled:opacity-50"
                                   >
                                     Cancel
                                   </button>
@@ -1324,87 +1503,130 @@ export default function MemberDashboard() {
 
           {/* Create Project Section */}
           {activeSection === "project" && (
-            <div className="max-w-2xl">
-              <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                <FolderIcon className="w-8 h-8 text-blue-400" />
-                Create Project
-              </h1>
+            <div className="max-w-3xl mx-auto">
+              {/* Modern Header */}
+              <div className="mb-8 text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl mb-4 shadow-2xl shadow-blue-500/30">
+                  <FolderIcon className="w-9 h-9 text-white" />
+                </div>
+                <h1 className="text-4xl font-black bg-gradient-to-r from-blue-400 via-cyan-400 to-blue-500 bg-clip-text text-transparent mb-2">
+                  Create Project
+                </h1>
+                <p className="text-gray-400 text-lg">
+                  Share your amazing work with the community
+                </p>
+              </div>
+
               <form
                 onSubmit={createProject}
-                className="bg-gray-800/50 backdrop-blur p-8 rounded-xl border border-gray-700 shadow-xl space-y-5"
+                className="bg-gradient-to-br from-gray-800/70 via-gray-800/50 to-gray-900/70 backdrop-blur-xl p-10 rounded-3xl border border-gray-700/60 shadow-2xl space-y-7 hover:shadow-blue-500/10 transition-all duration-500"
               >
                 {msg && (
                   <div
-                    className={`p-4 rounded-lg ${
+                    className={`p-5 rounded-2xl font-semibold shadow-lg border-2 ${
                       msg.includes("Failed")
-                        ? "bg-red-900/50 text-red-300"
-                        : "bg-green-900/50 text-green-300"
+                        ? "bg-red-900/30 text-red-300 border-red-500/50"
+                        : "bg-green-900/30 text-green-300 border-green-500/50"
                     }`}
                   >
                     {msg}
                   </div>
                 )}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Title
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5 text-blue-400" />
+                    Project Title
                   </label>
                   <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    placeholder="Enter project title"
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-500/50 placeholder-gray-500 text-white font-medium"
+                    placeholder="Enter your project name..."
                     value={pTitle}
                     onChange={(e) => setPTitle(e.target.value)}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5 text-blue-400" />
                     Description
                   </label>
                   <textarea
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg h-32 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    placeholder="Describe your project..."
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl h-36 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-500/50 placeholder-gray-500 text-white font-medium resize-none"
+                    placeholder="Describe what makes your project unique..."
                     value={pDesc}
                     onChange={(e) => setPDesc(e.target.value)}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <LinkIcon className="w-5 h-5 text-blue-400" />
                     Repository URL
                   </label>
                   <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    placeholder="https://github.com/..."
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-500/50 placeholder-gray-500 text-white font-medium"
+                    placeholder="https://github.com/username/repo"
                     value={pRepo}
                     onChange={(e) => setPRepo(e.target.value)}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Live URL (optional)
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <GlobeAltIcon className="w-5 h-5 text-blue-400" />
+                    Live URL{" "}
+                    <span className="text-xs text-gray-500">(optional)</span>
                   </label>
                   <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                    placeholder="https://..."
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-300 hover:border-blue-500/50 placeholder-gray-500 text-white font-medium"
+                    placeholder="https://your-project-demo.com"
                     value={pLive}
                     onChange={(e) => setPLive(e.target.value)}
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Project Image
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <ArrowUpTrayIcon className="w-5 h-5 text-blue-400" />
+                    Project Image{" "}
+                    {pImage && (
+                      <span className="text-green-400 text-xs">
+                        ({pImage.name})
+                      </span>
+                    )}
                   </label>
                   <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white hover:file:bg-blue-700 transition"
+                    key={pImage ? "has-image" : "no-image"}
+                    className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-blue-600 file:to-cyan-600 file:text-white file:font-semibold hover:file:from-blue-700 hover:file:to-cyan-700 file:shadow-lg file:transition-all cursor-pointer"
                     type="file"
                     accept="image/*"
                     onChange={(e) => setPImage(e.target.files?.[0] || null)}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported: JPG, PNG, GIF (Max 5MB)
+                  </p>
                 </div>
-                <button className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 p-4 rounded-lg font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2">
-                  <PaperAirplaneIcon className="w-5 h-5" />
-                  Submit Project
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-700 hover:via-blue-800 hover:to-cyan-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <PaperAirplaneIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                      Submit Project for Review
+                    </>
+                  )}
                 </button>
               </form>
             </div>
@@ -1412,69 +1634,85 @@ export default function MemberDashboard() {
 
           {/* Create Event Section */}
           {activeSection === "event" && (
-            <div className="max-w-2xl">
-              <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                <CalendarIcon className="w-8 h-8 text-green-400" />
-                Create Event
-              </h1>
+            <div className="max-w-3xl mx-auto">
+              {/* Modern Header */}
+              <div className="mb-8 text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-500 rounded-2xl mb-4 shadow-2xl shadow-emerald-500/30">
+                  <CalendarIcon className="w-9 h-9 text-white" />
+                </div>
+                <h1 className="text-4xl font-black bg-gradient-to-r from-emerald-400 via-green-400 to-emerald-500 bg-clip-text text-transparent mb-2">
+                  Create Event
+                </h1>
+                <p className="text-gray-400 text-lg">
+                  Organize and share exciting events with everyone
+                </p>
+              </div>
+
               <form
                 onSubmit={createEvent}
-                className="bg-gray-800/50 backdrop-blur p-8 rounded-xl border border-gray-700 shadow-xl space-y-5"
+                className="bg-gradient-to-br from-gray-800/70 via-gray-800/50 to-gray-900/70 backdrop-blur-xl p-10 rounded-3xl border border-gray-700/60 shadow-2xl space-y-7 hover:shadow-emerald-500/10 transition-all duration-500"
               >
                 {msg && (
                   <div
-                    className={`p-4 rounded-lg ${
+                    className={`p-5 rounded-2xl font-semibold shadow-lg border-2 ${
                       msg.includes("Failed")
-                        ? "bg-red-900/50 text-red-300"
-                        : "bg-green-900/50 text-green-300"
+                        ? "bg-red-900/30 text-red-300 border-red-500/50"
+                        : "bg-green-900/30 text-green-300 border-green-500/50"
                     }`}
                   >
                     {msg}
                   </div>
                 )}
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Title
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5 text-emerald-400" />
+                    Event Title
                   </label>
                   <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                    placeholder="Enter event title"
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 hover:border-emerald-500/50 placeholder-gray-500 text-white font-medium"
+                    placeholder="Enter event name..."
                     value={eTitle}
                     onChange={(e) => setETitle(e.target.value)}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <DocumentTextIcon className="w-5 h-5 text-emerald-400" />
                     Description
                   </label>
                   <textarea
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg h-32 focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                    placeholder="Describe the event..."
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl h-36 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 hover:border-emerald-500/50 placeholder-gray-500 text-white font-medium resize-none"
+                    placeholder="Describe what attendees can expect..."
                     value={eDesc}
                     onChange={(e) => setEDesc(e.target.value)}
                     required
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                      <CalendarIcon className="w-5 h-5 text-emerald-400" />
                       Date
                     </label>
                     <input
-                      className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                      className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 hover:border-emerald-500/50 text-white font-medium"
                       type="date"
                       value={eDate}
                       onChange={(e) => setEDate(e.target.value)}
                       required
                     />
                   </div>
-                  <div>
-                    <label className="block text-sm font-medium mb-2 text-gray-300">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                      <ClockIcon className="w-5 h-5 text-emerald-400" />
                       Time
                     </label>
                     <input
-                      className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
+                      className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 hover:border-emerald-500/50 text-white font-medium"
                       type="time"
                       value={eTime}
                       onChange={(e) => setETime(e.target.value)}
@@ -1482,32 +1720,59 @@ export default function MemberDashboard() {
                     />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <MapPinIcon className="w-5 h-5 text-emerald-400" />
                     Location
                   </label>
                   <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition"
-                    placeholder="Event location"
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all duration-300 hover:border-emerald-500/50 placeholder-gray-500 text-white font-medium"
+                    placeholder="Where will the event take place?"
                     value={eLoc}
                     onChange={(e) => setELoc(e.target.value)}
                     required
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2 text-gray-300">
-                    Event Image
+
+                <div className="space-y-2">
+                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                    <ArrowUpTrayIcon className="w-5 h-5 text-emerald-400" />
+                    Event Image{" "}
+                    {eImage && (
+                      <span className="text-green-400 text-xs">
+                        ({eImage.name})
+                      </span>
+                    )}
                   </label>
                   <input
-                    className="w-full p-3 bg-gray-900 border border-gray-700 rounded-lg file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-green-600 file:text-white hover:file:bg-green-700 transition"
+                    key={eImage ? "has-event-image" : "no-event-image"}
+                    className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-emerald-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-emerald-600 file:to-green-600 file:text-white file:font-semibold hover:file:from-emerald-700 hover:file:to-green-700 file:shadow-lg file:transition-all cursor-pointer"
                     type="file"
                     accept="image/*"
                     onChange={(e) => setEImage(e.target.files?.[0] || null)}
                   />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Supported: JPG, PNG, GIF (Max 5MB)
+                  </p>
                 </div>
-                <button className="w-full bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 p-4 rounded-lg font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2">
-                  <PaperAirplaneIcon className="w-5 h-5" />
-                  Submit Event
+
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full bg-gradient-to-r from-emerald-600 via-green-700 to-emerald-600 hover:from-emerald-700 hover:via-green-800 hover:to-emerald-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-6 h-6 border-3 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      <PaperAirplaneIcon className="w-6 h-6 group-hover:translate-x-1 transition-transform" />
+                      Submit Event for Review
+                    </>
+                  )}
                 </button>
               </form>
             </div>

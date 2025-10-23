@@ -89,10 +89,10 @@ export default function AlumniDashboard() {
 
   const handleProfileUpload = async (file: File) => {
     const formData = new FormData();
-    formData.append("user_photo", file);
+    formData.append("photo", file);
 
     const access = localStorage.getItem("access");
-    const response = await fetch(`${base}/api/auth/profile/update/`, {
+    const response = await fetch(`${base}/api/auth/me/profile/`, {
       method: "PATCH",
       headers: { Authorization: `Bearer ${access}` },
       body: formData,

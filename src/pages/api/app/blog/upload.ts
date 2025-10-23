@@ -13,7 +13,12 @@ async function readBuffer(req: NextApiRequest): Promise<Buffer> {
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") return res.status(405).end();
   const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
-  const authorization = req.headers["authorization"] || "";
+  // Forward auth header; fall back to x-access-token if provided
+  let authorization = (req.headers["authorization"] as string) || "";
+  if (!authorization) {
+    const token = (req.headers["x-access-token"] as string) || "";
+    if (token) authorization = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+  }
   const body = await readBuffer(req);
   const r = await fetch(`${base}/api/blog/uploads/`, {
     method: "POST",
@@ -24,6 +29,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     },
     body,
   } as any);
-  const data = await r.json();
+  const data = await r
+    .json()
+    .catch(() => ({ detail: "Upload response was not JSON" }));
   res.status(r.status).json(data);
 }

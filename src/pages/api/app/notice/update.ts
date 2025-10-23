@@ -14,7 +14,12 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   if (req.method !== 'PATCH' && req.method !== 'PUT') return res.status(405).end();
   const { id } = (req.query as any) as { id?: string };
   const base = process.env.NEXT_PUBLIC_API_BASE || 'http://localhost:8000';
-  const auth = (req.headers['authorization'] as string) || '';
+  // Forward Authorization header; fall back to x-access-token if needed
+  let auth = (req.headers['authorization'] as string) || '';
+  if (!auth) {
+    const token = (req.headers['x-access-token'] as string) || '';
+    if (token) auth = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+  }
   const body = await readBuffer(req);
   if (!req.headers['x-notice-id'] && !id) return res.status(400).json({ detail: 'id required' });
   const targetId = (req.headers['x-notice-id'] as string) || id as string;
@@ -30,4 +35,3 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
   const data = await r.json();
   res.status(r.status).json(data);
 }
-

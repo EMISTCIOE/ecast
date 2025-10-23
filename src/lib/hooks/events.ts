@@ -4,7 +4,7 @@ import { authedFetch } from '../apiClient';
 export function useEvents() {
   const list = useCallback(async (params?: Record<string, any>) => {
     const query = params ? `?${new URLSearchParams(params as any)}` : '';
-    const res = await fetch(`/api/app/event/list${query}`);
+    const res = await authedFetch(`/api/app/event/list${query}`);
     if (!res.ok) throw new Error('list events failed');
     return res.json();
   }, []);
