@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
 
+const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+
 type Blog = {
   id: string;
   slug: string;
@@ -77,7 +79,13 @@ export default function AlumniDetail() {
           <div className="bg-gray-900 p-6 rounded-lg border border-gray-800 mb-8">
             <div className="flex items-start gap-6">
               <img
-                src={user.photo || "/assets/placeholder.png"}
+                src={
+                  user.photo
+                    ? user.photo.startsWith("http")
+                      ? user.photo
+                      : `${base}${user.photo}`
+                    : "/assets/placeholder.png"
+                }
                 alt={user.username}
                 className="w-24 h-24 rounded-full object-cover border-2 border-gray-700"
               />

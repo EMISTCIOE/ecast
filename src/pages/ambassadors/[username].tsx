@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
 
+const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+
 type Blog = {
   id: string;
   slug: string;
@@ -27,12 +29,12 @@ type User = {
 
 export default function AmbassadorDetail() {
   const router = useRouter();
-  const { id } = router.query as { id?: string };
+  const { username } = router.query as { username?: string };
   const [user, setUser] = useState<User | null>(null);
   const [blogs, setBlogs] = useState<Blog[]>([]);
 
   useEffect(() => {
-    if (!id) return;
+    if (!username) return;
 
     // Fetch user details
     (async () => {
@@ -40,7 +42,7 @@ export default function AmbassadorDetail() {
         const r = await fetch(`/api/app/users/public?role=AMBASSADOR`);
         const data = await r.json();
         const foundUser = Array.isArray(data)
-          ? data.find((u: any) => u.id === id)
+          ? data.find((u: any) => u.username === username)
           : null;
         setUser(foundUser);
       } catch {}
@@ -49,12 +51,12 @@ export default function AmbassadorDetail() {
     // Fetch user's blogs
     (async () => {
       try {
-        const r = await fetch(`/api/app/blog/by-author?author=${id}`);
+        const r = await fetch(`/api/app/blog/by-author?author=${username}`);
         const data = await r.json();
         setBlogs(Array.isArray(data) ? data : []);
       } catch {}
     })();
-  }, [id]);
+  }, [username]);
 
   if (!user) {
     return (
@@ -77,7 +79,13 @@ export default function AmbassadorDetail() {
           <div className="bg-gray-900 p-6 rounded-lg border border-gray-800 mb-8">
             <div className="flex items-start gap-6">
               <img
-                src={user.photo || "/assets/placeholder.png"}
+                src={
+                  user.photo
+                    ? user.photo.startsWith("http")
+                      ? user.photo
+                      : `${base}${user.photo}`
+                    : "/assets/placeholder.png"
+                }
                 alt={user.username}
                 className="w-24 h-24 rounded-full object-cover border-2 border-gray-700"
               />
