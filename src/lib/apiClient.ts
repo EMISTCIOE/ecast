@@ -46,8 +46,6 @@ export async function authedFetch(input: RequestInfo | URL, init: RequestInit = 
   const token = typeof window !== 'undefined' ? localStorage.getItem('access') : null;
   const headers = new Headers(init.headers as HeadersInit);
   if (token) headers.set('Authorization', `Bearer ${token}`);
-  // Also pass through to help certain proxies carry the token
-  if (token) headers.set('x-access-token', `Bearer ${token}`);
   const res = await fetch(input, { ...init, headers });
   if (res.status !== 401) return res;
   // Try refresh once
@@ -55,7 +53,6 @@ export async function authedFetch(input: RequestInfo | URL, init: RequestInit = 
   if (!newAccess) return res; // let caller handle 401
   const retryHeaders = new Headers(init.headers as HeadersInit);
   retryHeaders.set('Authorization', `Bearer ${newAccess}`);
-  retryHeaders.set('x-access-token', `Bearer ${newAccess}`);
   return fetch(input, { ...init, headers: retryHeaders });
 }
 

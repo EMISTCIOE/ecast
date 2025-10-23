@@ -6,10 +6,10 @@ import ProfilePictureModal from "@/components/ProfilePictureModal";
 import Footer from "@/components/footar";
 import { useNotices } from "@/lib/hooks/notices";
 import { useBlogs } from "@/lib/hooks/blogs";
-import RichTextEditor from "@/components/RichTextEditor";
 import { useProjects } from "@/lib/hooks/projects";
 import { useEvents } from "@/lib/hooks/events";
 import { useTasks } from "@/lib/hooks/tasks";
+import { useGallery } from "@/lib/hooks/gallery";
 import MySubmissions from "@/components/MySubmissions";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/Toast";
@@ -17,6 +17,14 @@ import CreateNoticeModal from "@/components/modals/CreateNoticeModal";
 import CreateBlogModal from "@/components/modals/CreateBlogModal";
 import CreateProjectModal from "@/components/modals/CreateProjectModal";
 import CreateEventModal from "@/components/modals/CreateEventModal";
+import CreateGalleryModal from "@/components/modals/CreateGalleryModal";
+// Section Components
+import OverviewSection from "@/components/dashboard/sections/OverviewSection";
+import NoticesSection from "@/components/dashboard/sections/NoticesSection";
+import BlogsSection from "@/components/dashboard/sections/BlogsSection";
+import ProjectsSection from "@/components/dashboard/sections/ProjectsSection";
+import EventsSection from "@/components/dashboard/sections/EventsSection";
+import GallerySection from "@/components/dashboard/sections/GallerySection";
 import {
   BellIcon,
   DocumentTextIcon,
@@ -38,6 +46,7 @@ import {
   PlusIcon,
   PencilSquareIcon,
   TrashIcon,
+  PhotoIcon,
 } from "@heroicons/react/24/outline";
 import {
   BellIcon as BellIconSolid,
@@ -58,6 +67,91 @@ type Notice = {
   audience: string;
   published_by_username: string;
 };
+
+// TaskCard component for expandable task display
+function TaskCard({ task, onSubmit }: { task: any; onSubmit: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+  const dueDate = task.due_date ? new Date(task.due_date) : null;
+  const isOverdue = dueDate && dueDate < new Date();
+  const formattedDate = dueDate
+    ? dueDate.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      })
+    : "No deadline";
+
+  return (
+    <div className="group bg-gradient-to-r from-gray-900/60 to-gray-800/60 rounded-xl border border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10 overflow-hidden">
+      <div className="p-5">
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-3 mb-2 flex-wrap">
+              <h4 className="font-semibold text-lg text-white group-hover:text-blue-300 transition-colors">
+                {task.title}
+              </h4>
+              <span
+                className={`px-2.5 py-1 rounded-full text-xs font-bold whitespace-nowrap ${
+                  task.status === "COMPLETED"
+                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                    : task.status === "SUBMITTED"
+                    ? "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
+                    : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                }`}
+              >
+                {task.status || "OPEN"}
+              </span>
+            </div>
+            <div className="flex items-center gap-3 text-sm text-gray-400 mb-3">
+              <div className="flex items-center gap-1.5">
+                <ClockIcon className="w-4 h-4" />
+                <span className={isOverdue ? "text-red-400 font-semibold" : ""}>
+                  Due: {formattedDate}
+                  {isOverdue && " (Overdue!)"}
+                </span>
+              </div>
+            </div>
+            {task.description && (
+              <div className="mt-2">
+                <p
+                  className={`text-sm text-gray-300 leading-relaxed transition-all duration-300 ${
+                    expanded ? "" : "line-clamp-2"
+                  }`}
+                >
+                  {task.description}
+                </p>
+                {task.description.length > 100 && (
+                  <button
+                    onClick={() => setExpanded(!expanded)}
+                    className="text-xs text-blue-400 hover:text-blue-300 mt-1.5 font-medium flex items-center gap-1"
+                  >
+                    {expanded ? (
+                      <>
+                        <span>Show less</span>
+                        <span className="text-lg leading-none">↑</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Read more</span>
+                        <span className="text-lg leading-none">↓</span>
+                      </>
+                    )}
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+          <button
+            onClick={onSubmit}
+            className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 hover:text-blue-300 rounded-lg font-medium transition-all duration-300 hover:scale-105 border border-blue-500/30 whitespace-nowrap flex items-center gap-1.5"
+          >
+            Submit <span className="text-lg leading-none">→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default function MemberDashboard() {
   const [authReady, setAuthReady] = useState(false);
@@ -87,6 +181,11 @@ export default function MemberDashboard() {
   } = useBlogs();
   const { create: createProjectApi, list: listProjects } = useProjects();
   const { create: createEventApi, list: listEvents } = useEvents();
+  const {
+    create: createGalleryApi,
+    list: listGallery,
+    remove: deleteGallery,
+  } = useGallery();
   const { listAssigned, submit } = useTasks();
   const [role, setRole] = useState<string | null>(null);
   const [nTitle, setNTitle] = useState("");
@@ -98,6 +197,7 @@ export default function MemberDashboard() {
   const [myBlogs, setMyBlogs] = useState<any[]>([]);
   const [myProjects, setMyProjects] = useState<any[]>([]);
   const [myEvents, setMyEvents] = useState<any[]>([]);
+  const [myGallery, setMyGallery] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Blog
@@ -152,13 +252,29 @@ export default function MemberDashboard() {
           setRole(u.role || null);
         } catch {}
       }
-      // Fetch both ALL and MEMBERS notices for feed
-      listNotices({ audience: "ALL" }).then((d) =>
-        setNotices((prev) => [...prev, ...d])
-      );
-      listNotices({ audience: "MEMBERS" }).then((d) =>
-        setNotices((prev) => [...prev, ...d])
-      );
+      // Fetch both ALL and MEMBERS notices for feed (deduped)
+      const normalize = (data: any): any[] => {
+        if (Array.isArray(data)) return data;
+        if (data && Array.isArray((data as any).results))
+          return (data as any).results;
+        return [];
+      };
+      Promise.all([
+        listNotices({ audience: "ALL" }),
+        listNotices({ audience: "MEMBERS" }),
+      ])
+        .then(([allData, memberData]) => {
+          const merged = [...normalize(allData), ...normalize(memberData)];
+          const seen = new Set<string>();
+          const unique = merged.filter((n: any) => {
+            const key = String(n.id || n.uuid || n.slug || JSON.stringify(n));
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          setNotices(unique);
+        })
+        .catch(() => {});
       // Fetch my own items for CRUD
       listNotices({ mine: "1" })
         .then(setMyNotices)
@@ -171,6 +287,9 @@ export default function MemberDashboard() {
         .catch(() => {});
       listEvents({ mine: "1" })
         .then(setMyEvents)
+        .catch(() => {});
+      listGallery({ mine: "1" })
+        .then(setMyGallery)
         .catch(() => {});
       listAssigned()
         .then(setTasks)
@@ -239,90 +358,6 @@ export default function MemberDashboard() {
       setMsg("Failed to submit blog");
     } finally {
       setIsSubmitting(false);
-    }
-  };
-
-  // Simple inline edit state for my items
-  const [editNoticeId, setEditNoticeId] = useState<string>("");
-  const [editNoticeTitle, setEditNoticeTitle] = useState("");
-  const [editNoticeContent, setEditNoticeContent] = useState("");
-  const [editNoticeAudience, setEditNoticeAudience] = useState("ALL");
-  const [editNoticeFile, setEditNoticeFile] = useState<File | null>(null);
-  const startEditNotice = (n: any) => {
-    setEditNoticeId(n.id);
-    setEditNoticeTitle(n.title);
-    setEditNoticeContent(n.content);
-    setEditNoticeAudience(n.audience || "ALL");
-    setEditNoticeFile(null);
-  };
-  const saveEditNotice = async () => {
-    if (!editNoticeId) return;
-    setIsSubmitting(true);
-    try {
-      const form = new FormData();
-      form.append("title", editNoticeTitle);
-      form.append("content", editNoticeContent);
-      form.append("audience", editNoticeAudience);
-      if (editNoticeFile) {
-        form.append("attachment", editNoticeFile);
-      }
-      await updateNotice(editNoticeId, form);
-      setEditNoticeId("");
-      setEditNoticeFile(null);
-      listNotices({ mine: "1" }).then(setMyNotices);
-    } catch (error) {
-      console.error("Failed to update notice:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const [editBlogSlug, setEditBlogSlug] = useState<string>("");
-  const [editBlogTitle, setEditBlogTitle] = useState("");
-  const [editBlogDesc, setEditBlogDesc] = useState("");
-  const [editBlogContent, setEditBlogContent] = useState("");
-  const [editBlogCover, setEditBlogCover] = useState<File | null>(null);
-  const startEditBlog = (b: any) => {
-    setEditBlogSlug(b.slug);
-    setEditBlogTitle(b.title);
-    setEditBlogDesc(b.description || "");
-    setEditBlogContent(b.content || "");
-    setEditBlogCover(null);
-  };
-  const saveEditBlog = async () => {
-    if (!editBlogSlug) return;
-    setIsSubmitting(true);
-    try {
-      const form = new FormData();
-      form.append("title", editBlogTitle);
-      form.append("description", editBlogDesc);
-      form.append("content", editBlogContent);
-      if (editBlogCover) {
-        form.append("cover_image", editBlogCover);
-      }
-      await updateBlog(editBlogSlug, form);
-      setEditBlogSlug("");
-      setEditBlogCover(null);
-      listBlogs({ mine: "1" }).then(setMyBlogs);
-    } catch (error) {
-      console.error("Failed to update blog:", error);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handleInsertImage = async (file: File) => {
-    const form = new FormData();
-    form.append("image", file);
-    const res = await fetch("/api/app/blog/upload", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${localStorage.getItem("access")}` },
-      body: form,
-    });
-    if (res.ok) {
-      const data = await res.json();
-      const url = data.url;
-      setBContent((prev) => prev + `\n<img src="${url}" alt="image" />\n`);
     }
   };
 
@@ -418,6 +453,7 @@ export default function MemberDashboard() {
   const [showCreateBlogModal, setShowCreateBlogModal] = useState(false);
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
+  const [showCreateGalleryModal, setShowCreateGalleryModal] = useState(false);
 
   const menuItems = [
     { id: "overview", name: "Overview", icon: HomeIcon },
@@ -425,6 +461,7 @@ export default function MemberDashboard() {
     { id: "blogs", name: "My Blogs", icon: DocumentTextIcon },
     { id: "projects", name: "My Projects", icon: FolderIcon },
     { id: "events", name: "My Events", icon: CalendarIcon },
+    { id: "gallery", name: "My Gallery", icon: PhotoIcon },
     { id: "submit", name: "Submit Task", icon: PaperAirplaneIcon },
     { id: "submissions", name: "My Submissions", icon: DocumentTextIcon },
   ];
@@ -510,6 +547,13 @@ export default function MemberDashboard() {
                   onClick: () => setActiveSection("event"),
                 },
                 {
+                  id: "gallery",
+                  label: "My Gallery",
+                  icon: PhotoIcon as any,
+                  active: activeSection === "gallery",
+                  onClick: () => setActiveSection("gallery"),
+                },
+                {
                   id: "submit",
                   label: "Submit Task",
                   icon: PaperAirplaneIcon as any,
@@ -545,216 +589,12 @@ export default function MemberDashboard() {
         >
           {/* Overview Section */}
           {activeSection === "overview" && (
-            <div className="space-y-8 animate-fade-in">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-5xl font-extrabold mb-2 bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    Welcome Back! 👋
-                  </h1>
-                  <p className="text-gray-400 text-lg">
-                    Let's make today productive
-                  </p>
-                </div>
-              </div>
-
-              {/* Quick Actions */}
-              <div>
-                <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <SparklesIcon className="w-7 h-7 text-yellow-400" />
-                  Quick Actions
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <button
-                    onClick={() => setActiveSection("notice")}
-                    className="group relative overflow-hidden bg-gradient-to-br from-purple-900/40 via-purple-800/20 to-purple-600/10 p-8 rounded-2xl border border-purple-500/30 hover:border-purple-400/60 shadow-xl hover:shadow-2xl hover:shadow-purple-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-purple-600/0 via-purple-500/0 to-purple-400/0 group-hover:from-purple-600/10 group-hover:via-purple-500/5 group-hover:to-purple-400/10 transition-all duration-500"></div>
-                    <div className="relative z-10">
-                      <div className="w-14 h-14 bg-purple-500/20 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-purple-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
-                        <BellIcon className="w-7 h-7 text-purple-400 group-hover:text-purple-300" />
-                      </div>
-                      <h3 className="text-xl font-bold mb-2 group-hover:text-purple-300 transition-colors">
-                        Create Notice
-                      </h3>
-                      <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-                        Post important announcements
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveSection("blog")}
-                    className="group relative overflow-hidden bg-gradient-to-br from-pink-900/40 via-pink-800/20 to-pink-600/10 p-8 rounded-2xl border border-pink-500/30 hover:border-pink-400/60 shadow-xl hover:shadow-2xl hover:shadow-pink-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-pink-600/0 via-pink-500/0 to-pink-400/0 group-hover:from-pink-600/10 group-hover:via-pink-500/5 group-hover:to-pink-400/10 transition-all duration-500"></div>
-                    <div className="relative z-10">
-                      <div className="w-14 h-14 bg-pink-500/20 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-pink-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
-                        <DocumentTextIcon className="w-7 h-7 text-pink-400 group-hover:text-pink-300" />
-                      </div>
-                      <h3 className="text-xl font-bold mb-2 group-hover:text-pink-300 transition-colors">
-                        Write Blog
-                      </h3>
-                      <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-                        Share your thoughts & ideas
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveSection("project")}
-                    className="group relative overflow-hidden bg-gradient-to-br from-blue-900/40 via-blue-800/20 to-blue-600/10 p-8 rounded-2xl border border-blue-500/30 hover:border-blue-400/60 shadow-xl hover:shadow-2xl hover:shadow-blue-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/0 via-blue-500/0 to-blue-400/0 group-hover:from-blue-600/10 group-hover:via-blue-500/5 group-hover:to-blue-400/10 transition-all duration-500"></div>
-                    <div className="relative z-10">
-                      <div className="w-14 h-14 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-blue-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
-                        <FolderIcon className="w-7 h-7 text-blue-400 group-hover:text-blue-300" />
-                      </div>
-                      <h3 className="text-xl font-bold mb-2 group-hover:text-blue-300 transition-colors">
-                        Add Project
-                      </h3>
-                      <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-                        Showcase your amazing work
-                      </p>
-                    </div>
-                  </button>
-
-                  <button
-                    onClick={() => setActiveSection("event")}
-                    className="group relative overflow-hidden bg-gradient-to-br from-emerald-900/40 via-emerald-800/20 to-emerald-600/10 p-8 rounded-2xl border border-emerald-500/30 hover:border-emerald-400/60 shadow-xl hover:shadow-2xl hover:shadow-emerald-500/30 transition-all duration-500 hover:scale-105 hover:-translate-y-2"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-600/0 via-emerald-500/0 to-emerald-400/0 group-hover:from-emerald-600/10 group-hover:via-emerald-500/5 group-hover:to-emerald-400/10 transition-all duration-500"></div>
-                    <div className="relative z-10">
-                      <div className="w-14 h-14 bg-emerald-500/20 rounded-2xl flex items-center justify-center mb-4 group-hover:bg-emerald-500/30 transition-all duration-300 group-hover:scale-110 group-hover:rotate-6">
-                        <CalendarIcon className="w-7 h-7 text-emerald-400 group-hover:text-emerald-300" />
-                      </div>
-                      <h3 className="text-xl font-bold mb-2 group-hover:text-emerald-300 transition-colors">
-                        Create Event
-                      </h3>
-                      <p className="text-sm text-gray-400 group-hover:text-gray-300 transition-colors">
-                        Organize exciting activities
-                      </p>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Tasks Assigned Summary */}
-              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-2xl border border-gray-700/50 shadow-2xl hover:border-gray-600/50 transition-all duration-300">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-2xl font-bold flex items-center gap-3">
-                    <div className="w-10 h-10 bg-blue-500/20 rounded-xl flex items-center justify-center">
-                      <ClipboardDocumentCheckIcon className="w-6 h-6 text-blue-400" />
-                    </div>
-                    Tasks Assigned
-                  </h3>
-                  <button
-                    onClick={() => setActiveSection("submit")}
-                    className="group px-5 py-2.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-xl font-semibold shadow-lg hover:shadow-xl hover:shadow-blue-500/20 transition-all duration-300 flex items-center gap-2 hover:scale-105"
-                  >
-                    <PaperAirplaneIcon className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    Submit Task
-                  </button>
-                </div>
-                {tasks.length === 0 ? (
-                  <div className="text-center py-12">
-                    <ClockIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg">
-                      No tasks assigned yet.
-                    </p>
-                    <p className="text-gray-500 text-sm mt-2">
-                      Check back later for new assignments
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-3">
-                    {tasks.slice(0, 3).map((t: any) => (
-                      <div
-                        key={t.id}
-                        className="group flex items-center justify-between bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-5 rounded-xl border border-gray-700/50 hover:border-blue-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/10"
-                      >
-                        <div className="flex-1">
-                          <div className="font-semibold text-lg text-white group-hover:text-blue-300 transition-colors">
-                            {t.title}
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-gray-400 mt-1">
-                            <ClockIcon className="w-4 h-4" />
-                            Due: {t.due_date || "No deadline"}
-                          </div>
-                        </div>
-                        <button
-                          onClick={() => {
-                            setSelTask(t.id);
-                            setActiveSection("submit");
-                          }}
-                          className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 hover:text-blue-300 rounded-lg font-medium transition-all duration-300 hover:scale-105 border border-blue-500/30"
-                        >
-                          Submit →
-                        </button>
-                      </div>
-                    ))}
-                    {tasks.length > 3 && (
-                      <div className="text-center pt-2">
-                        <button
-                          onClick={() => setActiveSection("submit")}
-                          className="text-sm text-blue-400 hover:text-blue-300 font-medium"
-                        >
-                          +{tasks.length - 3} more tasks • View all →
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-
-              {/* Recent Notices */}
-              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-2xl border border-gray-700/50 shadow-2xl hover:border-gray-600/50 transition-all duration-300">
-                <h3 className="text-2xl font-bold mb-6 flex items-center gap-3">
-                  <div className="w-10 h-10 bg-purple-500/20 rounded-xl flex items-center justify-center">
-                    <BellIcon className="w-6 h-6 text-purple-400" />
-                  </div>
-                  Recent Notices
-                </h3>
-                {sorted.length === 0 ? (
-                  <div className="text-center py-12">
-                    <BellIcon className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                    <p className="text-gray-400 text-lg">No notices yet</p>
-                    <p className="text-gray-500 text-sm mt-2">
-                      Stay tuned for important announcements
-                    </p>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {sorted.slice(0, 5).map((n) => (
-                      <div
-                        key={n.id}
-                        className="group bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-6 rounded-xl border border-gray-700/50 hover:border-purple-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/10"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <h4 className="font-bold text-lg text-purple-300 group-hover:text-purple-200 transition-colors mb-2">
-                              {n.title}
-                            </h4>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-400 mb-3">
-                              <span className="flex items-center gap-1">
-                                <ClockIcon className="w-4 h-4" />
-                                {new Date(n.created_at).toLocaleDateString()}
-                              </span>
-                              <span className="px-2 py-1 bg-purple-500/20 rounded-md text-purple-300 text-xs font-semibold">
-                                {n.audience}
-                              </span>
-                              <span>by {n.published_by_username}</span>
-                            </div>
-                            <p className="text-sm text-gray-300 line-clamp-2 leading-relaxed">
-                              {n.content}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <OverviewSection
+              tasks={tasks}
+              notices={notices}
+              onNavigate={setActiveSection}
+              onTaskSelect={setSelTask}
+            />
           )}
 
           {/* Submit Task Section */}
@@ -782,6 +622,7 @@ export default function MemberDashboard() {
                     setSubMsg("Please add notes or attach a file.");
                     return;
                   }
+                  setIsSubmitting(true);
                   const form = new FormData();
                   form.append("task", selTask);
                   form.append("content", subText);
@@ -792,8 +633,14 @@ export default function MemberDashboard() {
                     setSelTask("");
                     setSubText("");
                     setSubFile(null);
-                  } catch {
-                    setSubMsg("Submission failed");
+                  } catch (err: any) {
+                    setSubMsg(
+                      `Submission failed${
+                        err?.message ? ": " + err.message : ""
+                      }`
+                    );
+                  } finally {
+                    setIsSubmitting(false);
                   }
                 }}
                 className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-10 rounded-3xl border border-gray-700/50 shadow-2xl space-y-6"
@@ -903,674 +750,56 @@ export default function MemberDashboard() {
 
           {/* My Notices Section */}
           {activeSection === "notices" && (
-            <div className="animate-fade-in">
-              {/* Header with Create Button */}
-              <div className="mb-8 flex items-center justify-between">
-                <div>
-                  <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
-                    <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
-                      <BellIcon className="w-7 h-7 text-white" />
-                    </div>
-                    My Notices
-                  </h1>
-                  <p className="text-gray-400 text-lg">
-                    View and manage your submitted notices
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowCreateNoticeModal(true)}
-                  className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-purple-500/30 transition-all duration-300 hover:scale-105"
-                >
-                  <PlusIcon className="w-5 h-5" />
-                  Create Notice
-                </button>
-              </div>
-
-              {/* My Notices List */}
-              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
-                {myNotices.length === 0 ? (
-                  <div className="text-center py-16">
-                    <BellIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
-                    <p className="text-gray-400 text-xl font-semibold mb-2">
-                      No notices created yet
-                    </p>
-                    <p className="text-gray-500 text-sm mb-6">
-                      Create your first notice to share announcements with the
-                      community
-                    </p>
-                    <button
-                      onClick={() => setShowCreateNoticeModal(true)}
-                      className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg transition-all duration-300"
-                    >
-                      <PlusIcon className="w-5 h-5" />
-                      Create Your First Notice
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {myNotices.map((n: any) => (
-                      <div
-                        key={n.id}
-                        className="group bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-6 rounded-2xl border border-gray-700/50 hover:border-purple-500/30 transition-all duration-300"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            {editNoticeId === n.id ? (
-                              <div className="space-y-3">
-                                <input
-                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 font-semibold text-lg text-white"
-                                  placeholder="Notice Title"
-                                  value={editNoticeTitle}
-                                  onChange={(e) =>
-                                    setEditNoticeTitle(e.target.value)
-                                  }
-                                />
-                                <textarea
-                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 resize-none text-white"
-                                  placeholder="Notice Content"
-                                  rows={4}
-                                  value={editNoticeContent}
-                                  onChange={(e) =>
-                                    setEditNoticeContent(e.target.value)
-                                  }
-                                />
-                                <select
-                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 text-white"
-                                  value={editNoticeAudience}
-                                  onChange={(e) =>
-                                    setEditNoticeAudience(e.target.value)
-                                  }
-                                >
-                                  <option value="ALL">All Members</option>
-                                  <option value="MEMBERS">Members Only</option>
-                                  <option value="AMBASSADORS">
-                                    Ambassadors Only
-                                  </option>
-                                </select>
-                                <div>
-                                  <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
-                                    <ArrowUpTrayIcon className="w-4 h-4 text-purple-400" />
-                                    Update Attachment{" "}
-                                    {editNoticeFile && (
-                                      <span className="text-green-400 text-xs">
-                                        ({editNoticeFile.name})
-                                      </span>
-                                    )}
-                                    {n.attachment && !editNoticeFile && (
-                                      <span className="text-gray-500 text-xs">
-                                        (Current:{" "}
-                                        {n.attachment.split("/").pop()})
-                                      </span>
-                                    )}
-                                  </label>
-                                  <input
-                                    type="file"
-                                    accept="application/pdf,image/*"
-                                    className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-purple-500/30 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600/20 file:text-purple-300 hover:file:bg-purple-600/30 file:transition-all cursor-pointer text-sm text-white"
-                                    onChange={(e) =>
-                                      setEditNoticeFile(
-                                        e.target.files?.[0] || null
-                                      )
-                                    }
-                                  />
-                                  {editNoticeFile &&
-                                    editNoticeFile.type?.startsWith(
-                                      "image/"
-                                    ) && (
-                                      <div className="mt-3">
-                                        <img
-                                          src={URL.createObjectURL(
-                                            editNoticeFile
-                                          )}
-                                          alt="New attachment preview"
-                                          className="max-h-48 rounded-lg border border-purple-500/30"
-                                        />
-                                      </div>
-                                    )}
-                                  {!editNoticeFile &&
-                                    n.attachment &&
-                                    isImagePath(n.attachment) && (
-                                      <div className="mt-3">
-                                        <img
-                                          src={
-                                            n.attachment.startsWith("http")
-                                              ? n.attachment
-                                              : `${base}${n.attachment}`
-                                          }
-                                          alt="Current attachment preview"
-                                          className="max-h-48 rounded-lg border border-purple-500/30"
-                                        />
-                                      </div>
-                                    )}
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <h4 className="font-bold text-lg text-white mb-2">
-                                  {n.title}
-                                </h4>
-                                <p className="text-sm text-gray-300 mb-3 line-clamp-2">
-                                  {n.content}
-                                </p>
-                              </>
-                            )}
-                            <div className="flex items-center gap-2 mb-3">
-                              <span
-                                className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                                  n.status === "APPROVED"
-                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                                    : n.status === "REJECTED"
-                                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                                    : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                                }`}
-                              >
-                                {n.status}
-                              </span>
-                              {editNoticeId !== n.id && (
-                                <>
-                                  <span className="px-2 py-1 bg-purple-500/20 rounded-md text-purple-300 text-xs font-semibold">
-                                    {n.audience}
-                                  </span>
-                                  <span className="text-sm text-gray-400">
-                                    {new Date(
-                                      n.created_at
-                                    ).toLocaleDateString()}
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            {canEditOrDeleteNotice(n) &&
-                              (editNoticeId === n.id ? (
-                                <>
-                                  <button
-                                    onClick={saveEditNotice}
-                                    disabled={isSubmitting}
-                                    className="px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg font-medium transition-all border border-green-500/30 disabled:opacity-50"
-                                  >
-                                    {isSubmitting ? "Saving..." : "Save"}
-                                  </button>
-                                  <button
-                                    onClick={() => setEditNoticeId("")}
-                                    disabled={isSubmitting}
-                                    className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 text-gray-400 rounded-lg font-medium transition-all border border-gray-500/30 disabled:opacity-50"
-                                  >
-                                    Cancel
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button
-                                    onClick={() => startEditNotice(n)}
-                                    className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg font-medium transition-all border border-blue-500/30"
-                                  >
-                                    <PencilSquareIcon className="w-5 h-5" />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      deleteNotice(n.id).then(() =>
-                                        listNotices({ mine: "1" }).then(
-                                          setMyNotices
-                                        )
-                                      )
-                                    }
-                                    className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg font-medium transition-all border border-red-500/30"
-                                  >
-                                    <TrashIcon className="w-5 h-5" />
-                                  </button>
-                                </>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <NoticesSection
+              myNotices={myNotices}
+              isSubmitting={isSubmitting}
+              canEditOrDeleteNotice={canEditOrDeleteNotice}
+              onCreateClick={() => setShowCreateNoticeModal(true)}
+              onUpdate={updateNotice}
+              onDelete={deleteNotice}
+              onRefresh={() => listNotices({ mine: "1" }).then(setMyNotices)}
+            />
           )}
 
           {/* My Blogs Section */}
           {activeSection === "blog" && (
-            <div className="animate-fade-in">
-              {/* Header with Create Button */}
-              <div className="mb-8 flex items-center justify-between">
-                <div>
-                  <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
-                    <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/30">
-                      <DocumentTextIcon className="w-7 h-7 text-white" />
-                    </div>
-                    My Blogs
-                  </h1>
-                  <p className="text-gray-400 text-lg">
-                    View and manage your submitted blog posts
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowCreateBlogModal(true)}
-                  className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-pink-500/30 transition-all duration-300 hover:scale-105"
-                >
-                  <PlusIcon className="w-5 h-5" />
-                  Create Blog
-                </button>
-              </div>
-
-              {/* My Blogs List */}
-              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
-                {myBlogs.length === 0 ? (
-                  <div className="text-center py-16">
-                    <DocumentTextIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
-                    <p className="text-gray-400 text-xl font-semibold mb-2">
-                      No blogs created yet
-                    </p>
-                    <p className="text-gray-500 text-sm mb-6">
-                      Create your first blog post to share your ideas with the
-                      community
-                    </p>
-                    <button
-                      onClick={() => setShowCreateBlogModal(true)}
-                      className="bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg transition-all duration-300"
-                    >
-                      <PlusIcon className="w-5 h-5" />
-                      Create Your First Blog
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    {myBlogs.map((b: any) => (
-                      <div
-                        key={b.id}
-                        className="group bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-6 rounded-2xl border border-gray-700/50 hover:border-pink-500/30 transition-all duration-300"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            {editBlogSlug === b.slug ? (
-                              <div className="space-y-3">
-                                <input
-                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 font-semibold text-lg text-white"
-                                  placeholder="Blog Title"
-                                  value={editBlogTitle}
-                                  onChange={(e) =>
-                                    setEditBlogTitle(e.target.value)
-                                  }
-                                />
-                                <input
-                                  className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 text-white"
-                                  placeholder="Short Description"
-                                  value={editBlogDesc}
-                                  onChange={(e) =>
-                                    setEditBlogDesc(e.target.value)
-                                  }
-                                />
-                                <div className="w-full">
-                                  <label className="block text-sm font-semibold text-gray-300 mb-2">
-                                    Blog Content
-                                  </label>
-                                  <RichTextEditor
-                                    value={editBlogContent}
-                                    onChange={setEditBlogContent}
-                                    className="min-h-[300px]"
-                                  />
-                                </div>
-                                <div>
-                                  <label className="block text-sm font-semibold text-gray-300 mb-2 flex items-center gap-2">
-                                    <ArrowUpTrayIcon className="w-4 h-4 text-pink-400" />
-                                    Update Cover Image{" "}
-                                    {editBlogCover && (
-                                      <span className="text-green-400 text-xs">
-                                        ({editBlogCover.name})
-                                      </span>
-                                    )}
-                                    {b.cover_image && !editBlogCover && (
-                                      <span className="text-gray-500 text-xs">
-                                        (Current cover set)
-                                      </span>
-                                    )}
-                                  </label>
-                                  <input
-                                    type="file"
-                                    accept="image/*"
-                                    className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-pink-500/30 rounded-xl hover:border-pink-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-pink-600/20 file:text-pink-300 hover:file:bg-pink-600/30 file:transition-all cursor-pointer text-sm text-white"
-                                    onChange={(e) =>
-                                      setEditBlogCover(
-                                        e.target.files?.[0] || null
-                                      )
-                                    }
-                                  />
-                                  {editBlogCover &&
-                                    editBlogCover.type?.startsWith(
-                                      "image/"
-                                    ) && (
-                                      <div className="mt-3">
-                                        <img
-                                          src={URL.createObjectURL(
-                                            editBlogCover
-                                          )}
-                                          alt="New cover preview"
-                                          className="max-h-48 rounded-lg border border-pink-500/30"
-                                        />
-                                      </div>
-                                    )}
-                                  {!editBlogCover && b.cover_image && (
-                                    <div className="mt-3">
-                                      <img
-                                        src={b.cover_image}
-                                        alt="Current cover preview"
-                                        className="max-h-48 rounded-lg border border-pink-500/30"
-                                      />
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            ) : (
-                              <>
-                                <h4 className="font-bold text-lg text-white mb-2">
-                                  {b.title}
-                                </h4>
-                                {b.description && (
-                                  <p className="text-sm text-gray-400 line-clamp-2 mb-2">
-                                    {b.description}
-                                  </p>
-                                )}
-                              </>
-                            )}
-                            <div className="flex items-center gap-2 mb-3">
-                              <span
-                                className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                                  b.status === "APPROVED"
-                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                                    : b.status === "REJECTED"
-                                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                                    : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                                }`}
-                              >
-                                {b.status}
-                              </span>
-                              {editBlogSlug !== b.slug && (
-                                <span className="text-sm text-gray-400">
-                                  {new Date(b.created_at).toLocaleDateString()}
-                                </span>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex gap-2">
-                            {canEditOrDeleteBlog(b) &&
-                              (editBlogSlug === b.slug ? (
-                                <>
-                                  <button
-                                    onClick={saveEditBlog}
-                                    disabled={isSubmitting}
-                                    className="px-4 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg font-medium transition-all border border-green-500/30 disabled:opacity-50"
-                                  >
-                                    {isSubmitting ? "Saving..." : "Save"}
-                                  </button>
-                                  <button
-                                    onClick={() => setEditBlogSlug("")}
-                                    disabled={isSubmitting}
-                                    className="px-4 py-2 bg-gray-600/20 hover:bg-gray-600/30 text-gray-400 rounded-lg font-medium transition-all border border-gray-500/30 disabled:opacity-50"
-                                  >
-                                    Cancel
-                                  </button>
-                                </>
-                              ) : (
-                                <>
-                                  <button
-                                    onClick={() => startEditBlog(b)}
-                                    className="px-4 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg font-medium transition-all border border-blue-500/30"
-                                  >
-                                    Edit
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      deleteBlog(b.slug).then(() =>
-                                        listBlogs({ mine: "1" }).then(
-                                          setMyBlogs
-                                        )
-                                      )
-                                    }
-                                    className="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 text-red-400 rounded-lg font-medium transition-all border border-red-500/30"
-                                  >
-                                    Delete
-                                  </button>
-                                </>
-                              ))}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <BlogsSection
+              myBlogs={myBlogs}
+              isSubmitting={isSubmitting}
+              canEditOrDeleteBlog={canEditOrDeleteBlog}
+              onCreateClick={() => setShowCreateBlogModal(true)}
+              onUpdate={updateBlog}
+              onDelete={deleteBlog}
+              onRefresh={() => listBlogs({ mine: "1" }).then(setMyBlogs)}
+            />
           )}
 
-          {/* Create Project Section */}
           {/* My Projects Section */}
           {activeSection === "project" && (
-            <div className="animate-fade-in">
-              {/* Header with Create Button */}
-              <div className="mb-8 flex items-center justify-between">
-                <div>
-                  <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
-                      <FolderIcon className="w-7 h-7 text-white" />
-                    </div>
-                    My Projects
-                  </h1>
-                  <p className="text-gray-400 text-lg">
-                    View and manage your submitted projects
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowCreateProjectModal(true)}
-                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-blue-500/30 transition-all duration-300 hover:scale-105"
-                >
-                  <PlusIcon className="w-5 h-5" />
-                  Create Project
-                </button>
-              </div>
-
-              {/* My Projects List */}
-              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
-                {myProjects.length === 0 ? (
-                  <div className="text-center py-16">
-                    <FolderIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
-                    <p className="text-gray-400 text-xl font-semibold mb-2">
-                      No projects created yet
-                    </p>
-                    <p className="text-gray-500 text-sm mb-6">
-                      Create your first project to showcase your work
-                    </p>
-                    <button
-                      onClick={() => setShowCreateProjectModal(true)}
-                      className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg transition-all duration-300"
-                    >
-                      <PlusIcon className="w-5 h-5" />
-                      Create Your First Project
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <p className="text-gray-400">
-                      {myProjects.length} project
-                      {myProjects.length !== 1 ? "s" : ""} submitted
-                    </p>
-                    {myProjects.map((p: any) => (
-                      <div
-                        key={p.id}
-                        className="group bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-6 rounded-2xl border border-gray-700/50 hover:border-blue-500/30 transition-all duration-300"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <h4 className="font-bold text-lg text-white mb-2">
-                              {p.title}
-                            </h4>
-                            {p.description && (
-                              <p className="text-sm text-gray-400 line-clamp-2 mb-2">
-                                {p.description}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-2 mb-3">
-                              <span
-                                className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                                  p.status === "APPROVED"
-                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                                    : p.status === "REJECTED"
-                                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                                    : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                                }`}
-                              >
-                                {p.status}
-                              </span>
-                              <span className="text-sm text-gray-400">
-                                {new Date(p.created_at).toLocaleDateString()}
-                              </span>
-                            </div>
-                            {(p.repo_url || p.live_url) && (
-                              <div className="flex gap-3 mt-2">
-                                {p.repo_url && (
-                                  <a
-                                    href={p.repo_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1"
-                                  >
-                                    <LinkIcon className="w-4 h-4" />
-                                    Repository
-                                  </a>
-                                )}
-                                {p.live_url && (
-                                  <a
-                                    href={p.live_url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="text-cyan-400 hover:text-cyan-300 text-sm flex items-center gap-1"
-                                  >
-                                    <GlobeAltIcon className="w-4 h-4" />
-                                    Live Demo
-                                  </a>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+            <ProjectsSection
+              myProjects={myProjects}
+              onCreateClick={() => setShowCreateProjectModal(true)}
+            />
           )}
 
           {/* My Events Section */}
           {activeSection === "event" && (
-            <div className="animate-fade-in">
-              {/* Header with Create Button */}
-              <div className="mb-8 flex items-center justify-between">
-                <div>
-                  <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
-                      <CalendarIcon className="w-7 h-7 text-white" />
-                    </div>
-                    My Events
-                  </h1>
-                  <p className="text-gray-400 text-lg">
-                    View and manage your submitted events
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowCreateEventModal(true)}
-                  className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 px-6 py-3 rounded-xl font-bold flex items-center gap-2 shadow-lg hover:shadow-emerald-500/30 transition-all duration-300 hover:scale-105"
-                >
-                  <PlusIcon className="w-5 h-5" />
-                  Create Event
-                </button>
-              </div>
+            <EventsSection
+              myEvents={myEvents}
+              onCreateClick={() => setShowCreateEventModal(true)}
+            />
+          )}
 
-              {/* My Events List */}
-              <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-8 rounded-3xl border border-gray-700/50 shadow-2xl">
-                {myEvents.length === 0 ? (
-                  <div className="text-center py-16">
-                    <CalendarIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
-                    <p className="text-gray-400 text-xl font-semibold mb-2">
-                      No events created yet
-                    </p>
-                    <p className="text-gray-500 text-sm mb-6">
-                      Create your first event to engage with the community
-                    </p>
-                    <button
-                      onClick={() => setShowCreateEventModal(true)}
-                      className="bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 px-6 py-3 rounded-xl font-bold inline-flex items-center gap-2 shadow-lg transition-all duration-300"
-                    >
-                      <PlusIcon className="w-5 h-5" />
-                      Create Your First Event
-                    </button>
-                  </div>
-                ) : (
-                  <div className="space-y-4">
-                    <p className="text-gray-400">
-                      {myEvents.length} event{myEvents.length !== 1 ? "s" : ""}{" "}
-                      submitted
-                    </p>
-                    {myEvents.map((e: any) => (
-                      <div
-                        key={e.id}
-                        className="group bg-gradient-to-r from-gray-900/60 to-gray-800/60 p-6 rounded-2xl border border-gray-700/50 hover:border-emerald-500/30 transition-all duration-300"
-                      >
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <h4 className="font-bold text-lg text-white mb-2">
-                              {e.title}
-                            </h4>
-                            {e.description && (
-                              <p className="text-sm text-gray-400 line-clamp-2 mb-2">
-                                {e.description}
-                              </p>
-                            )}
-                            <div className="flex items-center gap-2 mb-3">
-                              <span
-                                className={`px-3 py-1 rounded-lg text-xs font-bold ${
-                                  e.status === "APPROVED"
-                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                                    : e.status === "REJECTED"
-                                    ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                                    : "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30"
-                                }`}
-                              >
-                                {e.status}
-                              </span>
-                            </div>
-                            {(e.date || e.time || e.location) && (
-                              <div className="flex flex-wrap gap-3 mt-2 text-sm text-gray-400">
-                                {e.date && (
-                                  <span className="flex items-center gap-1">
-                                    <CalendarIcon className="w-4 h-4 text-emerald-400" />
-                                    {new Date(e.date).toLocaleDateString()}
-                                  </span>
-                                )}
-                                {e.time && (
-                                  <span className="flex items-center gap-1">
-                                    <ClockIcon className="w-4 h-4 text-emerald-400" />
-                                    {e.time}
-                                  </span>
-                                )}
-                                {e.location && (
-                                  <span className="flex items-center gap-1">
-                                    <MapPinIcon className="w-4 h-4 text-emerald-400" />
-                                    {e.location}
-                                  </span>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
+          {/* My Gallery Section */}
+          {activeSection === "gallery" && (
+            <GallerySection
+              myGallery={myGallery}
+              onCreateClick={() => setShowCreateGalleryModal(true)}
+              onDelete={async (id) => {
+                await deleteGallery(id);
+              }}
+              onRefresh={() => listGallery({ mine: "1" }).then(setMyGallery)}
+            />
           )}
         </div>
 
@@ -1614,8 +843,8 @@ export default function MemberDashboard() {
             const form = new FormData();
             form.append("title", data.title);
             form.append("description", data.description);
-            form.append("repo_url", data.repo_url);
-            if (data.live_url) form.append("live_url", data.live_url);
+            form.append("repo_link", data.repo_link);
+            if (data.live_link) form.append("live_link", data.live_link);
             if (data.image) form.append("image", data.image);
 
             await createProjectApi(form);
@@ -1639,6 +868,18 @@ export default function MemberDashboard() {
             await createEventApi(form);
             toast.success("Event submitted for review successfully!");
             listEvents({ mine: "1" }).then(setMyEvents);
+          }}
+        />
+
+        <CreateGalleryModal
+          isOpen={showCreateGalleryModal}
+          onClose={() => setShowCreateGalleryModal(false)}
+          onSubmit={async (formData) => {
+            await createGalleryApi(formData);
+            toast.success(
+              "Image uploaded successfully! It will be reviewed by admins."
+            );
+            listGallery({ mine: "1" }).then(setMyGallery);
           }}
         />
       </div>

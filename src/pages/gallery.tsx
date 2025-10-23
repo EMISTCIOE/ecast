@@ -19,7 +19,7 @@ export default function GalleryPage() {
   useEffect(() => {
     (async () => {
       try {
-        const r = await fetch("/api/app/gallery/list");
+        const r = await fetch("/api/app/gallery/list?status=APPROVED");
         const data = await r.json();
         setRows(Array.isArray(data) ? data : []);
       } catch {}

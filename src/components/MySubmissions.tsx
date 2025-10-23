@@ -3,11 +3,27 @@ import { useBlogs } from "@/lib/hooks/blogs";
 import { useNotices } from "@/lib/hooks/notices";
 import { useProjects } from "@/lib/hooks/projects";
 import { useEvents } from "@/lib/hooks/events";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  DocumentTextIcon,
+  BellIcon,
+  FolderIcon,
+  CalendarIcon,
+  ClipboardDocumentCheckIcon,
+  CheckCircleIcon,
+  XCircleIcon,
+  ClockIcon,
+  LinkIcon,
+  PaperClipIcon,
+} from "@heroicons/react/24/outline";
 
 type Props = {
   role: "MEMBER" | "AMBASSADOR" | "ALUMNI" | "ADMIN";
   showTasks?: boolean;
 };
+
+const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
 
 export default function MySubmissions({ role, showTasks = true }: Props) {
   const [status, setStatus] = useState<"PENDING" | "APPROVED" | "REJECTED">(
@@ -101,189 +117,400 @@ export default function MySubmissions({ role, showTasks = true }: Props) {
     }
   }, [status, role]);
 
-  const pill = (s: string) => (
-    <span
-      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-        s === "APPROVED"
-          ? "bg-green-900 text-green-200"
-          : s === "PENDING"
-          ? "bg-yellow-900 text-yellow-200"
-          : "bg-red-900 text-red-200"
-      }`}
-    >
-      {s}
-    </span>
-  );
+  const totalSubmissions =
+    blogs.length +
+    notices.length +
+    projects.length +
+    events.length +
+    taskSubs.length;
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
-        <h2 className="text-2xl font-bold">My Submissions</h2>
-        <div className="ml-auto flex items-center gap-2">
-          <button
-            onClick={() => setStatus("PENDING")}
-            className={`px-3 py-1 rounded transition-colors ${
-              status === "PENDING"
-                ? "bg-yellow-700/40 text-yellow-200 border border-yellow-600"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            Pending only
-          </button>
-          <button
-            onClick={() => setStatus("APPROVED")}
-            className={`px-3 py-1 rounded transition-colors ${
-              status === "APPROVED"
-                ? "bg-green-700/40 text-green-200 border border-green-600"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            Approved only
-          </button>
-          <button
-            onClick={() => setStatus("REJECTED")}
-            className={`px-3 py-1 rounded transition-colors ${
-              status === "REJECTED"
-                ? "bg-red-700/40 text-red-200 border border-red-600"
-                : "bg-gray-800 text-gray-300 hover:bg-gray-700"
-            }`}
-          >
-            Rejected only
-          </button>
+      {/* Header with Filters */}
+      <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-6 rounded-2xl border border-gray-700/50 shadow-xl">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-1">
+              My Submissions
+            </h2>
+            <p className="text-sm text-gray-400">
+              Total: {totalSubmissions} submission
+              {totalSubmissions !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-sm text-gray-400 mr-1">Filter:</span>
+            <button
+              onClick={() => setStatus("PENDING")}
+              className={`px-4 py-2 rounded-xl transition-all duration-300 font-semibold text-sm ${
+                status === "PENDING"
+                  ? "bg-yellow-600/30 text-yellow-200 border-2 border-yellow-500/50 shadow-lg"
+                  : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border border-gray-700"
+              }`}
+            >
+              <ClockIcon className="w-4 h-4 inline mr-1.5" />
+              Pending
+            </button>
+            <button
+              onClick={() => setStatus("APPROVED")}
+              className={`px-4 py-2 rounded-xl transition-all duration-300 font-semibold text-sm ${
+                status === "APPROVED"
+                  ? "bg-green-600/30 text-green-200 border-2 border-green-500/50 shadow-lg"
+                  : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border border-gray-700"
+              }`}
+            >
+              <CheckCircleIcon className="w-4 h-4 inline mr-1.5" />
+              Approved
+            </button>
+            <button
+              onClick={() => setStatus("REJECTED")}
+              className={`px-4 py-2 rounded-xl transition-all duration-300 font-semibold text-sm ${
+                status === "REJECTED"
+                  ? "bg-red-600/30 text-red-200 border-2 border-red-500/50 shadow-lg"
+                  : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border border-gray-700"
+              }`}
+            >
+              <XCircleIcon className="w-4 h-4 inline mr-1.5" />
+              Rejected
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Blogs */}
-      <Section title={`Blogs (${blogs.length})`}>
-        <List
-          items={blogs}
-          render={(b: any) => (
-            <div className="flex items-center gap-3">
-              <div className="flex-1 min-w-0">
-                <div className="font-medium truncate">{b.title}</div>
-                <div className="text-xs text-gray-400 truncate">
-                  {b.description || ""}
-                </div>
-              </div>
-              {pill(b.status)}
-            </div>
-          )}
-        />
-      </Section>
-
-      {role !== "ALUMNI" && (
-        <>
-          <Section title={`Notices (${notices.length})`}>
-            <List
-              items={notices}
-              render={(n: any) => (
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{n.title}</div>
-                    <div className="text-xs text-gray-400 truncate">
-                      Audience: {n.audience}
-                    </div>
-                  </div>
-                  {pill(n.status)}
-                </div>
-              )}
-            />
-          </Section>
-
-          <Section title={`Projects (${projects.length})`}>
-            <List
-              items={projects}
-              render={(p: any) => (
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{p.title}</div>
-                    <div className="text-xs text-gray-400 truncate">
-                      {p.description || ""}
-                    </div>
-                  </div>
-                  {pill(p.status)}
-                </div>
-              )}
-            />
-          </Section>
-
-          <Section title={`Events (${events.length})`}>
-            <List
-              items={events}
-              render={(e: any) => (
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="font-medium truncate">{e.title}</div>
-                    <div className="text-xs text-gray-400 truncate">
-                      {e.location || ""}
-                    </div>
-                  </div>
-                  {pill(e.status)}
-                </div>
-              )}
-            />
-          </Section>
-
-          {showTasks && (
-            <Section title={`Task Submissions (${taskSubs.length})`}>
-              <List
-                items={taskSubs}
-                render={(t: any) => (
-                  <div className="flex items-center gap-3">
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium truncate">
-                        {t.task_title || t.task?.title || "Task"}
-                      </div>
-                      <div className="text-xs text-gray-400 truncate">
-                        {new Date(t.created_at).toLocaleString()}
-                      </div>
-                    </div>
-                    {pill(t.status)}
-                  </div>
-                )}
-              />
-            </Section>
-          )}
-        </>
+      {/* Empty State */}
+      {totalSubmissions === 0 && (
+        <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-12 rounded-2xl border border-gray-700/50 text-center">
+          <div className="w-20 h-20 bg-gray-700/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <DocumentTextIcon className="w-10 h-10 text-gray-500" />
+          </div>
+          <h3 className="text-xl font-semibold text-gray-300 mb-2">
+            No {status.toLowerCase()} submissions yet
+          </h3>
+          <p className="text-gray-500">
+            Your {status.toLowerCase()} submissions will appear here
+          </p>
+        </div>
       )}
+
+      {/* Submissions Grid */}
+      <div className="grid gap-5">
+        {/* Blogs Section */}
+        {blogs.length > 0 && (
+          <Section
+            title="Blogs"
+            count={blogs.length}
+            icon={DocumentTextIcon}
+            color="pink"
+          >
+            {blogs.map((b: any) => (
+              <SubmissionCard
+                key={b.id}
+                title={b.title}
+                description={b.description}
+                status={b.status}
+                createdAt={b.created_at}
+                color="pink"
+              />
+            ))}
+          </Section>
+        )}
+
+        {role !== "ALUMNI" && (
+          <>
+            {/* Notices Section */}
+            {notices.length > 0 && (
+              <Section
+                title="Notices"
+                count={notices.length}
+                icon={BellIcon}
+                color="purple"
+              >
+                {notices.map((n: any) => (
+                  <SubmissionCard
+                    key={n.id}
+                    title={n.title}
+                    description={`Audience: ${n.audience}`}
+                    status={n.status}
+                    createdAt={n.created_at}
+                    attachment={n.attachment}
+                    color="purple"
+                  />
+                ))}
+              </Section>
+            )}
+
+            {/* Projects Section */}
+            {projects.length > 0 && (
+              <Section
+                title="Projects"
+                count={projects.length}
+                icon={FolderIcon}
+                color="green"
+              >
+                {projects.map((p: any) => (
+                  <SubmissionCard
+                    key={p.id}
+                    title={p.title}
+                    description={p.description}
+                    status={p.status}
+                    createdAt={p.created_at}
+                    links={[
+                      p.repo_link && { label: "Repository", url: p.repo_link },
+                      p.live_link && { label: "Live Demo", url: p.live_link },
+                    ].filter(Boolean)}
+                    color="green"
+                  />
+                ))}
+              </Section>
+            )}
+
+            {/* Events Section */}
+            {events.length > 0 && (
+              <Section
+                title="Events"
+                count={events.length}
+                icon={CalendarIcon}
+                color="blue"
+              >
+                {events.map((e: any) => (
+                  <SubmissionCard
+                    key={e.id}
+                    title={e.title}
+                    description={e.description}
+                    status={e.status}
+                    createdAt={e.created_at}
+                    metadata={[
+                      e.event_date && {
+                        label: "Date",
+                        value: new Date(e.event_date).toLocaleDateString(),
+                      },
+                      e.location && { label: "Location", value: e.location },
+                    ].filter(Boolean)}
+                    color="blue"
+                  />
+                ))}
+              </Section>
+            )}
+
+            {/* Task Submissions Section */}
+            {showTasks && taskSubs.length > 0 && (
+              <Section
+                title="Task Submissions"
+                count={taskSubs.length}
+                icon={ClipboardDocumentCheckIcon}
+                color="yellow"
+              >
+                {taskSubs.map((t: any) => (
+                  <SubmissionCard
+                    key={t.id}
+                    title={t.task_title || t.task?.title || "Task Submission"}
+                    description={t.content}
+                    status={t.status}
+                    createdAt={t.created_at}
+                    attachment={t.attachment}
+                    color="yellow"
+                  />
+                ))}
+              </Section>
+            )}
+          </>
+        )}
+      </div>
     </div>
   );
 }
 
+// Section Component
 function Section({
   title,
+  count,
+  icon: Icon,
+  color,
   children,
 }: {
   title: string;
+  count: number;
+  icon: any;
+  color: "pink" | "purple" | "green" | "blue" | "yellow";
   children: React.ReactNode;
 }) {
+  const [collapsed, setCollapsed] = useState(false);
+
+  const colorClasses = {
+    pink: "from-pink-900/30 to-pink-600/20 border-pink-500/20 hover:border-pink-500/40",
+    purple:
+      "from-purple-900/30 to-purple-600/20 border-purple-500/20 hover:border-purple-500/40",
+    green:
+      "from-green-900/30 to-green-600/20 border-green-500/20 hover:border-green-500/40",
+    blue: "from-blue-900/30 to-blue-600/20 border-blue-500/20 hover:border-blue-500/40",
+    yellow:
+      "from-yellow-900/30 to-yellow-600/20 border-yellow-500/20 hover:border-yellow-500/40",
+  };
+
+  const iconColorClasses = {
+    pink: "text-pink-400",
+    purple: "text-purple-400",
+    green: "text-green-400",
+    blue: "text-blue-400",
+    yellow: "text-yellow-400",
+  };
+
   return (
-    <div className="bg-gray-800/50 border border-gray-700 rounded-xl p-5">
-      <h3 className="text-lg font-semibold mb-3">{title}</h3>
-      {children}
+    <div
+      className={`bg-gradient-to-br ${colorClasses[color]} backdrop-blur-xl rounded-2xl border transition-all duration-300 overflow-hidden`}
+    >
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="w-full p-5 flex items-center justify-between hover:bg-white/5 transition-colors"
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className={`w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center`}
+          >
+            <Icon className={`w-6 h-6 ${iconColorClasses[color]}`} />
+          </div>
+          <h3 className="text-xl font-bold text-white">
+            {title}{" "}
+            <span className="text-sm font-normal text-gray-400">({count})</span>
+          </h3>
+        </div>
+        {collapsed ? (
+          <ChevronDownIcon className="w-5 h-5 text-gray-400" />
+        ) : (
+          <ChevronUpIcon className="w-5 h-5 text-gray-400" />
+        )}
+      </button>
+      {!collapsed && <div className="p-5 pt-0 space-y-3">{children}</div>}
     </div>
   );
 }
 
-function List({
-  items,
-  render,
+// Submission Card Component
+function SubmissionCard({
+  title,
+  description,
+  status,
+  createdAt,
+  attachment,
+  links,
+  metadata,
+  color,
 }: {
-  items: any[];
-  render: (it: any) => React.ReactNode;
+  title: string;
+  description?: string;
+  status: string;
+  createdAt: string;
+  attachment?: string;
+  links?: Array<{ label: string; url: string }>;
+  metadata?: Array<{ label: string; value: string }>;
+  color: "pink" | "purple" | "green" | "blue" | "yellow";
 }) {
-  if (!items || items.length === 0)
-    return <div className="text-gray-400 text-sm">No items</div>;
+  const [expanded, setExpanded] = useState(false);
+
+  const statusColors = {
+    APPROVED: "bg-green-500/20 text-green-400 border border-green-500/30",
+    PENDING: "bg-yellow-500/20 text-yellow-400 border border-yellow-500/30",
+    REJECTED: "bg-red-500/20 text-red-400 border border-red-500/30",
+  };
+
+  const formattedDate = new Date(createdAt).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+
   return (
-    <div className="space-y-2">
-      {items.map((it) => (
-        <div
-          key={it.id || it.uuid || JSON.stringify(it)}
-          className="bg-gray-900/50 border border-gray-700 rounded-lg p-3"
-        >
-          {render(it)}
+    <div className="bg-gray-900/60 border border-gray-700/50 rounded-xl p-5 hover:border-gray-600/50 transition-all duration-300 hover:shadow-lg">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex-1 min-w-0">
+          <h4 className="font-semibold text-lg text-white mb-1.5 truncate">
+            {title}
+          </h4>
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <ClockIcon className="w-3.5 h-3.5" />
+            <span>{formattedDate}</span>
+          </div>
         </div>
-      ))}
+        <span
+          className={`px-3 py-1.5 rounded-full text-xs font-bold whitespace-nowrap ${
+            statusColors[status as keyof typeof statusColors] ||
+            statusColors.PENDING
+          }`}
+        >
+          {status}
+        </span>
+      </div>
+
+      {description && (
+        <div className="mb-3">
+          <p
+            className={`text-sm text-gray-300 leading-relaxed ${
+              expanded ? "" : "line-clamp-2"
+            }`}
+          >
+            {description}
+          </p>
+          {description.length > 100 && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="text-xs text-blue-400 hover:text-blue-300 mt-1 font-medium"
+            >
+              {expanded ? "Show less ↑" : "Read more ↓"}
+            </button>
+          )}
+        </div>
+      )}
+
+      {metadata && metadata.length > 0 && (
+        <div className="flex flex-wrap gap-3 mb-3">
+          {metadata.map((m: any, i: number) => (
+            <div
+              key={i}
+              className="text-xs bg-gray-800/50 px-2.5 py-1.5 rounded-lg"
+            >
+              <span className="text-gray-500">{m.label}:</span>{" "}
+              <span className="text-gray-300 font-medium">{m.value}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {attachment && (
+        <div className="mb-3">
+          <a
+            href={
+              attachment.startsWith("http")
+                ? attachment
+                : `${base}${attachment}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 text-sm text-blue-400 hover:text-blue-300 font-medium bg-blue-500/10 px-3 py-1.5 rounded-lg hover:bg-blue-500/20 transition-all"
+          >
+            <PaperClipIcon className="w-4 h-4" />
+            View Attachment
+          </a>
+        </div>
+      )}
+
+      {links && links.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          {links.map((link: any, i: number) => (
+            <a
+              key={i}
+              href={link.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-medium bg-blue-500/10 px-2.5 py-1.5 rounded-lg hover:bg-blue-500/20 transition-all"
+            >
+              <LinkIcon className="w-3.5 h-3.5" />
+              {link.label}
+            </a>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

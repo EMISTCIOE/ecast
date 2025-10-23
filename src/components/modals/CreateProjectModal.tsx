@@ -17,8 +17,8 @@ interface CreateProjectModalProps {
   onSubmit: (data: {
     title: string;
     description: string;
-    repo_url: string;
-    live_url: string;
+    repo_link: string;
+    live_link: string;
     image: File | null;
   }) => Promise<void>;
 }
@@ -45,8 +45,8 @@ export default function CreateProjectModal({
       await onSubmit({
         title,
         description,
-        repo_url: repoUrl,
-        live_url: liveUrl,
+        repo_link: repoUrl,
+        live_link: liveUrl,
         image,
       });
       setMessage("Project submitted successfully!");
@@ -170,6 +170,7 @@ export default function CreateProjectModal({
           <input
             type="file"
             accept="image/*"
+            required
             className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-blue-600 file:to-cyan-600 file:text-white file:font-semibold hover:file:from-blue-700 hover:file:to-cyan-700 file:shadow-lg file:transition-all cursor-pointer text-white"
             onChange={(e) => setImage(e.target.files?.[0] || null)}
           />
