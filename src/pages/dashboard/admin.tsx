@@ -56,9 +56,9 @@ export default function AdminDashboard() {
   const [ambassadorsLeaderboard, setAmbassadorsLeaderboard] = useState<any[]>(
     []
   );
-  const [leaderboardTab, setLeaderboardTab] = useState<"alumni" | "ambassadors">(
-    "ambassadors"
-  );
+  const [leaderboardTab, setLeaderboardTab] = useState<
+    "alumni" | "ambassadors"
+  >("ambassadors");
   const [latestBlogs, setLatestBlogs] = useState<any[]>([]);
   const [role, setRole] = useState<string | null>(null);
 
@@ -172,7 +172,7 @@ export default function AdminDashboard() {
         .listAssigned()
         .then((d: any[]) => setTasks(Array.isArray(d) ? d : []))
         .catch(() => setTasks([]));
-      
+
       // Load alumni leaderboard (top 5)
       authedFetch(`${base}/api/auth/leaderboard/alumni/`)
         .then((r) => r.json())
@@ -181,7 +181,7 @@ export default function AdminDashboard() {
           setAlumniLeaderboard(top5);
         })
         .catch(() => {});
-      
+
       // Load ambassadors leaderboard (current batch year only)
       const currentBatchYear = parseInt(
         process.env.NEXT_PUBLIC_CURRENT_BATCH_YEAR || "2082",
@@ -1102,8 +1102,8 @@ export default function AdminDashboard() {
                               {user.full_name || user.username}
                             </h3>
                             <p className="text-sm text-gray-400">
-                              {user.blogs || 0} blogs, {user.tasks_completed || 0}{" "}
-                              tasks
+                              {user.blogs || 0} blogs,{" "}
+                              {user.tasks_completed || 0} tasks
                             </p>
                           </div>
                           <div className="text-right">
@@ -1162,7 +1162,8 @@ export default function AdminDashboard() {
                               {user.full_name || user.username}
                             </h3>
                             <p className="text-sm text-gray-400">
-                              Batch {user.batch_year_bs} • {user.blogs || 0} blogs
+                              Batch {user.batch_year_bs} • {user.blogs || 0}{" "}
+                              blogs
                             </p>
                           </div>
                           <div className="text-right">
