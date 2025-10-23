@@ -418,7 +418,11 @@ export default function RichTextEditor({
         {/* Editor - Always mounted but hidden when not needed */}
         <div
           className={`${
-            viewMode === "split" ? "w-1/2 border-r border-gray-700" : viewMode === "edit" ? "w-full" : "hidden"
+            viewMode === "split"
+              ? "w-1/2 border-r border-gray-700"
+              : viewMode === "edit"
+              ? "w-full"
+              : "hidden"
           }`}
         >
           <div
