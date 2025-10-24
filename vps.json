@@ -3,7 +3,7 @@
   "type": "node",
   "path": "/srv/apps/ecast",
   "port": 3000,
-  "domain": "rac.tcioe.edu.np",
+  "domain": "ecast.tcioe.edu.np",
   "build": "npm install --legacy-peer-deps && npm run build",
   "start": "npm run start"
 }
