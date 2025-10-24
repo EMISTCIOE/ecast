@@ -10,7 +10,7 @@ import { useEvents } from "@/lib/hooks/events";
 import { useTasks } from "@/lib/hooks/tasks";
 import { useProjects } from "@/lib/hooks/projects";
 import { useUsers } from "@/lib/hooks/users";
-import { useGallery } from "@/lib/hooks/gallery";
+import { useIntake, IntakeStatus } from "@/lib/hooks/intake";
 import { authedFetch } from "@/lib/apiClient";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/Toast";
@@ -39,6 +39,7 @@ import {
   CheckIcon,
   ChartBarIcon,
   PresentationChartLineIcon,
+  UserPlusIcon,
 } from "@heroicons/react/24/outline";
 
 const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
@@ -54,10 +55,10 @@ export default function AdminDashboard() {
   }>();
   const [activeSection, setActiveSection] = useState("overview");
   const toast = useToast();
+  const { fetchStatus, updateStatus, fetchInfo } = useIntake();
 
   const [tasks, setTasks] = useState<any[]>([]);
   const [showTaskModal, setShowTaskModal] = useState(false);
-  const [leaderboard, setLeaderboard] = useState<any[]>([]);
   const [alumniLeaderboard, setAlumniLeaderboard] = useState<any[]>([]);
   const [ambassadorsLeaderboard, setAmbassadorsLeaderboard] = useState<any[]>(
     []
@@ -67,6 +68,16 @@ export default function AdminDashboard() {
   >("ambassadors");
   const [latestBlogs, setLatestBlogs] = useState<any[]>([]);
   const [role, setRole] = useState<string | null>(null);
+
+  // Intake status state
+  const [intakeStatus, setIntakeStatus] = useState<IntakeStatus | null>(null);
+  const [isTogglingIntake, setIsTogglingIntake] = useState(false);
+  const [showIntakeDialog, setShowIntakeDialog] = useState(false);
+  const [intakeStartDate, setIntakeStartDate] = useState("");
+  const [intakeEndDate, setIntakeEndDate] = useState("");
+  const [createNewBatch, setCreateNewBatch] = useState(false);
+  const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
+  const [availableBatches, setAvailableBatches] = useState<any[]>([]);
 
   // Task form
   const [assignees, setAssignees] = useState<any[]>([]);
@@ -82,7 +93,6 @@ export default function AdminDashboard() {
   const [pendingNotices, setPendingNotices] = useState<any[]>([]);
   const [pendingEvents, setPendingEvents] = useState<any[]>([]);
   const [pendingProjects, setPendingProjects] = useState<any[]>([]);
-  const [pendingGallery, setPendingGallery] = useState<any[]>([]);
   const [pendingSubs, setPendingSubs] = useState<any[]>([]);
   const [previewSub, setPreviewSub] = useState<any | null>(null);
 
@@ -94,7 +104,6 @@ export default function AdminDashboard() {
   const { list: listNotices } = useNotices();
   const { list: listEvents } = useEvents();
   const { list: listProjects } = useProjects();
-  const { list: listGallery } = useGallery();
   const tasksApi = useTasks();
   const {
     listUsers,
@@ -172,9 +181,6 @@ export default function AdminDashboard() {
       listProjects({ status: "PENDING" })
         .then(setPendingProjects)
         .catch(() => {});
-      listGallery({ status: "PENDING" })
-        .then(setPendingGallery)
-        .catch(() => {});
       pendingSubsApi()
         .then(setPendingSubs)
         .catch(() => {});
@@ -212,8 +218,107 @@ export default function AdminDashboard() {
 
       // Load analytics data (last 7 days)
       fetchAnalyticsData();
+
+      // Load intake status
+      loadIntakeStatus();
     }
   }, []);
+
+  // Auto-assign role based on committee position in create mode (only for committee mode)
+  useEffect(() => {
+    if (cmPosition === "President" || cmPosition === "Vice President") {
+      setCmRole("ADMIN");
+    } else if (cmPosition) {
+      setCmRole("MEMBER");
+    }
+  }, [cmPosition]);
+
+  const loadIntakeStatus = async () => {
+    try {
+      const status = await fetchStatus();
+      console.log("Loaded intake status:", status);
+      setIntakeStatus(status);
+
+      // Also load batch information
+      const info = await fetchInfo();
+      setAvailableBatches(info.batches || []);
+    } catch (error) {
+      console.error("Failed to load intake status:", error);
+    }
+  };
+
+  const toggleIntakeStatus = async () => {
+    if (!intakeStatus) {
+      console.log("No intake status available");
+      return;
+    }
+
+    // If opening, show dialog to collect parameters
+    if (!intakeStatus.is_open) {
+      console.log("Opening intake dialog...");
+      setShowIntakeDialog(true);
+      return;
+    }
+
+    // If closing, proceed directly
+    setIsTogglingIntake(true);
+    try {
+      const newStatus = await updateStatus(!intakeStatus.is_open);
+      setIntakeStatus(newStatus);
+      toast.success(
+        `Enrollment ${newStatus.is_open ? "opened" : "closed"} successfully!`
+      );
+
+      // Reload intake status to ensure we have the latest data
+      await loadIntakeStatus();
+    } catch (error) {
+      console.error("Failed to toggle intake status:", error);
+      toast.error("Failed to update enrollment status");
+    } finally {
+      setIsTogglingIntake(false);
+    }
+  };
+
+  const handleOpenIntake = async () => {
+    if (!intakeStartDate) {
+      toast.error("Please set a start date and time");
+      return;
+    }
+
+    setIsTogglingIntake(true);
+    try {
+      const params: any = {
+        start_datetime: new Date(intakeStartDate).toISOString(),
+        create_new_batch: createNewBatch,
+      };
+
+      if (intakeEndDate) {
+        params.end_datetime = new Date(intakeEndDate).toISOString();
+      }
+
+      if (selectedBatches.length > 0) {
+        params.available_batches = selectedBatches;
+      }
+
+      const newStatus = await updateStatus(true, params);
+      setIntakeStatus(newStatus);
+      toast.success("Enrollment opened successfully!");
+      setShowIntakeDialog(false);
+      // Reset form
+      setIntakeStartDate("");
+      setIntakeEndDate("");
+      setCreateNewBatch(false);
+      setSelectedBatches([]);
+
+      // Reload intake status to ensure we have the latest data
+      await loadIntakeStatus();
+    } catch (error) {
+      console.error("Failed to open intake:", error);
+      toast.error("Failed to open enrollment");
+    } finally {
+      setIsTogglingIntake(false);
+    }
+  };
 
   const fetchAnalyticsData = async () => {
     setAnalyticsLoading(true);
@@ -466,6 +571,77 @@ export default function AdminDashboard() {
               <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
                 Dashboard Overview
               </h1>
+
+              {/* Enrollment Status Control */}
+              <div className="mb-4 bg-gradient-to-br from-indigo-900/40 to-indigo-600/20 p-6 rounded-lg border border-indigo-500/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <UserPlusIcon className="w-8 h-8 text-indigo-400" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">
+                        Enrollment Status
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        {intakeStatus?.is_open
+                          ? "Students can currently submit applications"
+                          : "Enrollment is currently closed"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-sm text-gray-400">Status</div>
+                      <div
+                        className={`text-lg font-bold ${
+                          intakeStatus?.is_open
+                            ? "text-green-400"
+                            : "text-red-400"
+                        }`}
+                      >
+                        {intakeStatus?.is_open ? "OPEN" : "CLOSED"}
+                      </div>
+                    </div>
+                    <button
+                      onClick={toggleIntakeStatus}
+                      disabled={isTogglingIntake || !intakeStatus}
+                      className={`relative inline-flex items-center h-8 rounded-full w-16 transition-colors duration-200 ease-in-out focus:outline-none ${
+                        intakeStatus?.is_open ? "bg-green-600" : "bg-gray-600"
+                      } ${
+                        isTogglingIntake || !intakeStatus
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block w-6 h-6 transform transition-transform duration-200 ease-in-out bg-white rounded-full ${
+                          intakeStatus?.is_open
+                            ? "translate-x-9"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+                {intakeStatus?.message && (
+                  <div className="mt-3 p-3 bg-gray-900/50 rounded-lg">
+                    <p className="text-sm text-gray-300">
+                      <span className="font-semibold">Message: </span>
+                      {intakeStatus.message}
+                    </p>
+                  </div>
+                )}
+                {intakeStatus?.end_date && intakeStatus.is_open && (
+                  <div className="mt-2 text-sm text-gray-400">
+                    Deadline:{" "}
+                    {new Date(intakeStatus.end_date).toLocaleString("en-NP", {
+                      timeZone: "Asia/Kathmandu",
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div
                   onClick={() => setActiveSection("notices")}
@@ -1439,6 +1615,165 @@ export default function AdminDashboard() {
           )}
         </div>
       </div>
+
+      {/* Intake Opening Dialog */}
+      {showIntakeDialog && (
+        <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a1f3a] rounded-2xl shadow-2xl max-w-2xl w-full border border-indigo-700 max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-700">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-indigo-400 flex items-center gap-2">
+                  <UserPlusIcon className="w-7 h-7" />
+                  Open Enrollment
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowIntakeDialog(false);
+                    setIntakeStartDate("");
+                    setIntakeEndDate("");
+                    setCreateNewBatch(false);
+                    setSelectedBatches([]);
+                  }}
+                  className="text-gray-400 hover:text-white transition"
+                >
+                  <XMarkIcon className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6 space-y-6">
+              <p className="text-gray-300">
+                Configure the enrollment settings before opening registration.
+              </p>
+
+              {/* Start Date/Time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Start Date & Time <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="datetime-local"
+                  className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                  value={intakeStartDate}
+                  onChange={(e) => setIntakeStartDate(e.target.value)}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  When should enrollment open?
+                </p>
+              </div>
+
+              {/* End Date/Time */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  End Date & Time (Optional)
+                </label>
+                <input
+                  type="datetime-local"
+                  className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl text-white"
+                  value={intakeEndDate}
+                  onChange={(e) => setIntakeEndDate(e.target.value)}
+                />
+                <p className="text-xs text-gray-400 mt-1">
+                  Leave empty for no deadline
+                </p>
+              </div>
+
+              {/* Create New Batch */}
+              <div className="flex items-center gap-3 p-4 bg-[#252b47] rounded-xl border border-gray-600">
+                <input
+                  type="checkbox"
+                  id="createNewBatch"
+                  checked={createNewBatch}
+                  onChange={(e) => setCreateNewBatch(e.target.checked)}
+                  className="w-5 h-5 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500"
+                />
+                <label
+                  htmlFor="createNewBatch"
+                  className="text-gray-300 cursor-pointer"
+                >
+                  <div className="font-medium">Create New Batch</div>
+                  <div className="text-xs text-gray-400">
+                    Check this if you want to start a new batch for enrollment
+                  </div>
+                </label>
+              </div>
+
+              {/* Available Batches Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-300 mb-2">
+                  Available Batches (Optional)
+                </label>
+                <div className="bg-[#252b47] border border-gray-600 p-4 rounded-xl space-y-2 max-h-48 overflow-y-auto">
+                  {availableBatches.length === 0 ? (
+                    <p className="text-gray-400 text-sm">
+                      No batches available
+                    </p>
+                  ) : (
+                    availableBatches.map((batch: any) => (
+                      <div key={batch.code} className="flex items-center gap-3">
+                        <input
+                          type="checkbox"
+                          id={`batch-${batch.code}`}
+                          checked={selectedBatches.includes(batch.code)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedBatches([
+                                ...selectedBatches,
+                                batch.code,
+                              ]);
+                            } else {
+                              setSelectedBatches(
+                                selectedBatches.filter(
+                                  (b: string) => b !== batch.code
+                                )
+                              );
+                            }
+                          }}
+                          className="w-4 h-4 text-indigo-600 bg-gray-700 border-gray-600 rounded focus:ring-indigo-500"
+                        />
+                        <label
+                          htmlFor={`batch-${batch.code}`}
+                          className="text-gray-300 cursor-pointer flex-1"
+                        >
+                          {batch.label}
+                        </label>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Leave empty to allow all batches
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleOpenIntake}
+                  disabled={isTogglingIntake || !intakeStartDate}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                >
+                  <CheckIcon className="w-5 h-5" />
+                  {isTogglingIntake ? "Opening..." : "Open Enrollment"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowIntakeDialog(false);
+                    setIntakeStartDate("");
+                    setIntakeEndDate("");
+                    setCreateNewBatch(false);
+                    setSelectedBatches([]);
+                  }}
+                  disabled={isTogglingIntake}
+                  className="px-6 py-3 rounded-xl border-2 border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </>
   );
@@ -1705,9 +2040,6 @@ function UsersCrud({
           </div>
         ) : (
           list.map((u: any) => {
-            // Debug: log the user object to see what fields are actually available
-            console.log("User data:", u);
-
             // Get photo URL - check committee object first, then user_photo field
             const getPhotoUrl = () => {
               let photoUrl = null;
