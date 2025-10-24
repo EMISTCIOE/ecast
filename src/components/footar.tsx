@@ -9,6 +9,7 @@ import {
   FaArrowRight,
 } from "react-icons/fa";
 import Link from "next/link";
+import { NewsletterForm } from "./NewsletterForm";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -43,10 +44,10 @@ const Footer = () => {
       </div>
 
       <div className="relative max-w-7xl mx-auto px-6 pt-20 pb-8">
-        {/* Main Content Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-8 lg:gap-12 mb-12">
-          {/* Brand Column - Larger */}
-          <div className="lg:col-span-4 space-y-6">
+        {/* Main Content Grid - 6 Column Layout */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6 mb-12">
+          {/* Brand Column */}
+          <div className="lg:col-span-1 space-y-6">
             <Link href="/" className="inline-flex items-center group">
               <Image
                 src="/assets/ecast-logo.png"
@@ -62,12 +63,6 @@ const Footer = () => {
                 </p>
               </div>
             </Link>
-
-            <p className="text-gray-400 leading-relaxed pr-4">
-              Electronics and Computer Community Amidst Students, Thapathali. We
-              are dedicated to fostering innovation, collaboration, and
-              excellence among engineering students.
-            </p>
 
             {/* Social Icons with Glassmorphism */}
             <div className="flex flex-wrap gap-3">
@@ -98,20 +93,11 @@ const Footer = () => {
               >
                 <FaFacebook className="text-xl text-gray-400 group-hover:text-blue-400 transition-colors duration-300" />
               </a>
-              <a
-                href="https://discord.gg/4n8rquAp5H"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group relative p-3 bg-white bg-opacity-5 backdrop-blur-sm border border-white border-opacity-10 rounded-lg hover:border-indigo-500 transition-all duration-300"
-                aria-label="Discord"
-              >
-                <FaDiscord className="text-xl text-gray-400 group-hover:text-indigo-500 transition-colors duration-300" />
-              </a>
             </div>
           </div>
 
           {/* Quick Links */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <h3 className="text-sm font-bold uppercase tracking-wider text-blue-400 mb-4">
               Quick Links
             </h3>
@@ -138,7 +124,7 @@ const Footer = () => {
           </div>
 
           {/* Community */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <h3 className="text-sm font-bold uppercase tracking-wider text-blue-400 mb-4">
               Community
             </h3>
@@ -164,7 +150,7 @@ const Footer = () => {
           </div>
 
           {/* Resources */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-1">
             <h3 className="text-sm font-bold uppercase tracking-wider text-blue-400 mb-4">
               Resources
             </h3>
@@ -189,8 +175,8 @@ const Footer = () => {
             </nav>
           </div>
 
-          {/* Contact - Now smaller */}
-          <div className="lg:col-span-2">
+          {/* Contact */}
+          <div className="lg:col-span-1">
             <h3 className="text-sm font-bold uppercase tracking-wider text-blue-400 mb-4">
               Contact
             </h3>
@@ -225,6 +211,11 @@ const Footer = () => {
               </div>
             </div>
           </div>
+
+          {/* Newsletter */}
+          <div className="lg:col-span-1">
+            <NewsletterForm />
+          </div>
         </div>
 
         {/* Bottom Bar */}
@@ -235,13 +226,13 @@ const Footer = () => {
             </p>
             <div className="flex flex-wrap justify-center gap-6 text-sm">
               <Link
-                href="/privacy-policy"
+                href="#"
                 className="text-gray-500 hover:text-blue-400 transition-colors duration-200"
               >
                 Privacy
               </Link>
               <Link
-                href="/terms"
+                href="#"
                 className="text-gray-500 hover:text-blue-400 transition-colors duration-200"
               >
                 Terms

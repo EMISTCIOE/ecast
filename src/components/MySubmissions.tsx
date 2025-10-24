@@ -3,6 +3,7 @@ import { useBlogs } from "@/lib/hooks/blogs";
 import { useNotices } from "@/lib/hooks/notices";
 import { useProjects } from "@/lib/hooks/projects";
 import { useEvents } from "@/lib/hooks/events";
+import { useResearch } from "@/lib/hooks/research";
 import {
   ChevronDownIcon,
   ChevronUpIcon,
@@ -33,12 +34,14 @@ export default function MySubmissions({ role, showTasks = true }: Props) {
   const [notices, setNotices] = useState<any[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [events, setEvents] = useState<any[]>([]);
+  const [research, setResearch] = useState<any[]>([]);
   const [taskSubs, setTaskSubs] = useState<any[]>([]);
 
   const blogsApi = useBlogs();
   const noticesApi = useNotices();
   const projectsApi = useProjects();
   const eventsApi = useEvents();
+  const researchApi = useResearch();
 
   useEffect(() => {
     blogsApi
@@ -91,6 +94,18 @@ export default function MySubmissions({ role, showTasks = true }: Props) {
           }
         })
         .catch(() => setEvents([]));
+      researchApi
+        .list({ mine: "1", status })
+        .then((data) => {
+          if (Array.isArray(data)) {
+            setResearch(data);
+          } else if (data?.results && Array.isArray(data.results)) {
+            setResearch(data.results);
+          } else {
+            setResearch([]);
+          }
+        })
+        .catch(() => setResearch([]));
       if (showTasks) {
         fetch(`/api/app/tasks/submissions?status=${status}`, {
           headers: {
@@ -113,6 +128,7 @@ export default function MySubmissions({ role, showTasks = true }: Props) {
       setNotices([]);
       setProjects([]);
       setEvents([]);
+      setResearch([]);
       setTaskSubs([]);
     }
   }, [status, role]);
@@ -122,6 +138,7 @@ export default function MySubmissions({ role, showTasks = true }: Props) {
     notices.length +
     projects.length +
     events.length +
+    research.length +
     taskSubs.length;
 
   return (
@@ -292,6 +309,46 @@ export default function MySubmissions({ role, showTasks = true }: Props) {
               </Section>
             )}
 
+            {/* Research Section */}
+            {research.length > 0 && (
+              <Section
+                title="Research Papers"
+                count={research.length}
+                icon={DocumentTextIcon}
+                color="cyan"
+              >
+                {research.map((r: any) => (
+                  <SubmissionCard
+                    key={r.id}
+                    title={r.title}
+                    description={r.abstract}
+                    status={r.status}
+                    createdAt={r.created_at}
+                    metadata={[
+                      r.authors && { label: "Authors", value: r.authors },
+                      r.journal_name && {
+                        label: "Journal",
+                        value: r.journal_name,
+                      },
+                      r.publication_date && {
+                        label: "Published",
+                        value: new Date(
+                          r.publication_date
+                        ).toLocaleDateString(),
+                      },
+                      r.keywords && { label: "Keywords", value: r.keywords },
+                    ].filter(Boolean)}
+                    links={
+                      r.doi_link
+                        ? [{ label: "DOI", url: r.doi_link }]
+                        : undefined
+                    }
+                    color="cyan"
+                  />
+                ))}
+              </Section>
+            )}
+
             {/* Task Submissions Section */}
             {showTasks && taskSubs.length > 0 && (
               <Section
@@ -331,7 +388,7 @@ function Section({
   title: string;
   count: number;
   icon: any;
-  color: "pink" | "purple" | "green" | "blue" | "yellow";
+  color: "pink" | "purple" | "green" | "blue" | "yellow" | "cyan";
   children: React.ReactNode;
 }) {
   const [collapsed, setCollapsed] = useState(false);
@@ -345,6 +402,7 @@ function Section({
     blue: "from-blue-900/30 to-blue-600/20 border-blue-500/20 hover:border-blue-500/40",
     yellow:
       "from-yellow-900/30 to-yellow-600/20 border-yellow-500/20 hover:border-yellow-500/40",
+    cyan: "from-cyan-900/30 to-cyan-600/20 border-cyan-500/20 hover:border-cyan-500/40",
   };
 
   const iconColorClasses = {
@@ -353,6 +411,7 @@ function Section({
     green: "text-green-400",
     blue: "text-blue-400",
     yellow: "text-yellow-400",
+    cyan: "text-cyan-400",
   };
 
   return (
@@ -403,7 +462,7 @@ function SubmissionCard({
   attachment?: string;
   links?: Array<{ label: string; url: string }>;
   metadata?: Array<{ label: string; value: string }>;
-  color: "pink" | "purple" | "green" | "blue" | "yellow";
+  color: "pink" | "purple" | "green" | "blue" | "yellow" | "cyan";
 }) {
   const [expanded, setExpanded] = useState(false);
 
