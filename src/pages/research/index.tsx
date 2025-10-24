@@ -137,6 +137,8 @@ const ResearchList: React.FC<ResearchListProps> = ({ research }) => {
   );
 };
 
+export default ResearchList;
+
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const host = ctx.req?.headers?.host || "localhost:3000";
   const protocol =

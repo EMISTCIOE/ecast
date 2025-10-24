@@ -47,7 +47,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/events`,
+      url: `${BASE_URL}/ourevents`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
@@ -65,10 +65,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     },
     {
-      url: `${BASE_URL}/contact`,
+      url: `${BASE_URL}/contact-us`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/research`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
     },
   ];
 
@@ -86,7 +92,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const eventPages: MetadataRoute.Sitemap = events
     .filter((event: any) => event.status === "APPROVED")
     .map((event: any) => ({
-      url: `${BASE_URL}/events/${event.slug || event.id}`,
+      url: `${BASE_URL}/ourevents/${event.slug || event.id}`,
       lastModified: new Date(event.updated_at || event.created_at),
       changeFrequency: "weekly" as const,
       priority: 0.7,
@@ -102,5 +108,21 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     }));
 
-  return [...staticPages, ...blogPages, ...eventPages, ...projectPages];
+  // Dynamic notice pages
+  const noticePages: MetadataRoute.Sitemap = notices
+    .filter((notice: any) => notice.status === "APPROVED")
+    .map((notice: any) => ({
+      url: `${BASE_URL}/notices/${notice.slug || notice.id}`,
+      lastModified: new Date(notice.updated_at || notice.created_at),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    }));
+
+  return [
+    ...staticPages,
+    ...blogPages,
+    ...eventPages,
+    ...projectPages,
+    ...noticePages,
+  ];
 }
