@@ -19,6 +19,10 @@ import AdminBlogsCrud from "@/components/admin/BlogsCrud";
 import AdminEventsCrud from "@/components/admin/EventsCrud";
 import AdminProjectsCrud from "@/components/admin/ProjectsCrud";
 import AdminGalleryCrud from "@/components/admin/GalleryCrud";
+
+import { ComprehensiveAnalyticsDashboard } from "@/components/analytics/ComprehensiveAnalyticsDashboard";
+import { ChartCard } from "@/components/analytics/Charts";
+
 import {
   BellIcon,
   DocumentTextIcon,
@@ -33,6 +37,8 @@ import {
   PencilSquareIcon,
   TrashIcon,
   CheckIcon,
+  ChartBarIcon,
+  PresentationChartLineIcon,
 } from "@heroicons/react/24/outline";
 
 const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
@@ -79,6 +85,10 @@ export default function AdminDashboard() {
   const [pendingGallery, setPendingGallery] = useState<any[]>([]);
   const [pendingSubs, setPendingSubs] = useState<any[]>([]);
   const [previewSub, setPreviewSub] = useState<any | null>(null);
+
+  // Analytics data
+  const [analyticsData, setAnalyticsData] = useState<any>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   const { list: listBlogs } = useBlogs();
   const { list: listNotices } = useNotices();
@@ -199,8 +209,38 @@ export default function AdminDashboard() {
           setAmbassadorsLeaderboard(currentBatch);
         })
         .catch(() => {});
+
+      // Load analytics data (last 7 days)
+      fetchAnalyticsData();
     }
   }, []);
+
+  const fetchAnalyticsData = async () => {
+    setAnalyticsLoading(true);
+    try {
+      const websiteId = process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID;
+      if (!websiteId || websiteId === "your-website-id-here") {
+        setAnalyticsLoading(false);
+        return;
+      }
+
+      const endAt = new Date().getTime();
+      const startAt = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).getTime();
+
+      const response = await fetch(
+        `/api/analytics/umami?websiteId=${websiteId}&startAt=${startAt}&endAt=${endAt}`
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setAnalyticsData(data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch analytics:", error);
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  };
 
   const createCommitteeMember = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -384,6 +424,13 @@ export default function AdminDashboard() {
                     active: activeSection === "leaderboard",
                     onClick: () => setActiveSection("leaderboard"),
                   },
+                  {
+                    id: "analytics",
+                    label: "Analytics",
+                    icon: PresentationChartLineIcon,
+                    active: activeSection === "analytics",
+                    onClick: () => setActiveSection("analytics"),
+                  },
                 ],
               },
               {
@@ -415,92 +462,92 @@ export default function AdminDashboard() {
           } transition-all duration-300 p-8 mt-16`}
         >
           {activeSection === "overview" && (
-            <div className="max-w-7xl mx-auto space-y-6">
-              <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
+            <div className="max-w-7xl mx-auto space-y-4">
+              <h1 className="text-3xl font-bold mb-4 bg-gradient-to-r from-purple-400 via-pink-400 to-blue-400 bg-clip-text text-transparent">
                 Dashboard Overview
               </h1>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <div
                   onClick={() => setActiveSection("notices")}
-                  className="bg-gradient-to-br from-purple-900/30 to-purple-600/20 p-6 rounded-xl border border-purple-500/20 hover:border-purple-500/40 transition cursor-pointer"
+                  className="bg-gradient-to-br from-purple-900/30 to-purple-600/20 p-4 rounded-lg border border-purple-500/20 hover:border-purple-500/40 transition cursor-pointer"
                 >
-                  <BellIcon className="w-10 h-10 mb-3 text-purple-400" />
-                  <h3 className="text-lg font-semibold mb-1">
+                  <BellIcon className="w-8 h-8 mb-2 text-purple-400" />
+                  <h3 className="text-sm font-semibold mb-1">
                     Pending Notices
                   </h3>
-                  <p className="text-3xl font-bold text-purple-300">
+                  <p className="text-2xl font-bold text-purple-300">
                     {pendingNotices.length}
                   </p>
                 </div>
                 <div
                   onClick={() => setActiveSection("blogs")}
-                  className="bg-gradient-to-br from-pink-900/30 to-pink-600/20 p-6 rounded-xl border border-pink-500/20 hover:border-pink-500/40 transition cursor-pointer"
+                  className="bg-gradient-to-br from-pink-900/30 to-pink-600/20 p-4 rounded-lg border border-pink-500/20 hover:border-pink-500/40 transition cursor-pointer"
                 >
-                  <DocumentTextIcon className="w-10 h-10 mb-3 text-pink-400" />
-                  <h3 className="text-lg font-semibold mb-1">Pending Blogs</h3>
-                  <p className="text-3xl font-bold text-pink-300">
+                  <DocumentTextIcon className="w-8 h-8 mb-2 text-pink-400" />
+                  <h3 className="text-sm font-semibold mb-1">Pending Blogs</h3>
+                  <p className="text-2xl font-bold text-pink-300">
                     {pendingBlogs.length}
                   </p>
                 </div>
                 <div
                   onClick={() => setActiveSection("events")}
-                  className="bg-gradient-to-br from-blue-900/30 to-blue-600/20 p-6 rounded-xl border border-blue-500/20 hover:border-blue-500/40 transition cursor-pointer"
+                  className="bg-gradient-to-br from-blue-900/30 to-blue-600/20 p-4 rounded-lg border border-blue-500/20 hover:border-blue-500/40 transition cursor-pointer"
                 >
-                  <CalendarIcon className="w-10 h-10 mb-3 text-blue-400" />
-                  <h3 className="text-lg font-semibold mb-1">Pending Events</h3>
-                  <p className="text-3xl font-bold text-blue-300">
+                  <CalendarIcon className="w-8 h-8 mb-2 text-blue-400" />
+                  <h3 className="text-sm font-semibold mb-1">Pending Events</h3>
+                  <p className="text-2xl font-bold text-blue-300">
                     {pendingEvents.length}
                   </p>
                 </div>
                 <div
                   onClick={() => setActiveSection("projects")}
-                  className="bg-gradient-to-br from-green-900/30 to-green-600/20 p-6 rounded-xl border border-green-500/20 hover:border-green-500/40 transition cursor-pointer"
+                  className="bg-gradient-to-br from-green-900/30 to-green-600/20 p-4 rounded-lg border border-green-500/20 hover:border-green-500/40 transition cursor-pointer"
                 >
-                  <FolderIcon className="w-10 h-10 mb-3 text-green-400" />
-                  <h3 className="text-lg font-semibold mb-1">
+                  <FolderIcon className="w-8 h-8 mb-2 text-green-400" />
+                  <h3 className="text-sm font-semibold mb-1">
                     Pending Projects
                   </h3>
-                  <p className="text-3xl font-bold text-green-300">
+                  <p className="text-2xl font-bold text-green-300">
                     {pendingProjects.length}
                   </p>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800">
-                  <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                    <ClipboardDocumentCheckIcon className="w-6 h-6 text-yellow-400" />
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="bg-gray-900/50 backdrop-blur p-4 rounded-lg border border-gray-800">
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <ClipboardDocumentCheckIcon className="w-5 h-5 text-yellow-400" />
                     Quick Actions
                   </h3>
-                  <div className="space-y-3">
+                  <div className="space-y-2">
                     <button
                       onClick={() => setActiveSection("notices")}
-                      className="w-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 p-3 rounded-lg transition flex items-center gap-2"
+                      className="w-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 p-2 rounded-lg transition flex items-center gap-2 text-sm"
                     >
-                      <PlusCircleIcon className="w-5 h-5" /> Publish Notice
+                      <PlusCircleIcon className="w-4 h-4" /> Publish Notice
                     </button>
                     <button
                       onClick={() => setActiveSection("blogs")}
-                      className="w-full bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/30 p-3 rounded-lg transition flex items-center gap-2"
+                      className="w-full bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/30 p-2 rounded-lg transition flex items-center gap-2 text-sm"
                     >
-                      <PlusCircleIcon className="w-5 h-5" /> Publish Blog
+                      <PlusCircleIcon className="w-4 h-4" /> Publish Blog
                     </button>
                     <button
                       onClick={() => setActiveSection("projects")}
-                      className="w-full bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 p-3 rounded-lg transition flex items-center gap-2"
+                      className="w-full bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 p-2 rounded-lg transition flex items-center gap-2 text-sm"
                     >
-                      <PlusCircleIcon className="w-5 h-5" /> Publish Project
+                      <PlusCircleIcon className="w-4 h-4" /> Publish Project
                     </button>
                     <button
                       onClick={() => setActiveSection("tasks")}
-                      className="w-full bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 p-3 rounded-lg transition flex items-center gap-2"
+                      className="w-full bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 p-2 rounded-lg transition flex items-center gap-2 text-sm"
                     >
-                      <PlusCircleIcon className="w-5 h-5" /> Assign Task
+                      <PlusCircleIcon className="w-4 h-4" /> Assign Task
                     </button>
                   </div>
                 </div>
-                <div className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800">
-                  <h3 className="text-xl font-semibold mb-4">
+                <div className="bg-gray-900/50 backdrop-blur p-4 rounded-lg border border-gray-800">
+                  <h3 className="text-lg font-semibold mb-3">
                     Recent Activity
                   </h3>
                   <div className="space-y-2 text-sm text-gray-300">
@@ -522,18 +569,218 @@ export default function AdminDashboard() {
                     </p>
                   </div>
                 </div>
+                <div className="bg-gray-900/50 backdrop-blur p-4 rounded-lg border border-gray-800">
+                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                    <ChartBarIcon className="w-5 h-5 text-blue-400" />
+                    Content Stats
+                  </h3>
+                  <div className="space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Total Blogs:</span>
+                      <span className="font-semibold text-pink-400">
+                        {latestBlogs.length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Total Notices:</span>
+                      <span className="font-semibold text-purple-400">
+                        {pendingNotices.length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Total Events:</span>
+                      <span className="font-semibold text-blue-400">
+                        {pendingEvents.length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-400">Total Projects:</span>
+                      <span className="font-semibold text-green-400">
+                        {pendingProjects.length}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
-              <div className="bg-gray-900/50 backdrop-blur p-6 rounded-xl border border-gray-800">
-                <h3 className="text-xl font-semibold mb-4">Latest Blogs</h3>
-                <div className="space-y-3">
-                  {latestBlogs.map((b: any) => (
+              {/* Analytics Charts Section */}
+              {analyticsLoading ? (
+                <div className="bg-gray-900/50 backdrop-blur p-8 rounded-lg border border-gray-800 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500 mx-auto"></div>
+                  <p className="text-gray-400 mt-2">Loading analytics...</p>
+                </div>
+              ) : analyticsData ? (
+                <div className="space-y-4">
+                  {/* Analytics Stats Cards */}
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="bg-gradient-to-br from-blue-900/30 to-blue-600/20 p-4 rounded-lg border border-blue-500/20">
+                      <div className="text-sm text-gray-400 mb-1">
+                        Total Visitors
+                      </div>
+                      <div className="text-2xl font-bold text-blue-300">
+                        {analyticsData.summary?.visitors?.value?.toLocaleString() ||
+                          0}
+                      </div>
+                      {analyticsData.summary?.visitors?.change !==
+                        undefined && (
+                        <div className="text-xs text-gray-400 mt-1">
+                          {analyticsData.summary.visitors.change > 0 ? "+" : ""}
+                          {analyticsData.summary.visitors.change}% vs prev
+                          period
+                        </div>
+                      )}
+                    </div>
+                    <div className="bg-gradient-to-br from-purple-900/30 to-purple-600/20 p-4 rounded-lg border border-purple-500/20">
+                      <div className="text-sm text-gray-400 mb-1">
+                        Page Views
+                      </div>
+                      <div className="text-2xl font-bold text-purple-300">
+                        {analyticsData.summary?.pageviews?.value?.toLocaleString() ||
+                          0}
+                      </div>
+                      {analyticsData.summary?.pageviews?.change !==
+                        undefined && (
+                        <div className="text-xs text-gray-400 mt-1">
+                          {analyticsData.summary.pageviews.change > 0
+                            ? "+"
+                            : ""}
+                          {analyticsData.summary.pageviews.change}% vs prev
+                          period
+                        </div>
+                      )}
+                    </div>
+                    <div className="bg-gradient-to-br from-green-900/30 to-green-600/20 p-4 rounded-lg border border-green-500/20">
+                      <div className="text-sm text-gray-400 mb-1">
+                        Total Visits
+                      </div>
+                      <div className="text-2xl font-bold text-green-300">
+                        {analyticsData.summary?.visits?.value?.toLocaleString() ||
+                          0}
+                      </div>
+                      {analyticsData.summary?.visits?.change !== undefined && (
+                        <div className="text-xs text-gray-400 mt-1">
+                          {analyticsData.summary.visits.change > 0 ? "+" : ""}
+                          {analyticsData.summary.visits.change}% vs prev period
+                        </div>
+                      )}
+                    </div>
+                    <div className="bg-gradient-to-br from-orange-900/30 to-orange-600/20 p-4 rounded-lg border border-orange-500/20">
+                      <div className="text-sm text-gray-400 mb-1">
+                        Bounce Rate
+                      </div>
+                      <div className="text-2xl font-bold text-orange-300">
+                        {analyticsData.summary?.visits?.value
+                          ? Math.round(
+                              (analyticsData.summary.bounces.value /
+                                analyticsData.summary.visits.value) *
+                                100
+                            )
+                          : 0}
+                        %
+                      </div>
+                      {analyticsData.summary?.bounces?.change !== undefined && (
+                        <div className="text-xs text-gray-400 mt-1">
+                          {analyticsData.summary.bounces.change > 0 ? "+" : ""}
+                          {analyticsData.summary.bounces.change}% vs prev period
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Charts */}
+                  <div className="space-y-4">
+                    {/* Top row - Page views and Countries */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {analyticsData.pages &&
+                        analyticsData.pages.length > 0 && (
+                          <ChartCard
+                            title="Top Pages (Last 7 Days)"
+                            data={analyticsData.pages.slice(0, 5)}
+                            type="bar"
+                            color="#3B82F6"
+                            height={250}
+                          />
+                        )}
+                      {analyticsData.countries &&
+                        analyticsData.countries.length > 0 && (
+                          <ChartCard
+                            title="Visitors by Country"
+                            data={analyticsData.countries.slice(0, 5)}
+                            type="bar"
+                            color="#10B981"
+                            height={250}
+                          />
+                        )}
+                    </div>
+
+                    {/* Second row - Devices and Browsers */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {analyticsData.devices &&
+                        analyticsData.devices.length > 0 && (
+                          <ChartCard
+                            title="Devices"
+                            data={analyticsData.devices.slice(0, 5)}
+                            type="bar"
+                            color="#8B5CF6"
+                            height={250}
+                          />
+                        )}
+                      {analyticsData.browsers &&
+                        analyticsData.browsers.length > 0 && (
+                          <ChartCard
+                            title="Browsers"
+                            data={analyticsData.browsers.slice(0, 5)}
+                            type="bar"
+                            color="#F59E0B"
+                            height={250}
+                          />
+                        )}
+                    </div>
+
+                    {/* Third row - Referrers and Operating Systems */}
+                    <div className="grid md:grid-cols-2 gap-4">
+                      {analyticsData.referrers &&
+                        analyticsData.referrers.length > 0 && (
+                          <ChartCard
+                            title="Top Referrers"
+                            data={analyticsData.referrers.slice(0, 5)}
+                            type="bar"
+                            color="#EC4899"
+                            height={250}
+                          />
+                        )}
+                      {analyticsData.os && analyticsData.os.length > 0 && (
+                        <ChartCard
+                          title="Operating Systems"
+                          data={analyticsData.os.slice(0, 5)}
+                          type="bar"
+                          color="#14B8A6"
+                          height={250}
+                        />
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-gray-900/50 backdrop-blur p-8 rounded-lg border border-gray-800 text-center">
+                  <PresentationChartLineIcon className="w-12 h-12 text-gray-600 mx-auto mb-2" />
+                  <p className="text-gray-400">Analytics data unavailable</p>
+                  <p className="text-sm text-gray-500 mt-1">
+                    Configure Umami in .env file
+                  </p>
+                </div>
+              )}
+
+              <div className="bg-gray-900/50 backdrop-blur p-4 rounded-lg border border-gray-800">
+                <h3 className="text-lg font-semibold mb-3">Latest Blogs</h3>
+                <div className="space-y-2">
+                  {latestBlogs.slice(0, 5).map((b: any) => (
                     <div
                       key={b.id}
-                      className="flex items-center justify-between bg-gray-950 border border-gray-800 rounded p-3"
+                      className="flex items-center justify-between bg-gray-950 border border-gray-800 rounded p-2"
                     >
                       <div>
-                        <div className="font-semibold">{b.title}</div>
+                        <div className="font-semibold text-sm">{b.title}</div>
                         <div className="text-xs text-gray-400">
                           by {b.author_username} • {b.status}
                         </div>
@@ -1028,6 +1275,16 @@ export default function AdminDashboard() {
             </div>
           )}
 
+          {activeSection === "analytics" && (
+            <div className="w-full">
+              <ComprehensiveAnalyticsDashboard
+                websiteId={
+                  process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID || "your-website-id"
+                }
+              />
+            </div>
+          )}
+
           {activeSection === "leaderboard" && (
             <div className="max-w-4xl mx-auto">
               <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
@@ -1075,16 +1332,16 @@ export default function AdminDashboard() {
                         >
                           <div
                             className={`w-10 h-10 rounded-full flex items-center justify-center font-bold ${
-                              index === 0
+                              _index === 0
                                 ? "bg-yellow-500 text-gray-900"
-                                : index === 1
+                                : _index === 1
                                 ? "bg-gray-400 text-gray-900"
-                                : index === 2
+                                : _index === 2
                                 ? "bg-orange-600 text-white"
                                 : "bg-gray-700 text-gray-300"
                             }`}
                           >
-                            {index + 1}
+                            {_index + 1}
                           </div>
                           {user.photo && (
                             <img
@@ -1128,7 +1385,7 @@ export default function AdminDashboard() {
                         No alumni data available
                       </p>
                     ) : (
-                      alumniLeaderboard.map((user, _index) => (
+                      alumniLeaderboard.map((user, index) => (
                         <div
                           key={user.id}
                           className="flex items-center gap-4 p-4 bg-gray-950 rounded-lg border border-gray-800"

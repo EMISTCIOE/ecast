@@ -19,12 +19,12 @@ import CreateProjectModal from "@/components/modals/CreateProjectModal";
 import CreateEventModal from "@/components/modals/CreateEventModal";
 import CreateGalleryModal from "@/components/modals/CreateGalleryModal";
 // Section Components
-import OverviewSection from "@/components/dashboard/sections/OverviewSection";
-import NoticesSection from "@/components/dashboard/sections/NoticesSection";
-import BlogsSection from "@/components/dashboard/sections/BlogsSection";
-import ProjectsSection from "@/components/dashboard/sections/ProjectsSection";
-import EventsSection from "@/components/dashboard/sections/EventsSection";
-import GallerySection from "@/components/dashboard/sections/GallerySection";
+import OverviewSection from "@/components/dashboard-member/sections/OverviewSection";
+import NoticesSection from "@/components/dashboard-member/sections/NoticesSection";
+import BlogsSection from "@/components/dashboard-member/sections/BlogsSection";
+import ProjectsSection from "@/components/dashboard-member/sections/ProjectsSection";
+import EventsSection from "@/components/dashboard-member/sections/EventsSection";
+import GallerySection from "@/components/dashboard-member/sections/GallerySection";
 import {
   BellIcon,
   DocumentTextIcon,
@@ -233,12 +233,14 @@ export default function MemberDashboard() {
   const [subFile, setSubFile] = useState<File | null>(null);
 
   useEffect(() => {
+    const userStr = localStorage.getItem("user");
     const access = localStorage.getItem("access");
-    if (!access) {
+    const urole = userStr ? JSON.parse(userStr)?.role : null;
+
+    if (!access || urole !== "MEMBER") {
       Router.replace("/login");
     } else {
       setAuthReady(true);
-      const userStr = localStorage.getItem("user");
       if (userStr) {
         try {
           const u = JSON.parse(userStr);
@@ -441,10 +443,16 @@ export default function MemberDashboard() {
     if (!response.ok) throw new Error("Upload failed");
 
     const updated = await response.json();
+    const raw = updated.user_photo || updated.committee_member_photo || "";
+    const avatar = raw
+      ? raw.startsWith("http")
+        ? raw
+        : `${process.env.NEXT_PUBLIC_API_BASE || ""}${raw}`
+      : undefined;
     // Update sidebar user
     setSidebarUser((prev) => ({
       ...prev!,
-      avatarUrl: updated.user_photo || updated.committee_member_photo,
+      avatarUrl: avatar,
     }));
     // Update localStorage
     const userStr = localStorage.getItem("user");
@@ -603,6 +611,9 @@ export default function MemberDashboard() {
             <OverviewSection
               tasks={tasks}
               notices={notices}
+              blogs={myBlogs}
+              projects={myProjects}
+              events={myEvents}
               onNavigate={setActiveSection}
               onTaskSelect={setSelTask}
             />

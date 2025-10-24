@@ -42,10 +42,7 @@ const LoginPage = () => {
         Router.push(`/account/${token}`);
         return;
       }
-      if (role === "ADMIN") Router.push("/dashboard/admin");
-      else if (role === "AMBASSADOR") Router.push("/dashboard/ambassador");
-      else if (role === "ALUMNI") Router.push("/dashboard/alumni");
-      else Router.push("/dashboard/member");
+      Router.push("/me");
     } catch (e) {
       setError("Invalid username or password. Please try again.");
     } finally {

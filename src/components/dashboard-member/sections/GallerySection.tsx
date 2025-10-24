@@ -72,13 +72,13 @@ export default function GallerySection({
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold mb-2 flex items-center gap-3 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold mb-2 flex items-center gap-3 bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
             <div className="w-12 h-12 bg-gradient-to-br from-cyan-600 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg shadow-cyan-500/30">
               <PhotoIcon className="w-7 h-7 text-white" />
             </div>
             My Gallery
           </h1>
-          <p className="text-gray-400 text-lg">Manage your uploaded images</p>
+          <p className="text-gray-400 text-base">Manage your uploaded images</p>
         </div>
         <button
           onClick={onCreateClick}
@@ -194,7 +194,7 @@ export default function GallerySection({
             {(selectedImage.title || selectedImage.description) && (
               <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 to-transparent p-6 rounded-b-xl">
                 {selectedImage.title && (
-                  <h2 className="text-white text-2xl font-bold mb-2">
+                  <h2 className="text-white text-xl font-bold mb-2">
                     {selectedImage.title}
                   </h2>
                 )}

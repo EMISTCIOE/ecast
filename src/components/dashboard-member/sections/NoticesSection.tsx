@@ -59,13 +59,13 @@ export default function NoticesSection({
       {/* Header with Create Button */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+          <h1 className="text-3xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center shadow-lg shadow-purple-500/30">
               <BellIcon className="w-7 h-7 text-white" />
             </div>
             My Notices
           </h1>
-          <p className="text-gray-400 text-lg">
+          <p className="text-gray-400 text-base">
             View and manage your submitted notices
           </p>
         </div>
@@ -106,7 +106,7 @@ export default function NoticesSection({
               >
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
-                    <h4 className="font-bold text-lg text-white mb-2">
+                    <h4 className="font-bold text-base text-white mb-2">
                       {n.title}
                     </h4>
                     <p className="text-sm text-gray-300 mb-3 line-clamp-2">

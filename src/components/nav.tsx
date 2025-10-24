@@ -65,10 +65,12 @@ const NavBar: React.FC = () => {
   };
 
   const roleLabel = () => {
-    if (!me) return '';
+    if (!me) return "";
     const pos = me?.committee_position || me?.committee?.position;
     const role = me?.role;
-    return (pos && (role === 'ADMIN' || role === 'MEMBER')) ? pos : getRoleDisplay(role);
+    return pos && (role === "ADMIN" || role === "MEMBER")
+      ? pos
+      : getRoleDisplay(role);
   };
 
   return (
@@ -164,7 +166,8 @@ const NavBar: React.FC = () => {
                   </span>
                 )}
                 <span className="text-sm font-medium flex-1 text-left truncate">
-                  {(me.full_name || me.username) + (roleLabel() ? ` · ${roleLabel()}` : '')}
+                  {(me.full_name || me.username) +
+                    (roleLabel() ? ` · ${roleLabel()}` : "")}
                 </span>
                 <ChevronDownIcon
                   className={`w-4 h-4 transition-transform flex-shrink-0 ${
@@ -223,12 +226,12 @@ const NavBar: React.FC = () => {
                     <Link
                       href={`/${
                         me.role === "ADMIN"
-                          ? "dashboard/admin"
+                          ? "/me"
                           : me.role === "AMBASSADOR"
-                          ? "dashboard/ambassador"
+                          ? "/me"
                           : me.role === "ALUMNI"
-                          ? "dashboard/alumni"
-                          : "dashboard/member"
+                          ? "/me"
+                          : "/me"
                       }`}
                       onClick={() => setUserOpen(false)}
                       className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-gray-200 hover:text-white group"

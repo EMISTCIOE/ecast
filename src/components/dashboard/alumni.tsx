@@ -8,8 +8,9 @@ import MySubmissions from "@/components/MySubmissions";
 import { useBlogs } from "@/lib/hooks/blogs";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/Toast";
-import BlogsSection from "@/components/dashboard/sections/BlogsSection";
+import BlogsSection from "@/components/dashboard-member/sections/BlogsSection";
 import CreateBlogModal from "@/components/modals/CreateBlogModal";
+import OverviewSection from "@/components/dashboard-alumni/sections/OverviewSection";
 import {
   DocumentTextIcon,
   TrophyIcon,
@@ -54,10 +55,16 @@ export default function AlumniDashboard() {
     if (userStr) {
       try {
         const u = JSON.parse(userStr);
+        const raw = u.user_photo || u.committee_member_photo || "";
+        const avatar = raw
+          ? raw.startsWith("http")
+            ? raw
+            : `${process.env.NEXT_PUBLIC_API_BASE || ""}${raw}`
+          : undefined;
         setSidebarUser({
           name: u.full_name || u.username,
           role: u.role,
-          avatarUrl: u.user_photo || u.committee_member_photo,
+          avatarUrl: avatar,
         });
       } catch {}
     }
@@ -149,10 +156,16 @@ export default function AlumniDashboard() {
     if (!response.ok) throw new Error("Upload failed");
 
     const updated = await response.json();
+    const raw = updated.user_photo || updated.committee_member_photo || "";
+    const avatar = raw
+      ? raw.startsWith("http")
+        ? raw
+        : `${process.env.NEXT_PUBLIC_API_BASE || ""}${raw}`
+      : undefined;
     // Update sidebar user
     setSidebarUser((prev) => ({
       ...prev!,
-      avatarUrl: updated.user_photo || updated.committee_member_photo,
+      avatarUrl: avatar,
     }));
     // Update localStorage
     const userStr = localStorage.getItem("user");
@@ -237,71 +250,7 @@ export default function AlumniDashboard() {
         >
           {/* Overview Section */}
           {activeSection === "overview" && (
-            <div className="space-y-6">
-              <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-orange-400 via-red-400 to-pink-400 bg-clip-text text-transparent">
-                Alumni Dashboard
-              </h1>
-
-              {stats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gradient-to-br from-green-900/50 to-green-600/30 p-6 rounded-xl border border-green-500/20 shadow-xl">
-                    <ChartBarIcon className="w-10 h-10 mb-3 text-green-400" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      Blogs Approved
-                    </h3>
-                    <p className="text-4xl font-bold text-green-300 mb-3">
-                      {stats.blogs_approved || 0}
-                    </p>
-                    <div className="bg-gray-800 h-3 rounded-full overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-green-500 to-green-300 h-3 rounded-full transition-all duration-500"
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            (stats.blogs_approved || 0) * 10
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-yellow-900/50 to-yellow-600/30 p-6 rounded-xl border border-yellow-500/20 shadow-xl">
-                    <DocumentTextIcon className="w-10 h-10 mb-3 text-yellow-400" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      Blogs Pending
-                    </h3>
-                    <p className="text-4xl font-bold text-yellow-300 mb-3">
-                      {stats.blogs_pending || 0}
-                    </p>
-                    <div className="bg-gray-800 h-3 rounded-full overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-yellow-500 to-yellow-300 h-3 rounded-full transition-all duration-500"
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            (stats.blogs_pending || 0) * 10
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-gray-800/50 backdrop-blur p-6 rounded-xl border border-gray-700 shadow-xl">
-                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <DocumentTextIcon className="w-6 h-6 text-orange-400" />
-                  Quick Actions
-                </h3>
-                <button
-                  onClick={() => setActiveSection("blog")}
-                  className="w-full bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-700 hover:to-red-700 p-4 rounded-lg font-semibold shadow-lg transition-all hover:scale-105 flex items-center justify-center gap-2"
-                >
-                  <DocumentTextIcon className="w-5 h-5" />
-                  Manage Blogs
-                </button>
-              </div>
-            </div>
+            <OverviewSection blogs={myBlogs} onNavigate={setActiveSection} />
           )}
 
           {/* My Blogs Section */}
@@ -319,7 +268,7 @@ export default function AlumniDashboard() {
 
           {activeSection === "submissions" && (
             <div>
-              <h1 className="text-3xl font-bold mb-6">My Submissions</h1>
+              <h1 className="text-2xl font-bold mb-6">My Submissions</h1>
               <MySubmissions role={"ALUMNI"} showTasks={false} />
             </div>
           )}

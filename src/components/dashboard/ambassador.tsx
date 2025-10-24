@@ -10,8 +10,9 @@ import { useTasks } from "@/lib/hooks/tasks";
 import MySubmissions from "@/components/MySubmissions";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/Toast";
-import BlogsSection from "@/components/dashboard/sections/BlogsSection";
+import BlogsSection from "@/components/dashboard-member/sections/BlogsSection";
 import CreateBlogModal from "@/components/modals/CreateBlogModal";
+import OverviewSection from "@/components/dashboard-ambassador/sections/OverviewSection";
 import {
   DocumentTextIcon,
   ClipboardDocumentCheckIcon,
@@ -200,10 +201,16 @@ export default function AmbassadorDashboard() {
     if (!response.ok) throw new Error("Upload failed");
 
     const updated = await response.json();
+    const raw = updated.user_photo || updated.committee_member_photo || "";
+    const avatar = raw
+      ? raw.startsWith("http")
+        ? raw
+        : `${process.env.NEXT_PUBLIC_API_BASE || ""}${raw}`
+      : undefined;
     // Update sidebar user
     setSidebarUser((prev) => ({
       ...prev!,
-      avatarUrl: updated.user_photo || updated.committee_member_photo,
+      avatarUrl: avatar,
     }));
     // Update localStorage
     const userStr = localStorage.getItem("user");
@@ -301,90 +308,15 @@ export default function AmbassadorDashboard() {
         >
           {/* Overview Section */}
           {activeSection === "overview" && (
-            <div className="space-y-6">
-              <h1 className="text-4xl font-bold mb-8 bg-gradient-to-r from-green-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Ambassador Dashboard
-              </h1>
-
-              {stats && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-gradient-to-br from-green-900/50 to-green-600/30 p-6 rounded-xl border border-green-500/20 shadow-xl">
-                    <ChartBarIcon className="w-10 h-10 mb-3 text-green-400" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      Blogs Approved
-                    </h3>
-                    <p className="text-4xl font-bold text-green-300 mb-3">
-                      {stats.blogs_approved || 0}
-                    </p>
-                    <div className="bg-gray-800 h-3 rounded-full overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-green-500 to-green-300 h-3 rounded-full transition-all duration-500"
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            (stats.blogs_approved || 0) * 10
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-gradient-to-br from-blue-900/50 to-blue-600/30 p-6 rounded-xl border border-blue-500/20 shadow-xl">
-                    <ClipboardDocumentCheckIcon className="w-10 h-10 mb-3 text-blue-400" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      Tasks Approved
-                    </h3>
-                    <p className="text-4xl font-bold text-blue-300 mb-3">
-                      {stats.submissions_approved || 0}
-                    </p>
-                    <div className="bg-gray-800 h-3 rounded-full overflow-hidden">
-                      <div
-                        className="bg-gradient-to-r from-blue-500 to-blue-300 h-3 rounded-full transition-all duration-500"
-                        style={{
-                          width: `${Math.min(
-                            100,
-                            (stats.submissions_approved || 0) * 10
-                          )}%`,
-                        }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              <div className="bg-gray-800/50 backdrop-blur p-6 rounded-xl border border-gray-700 shadow-xl">
-                <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                  <ClipboardDocumentCheckIcon className="w-6 h-6 text-yellow-400" />
-                  Your Assigned Tasks ({tasks.length})
-                </h3>
-                <div className="space-y-3">
-                  {tasks.length === 0 ? (
-                    <p className="text-gray-400 text-center py-4">
-                      No tasks assigned yet
-                    </p>
-                  ) : (
-                    tasks.map((t: any) => (
-                      <div
-                        key={t.id}
-                        className="bg-gray-900/50 p-4 rounded-lg border border-gray-700 hover:border-yellow-500 transition"
-                      >
-                        <h4 className="font-semibold text-yellow-300">
-                          {t.title}
-                        </h4>
-                        <p className="text-sm text-gray-400 mt-1">
-                          {t.description}
-                        </p>
-                        {t.due_date && (
-                          <p className="text-xs text-gray-500 mt-2">
-                            Due: {new Date(t.due_date).toLocaleDateString()}
-                          </p>
-                        )}
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
+            <OverviewSection
+              tasks={tasks}
+              blogs={myBlogs}
+              onNavigate={setActiveSection}
+              onTaskSelect={(taskId) => {
+                setSelTask(taskId);
+                setActiveSection("submit");
+              }}
+            />
           )}
 
           {/* My Blogs Section */}
@@ -403,7 +335,7 @@ export default function AmbassadorDashboard() {
           {/* Submit Task Section */}
           {activeSection === "submit" && (
             <div className="max-w-2xl">
-              <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
+              <h1 className="text-2xl font-bold mb-6 flex items-center gap-3">
                 <ClipboardDocumentCheckIcon className="w-8 h-8 text-blue-400" />
                 Submit Task
               </h1>
@@ -473,7 +405,7 @@ export default function AmbassadorDashboard() {
           {/* My Submissions */}
           {activeSection === "submissions" && (
             <div>
-              <h1 className="text-3xl font-bold mb-6">My Submissions</h1>
+              <h1 className="text-2xl font-bold mb-6">My Submissions</h1>
               <MySubmissions role={"AMBASSADOR"} showTasks={true} />
             </div>
           )}
