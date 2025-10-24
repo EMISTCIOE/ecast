@@ -134,7 +134,7 @@ export default function Sidebar({
         )}
 
         {/* Menu Items */}
-        <div className="flex-1 overflow-y-auto px-3 py-4">
+        <div className="flex-1 overflow-y-auto custom-scrollbar px-3 py-4">
           {groups.map((g, gi) => (
             <div key={gi} className="mb-5">
               {expanded && g.title && (

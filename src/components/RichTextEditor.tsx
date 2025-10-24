@@ -465,7 +465,7 @@ export default function RichTextEditor({
               viewMode === "split" ? "w-1/2" : "w-full"
             } bg-gray-950/50`}
           >
-            <div className="min-h-[300px] p-3 overflow-auto">
+            <div className="min-h-[300px] p-3 overflow-auto custom-scrollbar">
               {value ? (
                 <div
                   className="prose prose-invert max-w-none [&_ul]:list-disc [&_ul]:ml-6 [&_ol]:list-decimal [&_ol]:ml-6 [&_blockquote]:border-l-4 [&_blockquote]:border-pink-500 [&_blockquote]:pl-4 [&_blockquote]:italic [&_blockquote]:text-gray-300 [&_blockquote]:bg-gray-900/50 [&_blockquote]:py-2 [&_a]:text-pink-400 [&_a]:underline [&_a]:hover:text-pink-300 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:mt-4 [&_h2]:mb-2 [&_h2]:text-pink-400 [&_h3]:text-xl [&_h3]:font-bold [&_h3]:mt-3 [&_h3]:mb-2 [&_h3]:text-pink-300 [&_img]:max-w-full [&_img]:rounded-lg [&_img]:my-2 [&_img]:border [&_img]:border-gray-700 [&_strong]:text-pink-200 [&_em]:text-purple-200"

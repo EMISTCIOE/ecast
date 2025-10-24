@@ -46,7 +46,7 @@ export default function EditNoticeModal({
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-black border border-purple-500/30 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-gradient-to-br from-gray-800 via-gray-900 to-black border border-purple-500/30 rounded-2xl shadow-2xl max-w-3xl w-full max-h-[90vh] overflow-y-auto custom-scrollbar">
         <div className="sticky top-0 bg-gradient-to-r from-purple-600 to-pink-600 p-6 flex items-center justify-between rounded-t-2xl">
           <h2 className="text-2xl font-bold text-white">Edit Notice</h2>
           <button

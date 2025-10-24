@@ -14,6 +14,37 @@ export interface Blog {
   updated_at?: string;
 }
 
+export interface Research {
+  id: string;
+  slug: string;
+  title: string;
+  abstract: string;
+  authors: string;
+  publication_date?: string;
+  journal_name?: string;
+  doi?: string;
+  url?: string;
+  document?: string;
+  keywords?: string;
+  created_by?: {
+    id: number;
+    username: string;
+    first_name?: string;
+    last_name?: string;
+    full_name?: string;
+  };
+  co_authors?: Array<{
+    id: number;
+    username: string;
+    first_name?: string;
+    last_name?: string;
+    full_name?: string;
+  }>;
+  status?: "PENDING" | "APPROVED" | "REJECTED";
+  created_at?: string;
+  updated_at?: string;
+}
+
 export interface Notice {
   id: number | string;
   title: string;

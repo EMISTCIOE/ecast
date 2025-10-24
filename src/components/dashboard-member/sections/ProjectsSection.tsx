@@ -19,13 +19,13 @@ export default function ProjectsSection({
       {/* Header with Create Button */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
               <FolderIcon className="w-7 h-7 text-white" />
             </div>
             My Projects
           </h1>
-          <p className="text-gray-400 text-base">
+          <p className="text-gray-400 text-sm">
             View and manage your submitted projects
           </p>
         </div>
@@ -43,10 +43,10 @@ export default function ProjectsSection({
         {myProjects.length === 0 ? (
           <div className="text-center py-16">
             <FolderIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
-            <p className="text-gray-400 text-xl font-semibold mb-2">
+            <p className="text-gray-400 text-lg font-semibold mb-2">
               No projects created yet
             </p>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-gray-500 text-xs mb-6">
               Create your first project to showcase your work
             </p>
             <button
@@ -79,11 +79,11 @@ export default function ProjectsSection({
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-base text-white mb-2">
+                    <h4 className="font-bold text-sm text-white mb-2">
                       {p.title}
                     </h4>
                     {p.description && (
-                      <p className="text-sm text-gray-400 line-clamp-2 mb-2">
+                      <p className="text-xs text-gray-400 line-clamp-2 mb-2">
                         {p.description}
                       </p>
                     )}

@@ -79,13 +79,13 @@ export default function EventsSection({
       {/* Header with Create Button */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">
             <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/30">
               <CalendarIcon className="w-7 h-7 text-white" />
             </div>
             My Events
           </h1>
-          <p className="text-gray-400 text-base">
+          <p className="text-gray-400 text-sm">
             View and manage your submitted events
           </p>
         </div>
@@ -103,10 +103,10 @@ export default function EventsSection({
         {myEvents.length === 0 ? (
           <div className="text-center py-16">
             <CalendarIcon className="w-20 h-20 text-gray-600 mx-auto mb-6" />
-            <p className="text-gray-400 text-xl font-semibold mb-2">
+            <p className="text-gray-400 text-lg font-semibold mb-2">
               No events created yet
             </p>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-gray-500 text-xs mb-6">
               Create your first event to engage with the community
             </p>
             <button
@@ -140,7 +140,7 @@ export default function EventsSection({
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start justify-between gap-3 mb-2">
-                      <h4 className="font-bold text-base text-white flex-1">
+                      <h4 className="font-bold text-sm text-white flex-1">
                         {e.title}
                       </h4>
                       {canEdit(e) && (

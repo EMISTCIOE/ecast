@@ -130,19 +130,19 @@ export default function MySubmissions({ role, showTasks = true }: Props) {
       <div className="bg-gradient-to-br from-gray-800/60 via-gray-800/40 to-gray-900/60 backdrop-blur-xl p-6 rounded-2xl border border-gray-700/50 shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-1">
+            <h2 className="text-xl font-bold text-white mb-1">
               My Submissions
             </h2>
-            <p className="text-sm text-gray-400">
+            <p className="text-xs text-gray-400">
               Total: {totalSubmissions} submission
               {totalSubmissions !== 1 ? "s" : ""}
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm text-gray-400 mr-1">Filter:</span>
+            <span className="text-xs text-gray-400 mr-1">Filter:</span>
             <button
               onClick={() => setStatus("PENDING")}
-              className={`px-4 py-2 rounded-xl transition-all duration-300 font-semibold text-sm ${
+              className={`px-4 py-2 rounded-xl transition-all duration-300 font-semibold text-xs ${
                 status === "PENDING"
                   ? "bg-yellow-600/30 text-yellow-200 border-2 border-yellow-500/50 shadow-lg"
                   : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border border-gray-700"
@@ -153,7 +153,7 @@ export default function MySubmissions({ role, showTasks = true }: Props) {
             </button>
             <button
               onClick={() => setStatus("APPROVED")}
-              className={`px-4 py-2 rounded-xl transition-all duration-300 font-semibold text-sm ${
+              className={`px-4 py-2 rounded-xl transition-all duration-300 font-semibold text-xs ${
                 status === "APPROVED"
                   ? "bg-green-600/30 text-green-200 border-2 border-green-500/50 shadow-lg"
                   : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border border-gray-700"
@@ -164,7 +164,7 @@ export default function MySubmissions({ role, showTasks = true }: Props) {
             </button>
             <button
               onClick={() => setStatus("REJECTED")}
-              className={`px-4 py-2 rounded-xl transition-all duration-300 font-semibold text-sm ${
+              className={`px-4 py-2 rounded-xl transition-all duration-300 font-semibold text-xs ${
                 status === "REJECTED"
                   ? "bg-red-600/30 text-red-200 border-2 border-red-500/50 shadow-lg"
                   : "bg-gray-800/50 text-gray-300 hover:bg-gray-700/50 border border-gray-700"
@@ -183,10 +183,10 @@ export default function MySubmissions({ role, showTasks = true }: Props) {
           <div className="w-20 h-20 bg-gray-700/30 rounded-full flex items-center justify-center mx-auto mb-4">
             <DocumentTextIcon className="w-10 h-10 text-gray-500" />
           </div>
-          <h3 className="text-xl font-semibold text-gray-300 mb-2">
+          <h3 className="text-lg font-semibold text-gray-300 mb-2">
             No {status.toLowerCase()} submissions yet
           </h3>
-          <p className="text-gray-500">
+          <p className="text-xs text-gray-500">
             Your {status.toLowerCase()} submissions will appear here
           </p>
         </div>
@@ -369,9 +369,9 @@ function Section({
           >
             <Icon className={`w-6 h-6 ${iconColorClasses[color]}`} />
           </div>
-          <h3 className="text-xl font-bold text-white">
+          <h3 className="text-lg font-bold text-white">
             {title}{" "}
-            <span className="text-sm font-normal text-gray-400">({count})</span>
+            <span className="text-xs font-normal text-gray-400">({count})</span>
           </h3>
         </div>
         {collapsed ? (
@@ -425,7 +425,7 @@ function SubmissionCard({
     <div className="bg-gray-900/60 border border-gray-700/50 rounded-xl p-5 hover:border-gray-600/50 transition-all duration-300 hover:shadow-lg">
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
-          <h4 className="font-semibold text-lg text-white mb-1.5 truncate">
+          <h4 className="font-semibold text-base text-white mb-1.5 truncate">
             {title}
           </h4>
           <div className="flex items-center gap-2 text-xs text-gray-400">
@@ -446,7 +446,7 @@ function SubmissionCard({
       {description && (
         <div className="mb-3">
           <p
-            className={`text-sm text-gray-300 leading-relaxed ${
+            className={`text-xs text-gray-300 leading-relaxed ${
               expanded ? "" : "line-clamp-2"
             }`}
           >

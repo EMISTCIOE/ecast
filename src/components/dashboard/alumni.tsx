@@ -6,10 +6,14 @@ import ProfilePictureModal from "@/components/ProfilePictureModal";
 import Footer from "@/components/footar";
 import MySubmissions from "@/components/MySubmissions";
 import { useBlogs } from "@/lib/hooks/blogs";
+import { useResearch } from "@/lib/hooks/research";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/Toast";
 import BlogsSection from "@/components/dashboard-member/sections/BlogsSection";
 import CreateBlogModal from "@/components/modals/CreateBlogModal";
+import ResearchSection from "@/components/dashboard-member/sections/ResearchSection";
+import CreateResearchModal from "@/components/dashboard-member/modals/CreateResearchModal";
+import EditResearchModal from "@/components/dashboard-member/modals/EditResearchModal";
 import OverviewSection from "@/components/dashboard-alumni/sections/OverviewSection";
 import {
   DocumentTextIcon,
@@ -37,7 +41,11 @@ export default function AlumniDashboard() {
   const [activeSection, setActiveSection] = useState("overview");
   const [stats, setStats] = useState<any>(null);
   const [myBlogs, setMyBlogs] = useState<any[]>([]);
+  const [myResearch, setMyResearch] = useState<any[]>([]);
   const [showCreateBlogModal, setShowCreateBlogModal] = useState(false);
+  const [showCreateResearchModal, setShowCreateResearchModal] = useState(false);
+  const [showEditResearchModal, setShowEditResearchModal] = useState(false);
+  const [researchToEdit, setResearchToEdit] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const toast = useToast();
@@ -47,6 +55,12 @@ export default function AlumniDashboard() {
     update: updateBlog,
     remove: deleteBlog,
   } = useBlogs();
+  const {
+    list: listResearch,
+    create: createResearch,
+    update: updateResearch,
+    remove: deleteResearch,
+  } = useResearch();
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -82,6 +96,11 @@ export default function AlumniDashboard() {
       // Load user's blogs
       listBlogs({ mine: "1" })
         .then(setMyBlogs)
+        .catch(() => {});
+
+      // Load user's research
+      listResearch({ mine: "1" })
+        .then(setMyResearch)
         .catch(() => {});
     }
   }, []);
@@ -140,6 +159,54 @@ export default function AlumniDashboard() {
 
   const canEditOrDeleteBlog = (blog: any) => {
     return blog.status === "PENDING" || blog.status === "REJECTED";
+  };
+
+  const handleCreateResearch = async (formData: FormData) => {
+    setIsSubmitting(true);
+    try {
+      await createResearch(formData);
+      toast.success("Research submitted for approval!");
+      setShowCreateResearchModal(false);
+      // Refresh research list
+      listResearch({ mine: "1" }).then(setMyResearch);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to create research");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleEditResearch = (research: any) => {
+    setResearchToEdit(research);
+    setShowEditResearchModal(true);
+  };
+
+  const handleUpdateResearch = async (
+    slug: string,
+    formData: FormData | Record<string, any>
+  ) => {
+    setIsSubmitting(true);
+    try {
+      await updateResearch(slug, formData);
+      toast.success("Research updated successfully!");
+      setShowEditResearchModal(false);
+      setResearchToEdit(null);
+      listResearch({ mine: "1" }).then(setMyResearch);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to update research");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteResearch = async (slug: string) => {
+    try {
+      await deleteResearch(slug);
+      toast.success("Research deleted successfully!");
+      listResearch({ mine: "1" }).then(setMyResearch);
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to delete research");
+    }
   };
 
   const handleProfileUpload = async (file: File) => {
@@ -228,6 +295,13 @@ export default function AlumniDashboard() {
                   active: activeSection === "submissions",
                   onClick: () => setActiveSection("submissions"),
                 },
+                {
+                  id: "research",
+                  label: "My Research",
+                  icon: DocumentTextIcon as any,
+                  active: activeSection === "research",
+                  onClick: () => setActiveSection("research"),
+                },
               ],
             },
           ]}
@@ -250,7 +324,11 @@ export default function AlumniDashboard() {
         >
           {/* Overview Section */}
           {activeSection === "overview" && (
-            <OverviewSection blogs={myBlogs} onNavigate={setActiveSection} />
+            <OverviewSection
+              blogs={myBlogs}
+              research={myResearch}
+              onNavigate={setActiveSection}
+            />
           )}
 
           {/* My Blogs Section */}
@@ -272,6 +350,16 @@ export default function AlumniDashboard() {
               <MySubmissions role={"ALUMNI"} showTasks={false} />
             </div>
           )}
+
+          {activeSection === "research" && (
+            <ResearchSection
+              myResearch={myResearch}
+              onCreateClick={() => setShowCreateResearchModal(true)}
+              onEditClick={handleEditResearch}
+              onDeleteClick={handleDeleteResearch}
+              isAdmin={false}
+            />
+          )}
         </div>
       </div>
 
@@ -280,6 +368,24 @@ export default function AlumniDashboard() {
         isOpen={showCreateBlogModal}
         onClose={() => setShowCreateBlogModal(false)}
         onSubmit={handleCreateBlog}
+      />
+
+      {/* Create Research Modal */}
+      <CreateResearchModal
+        isOpen={showCreateResearchModal}
+        onClose={() => setShowCreateResearchModal(false)}
+        onSubmit={handleCreateResearch}
+      />
+
+      {/* Edit Research Modal */}
+      <EditResearchModal
+        isOpen={showEditResearchModal}
+        onClose={() => {
+          setShowEditResearchModal(false);
+          setResearchToEdit(null);
+        }}
+        research={researchToEdit}
+        onSubmit={handleUpdateResearch}
       />
 
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />

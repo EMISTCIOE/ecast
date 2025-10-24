@@ -231,8 +231,7 @@ const Footer = () => {
         <div className="pt-8 border-t border-white border-opacity-10">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-sm text-gray-500 text-center md:text-left">
-              © {currentYear} ECAST. All rights reserved. Made with ❤️ by ECAST
-              Team
+              © {currentYear} ECAST. All rights reserved.
             </p>
             <div className="flex flex-wrap justify-center gap-6 text-sm">
               <Link

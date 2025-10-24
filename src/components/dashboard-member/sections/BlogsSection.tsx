@@ -55,13 +55,13 @@ export default function BlogsSection({
       {/* Header with Create Button */}
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
+          <h1 className="text-2xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-pink-400 to-purple-400 bg-clip-text text-transparent">
             <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-pink-500/30">
               <DocumentTextIcon className="w-7 h-7 text-white" />
             </div>
             My Blogs
           </h1>
-          <p className="text-gray-400 text-base">
+          <p className="text-gray-400 text-sm">
             View and manage your submitted blog posts
           </p>
         </div>
@@ -82,7 +82,7 @@ export default function BlogsSection({
             <p className="text-gray-400 text-lg font-semibold mb-2">
               No blogs created yet
             </p>
-            <p className="text-gray-500 text-sm mb-6">
+            <p className="text-gray-500 text-xs mb-6">
               Create your first blog post to share your ideas with the community
             </p>
             <button
@@ -111,11 +111,11 @@ export default function BlogsSection({
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-base text-white mb-2">
+                    <h4 className="font-bold text-sm text-white mb-2">
                       {b.title}
                     </h4>
                     {b.description && (
-                      <p className="text-sm text-gray-400 line-clamp-2 mb-2">
+                      <p className="text-xs text-gray-400 line-clamp-2 mb-2">
                         {b.description}
                       </p>
                     )}

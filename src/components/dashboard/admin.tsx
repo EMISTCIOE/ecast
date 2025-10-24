@@ -11,6 +11,7 @@ import { useTasks } from "@/lib/hooks/tasks";
 import { useProjects } from "@/lib/hooks/projects";
 import { useUsers } from "@/lib/hooks/users";
 import { useIntake, IntakeStatus } from "@/lib/hooks/intake";
+import { useResearch } from "@/lib/hooks/research";
 import { authedFetch } from "@/lib/apiClient";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/Toast";
@@ -19,6 +20,7 @@ import AdminBlogsCrud from "@/components/admin/BlogsCrud";
 import AdminEventsCrud from "@/components/admin/EventsCrud";
 import AdminProjectsCrud from "@/components/admin/ProjectsCrud";
 import AdminGalleryCrud from "@/components/admin/GalleryCrud";
+import AdminResearchCrud from "@/components/admin/ResearchCrud";
 
 import { ComprehensiveAnalyticsDashboard } from "@/components/analytics/ComprehensiveAnalyticsDashboard";
 import { ChartCard } from "@/components/analytics/Charts";
@@ -93,6 +95,7 @@ export default function AdminDashboard() {
   const [pendingNotices, setPendingNotices] = useState<any[]>([]);
   const [pendingEvents, setPendingEvents] = useState<any[]>([]);
   const [pendingProjects, setPendingProjects] = useState<any[]>([]);
+  const [pendingResearch, setPendingResearch] = useState<any[]>([]);
   const [pendingSubs, setPendingSubs] = useState<any[]>([]);
   const [previewSub, setPreviewSub] = useState<any | null>(null);
 
@@ -104,6 +107,7 @@ export default function AdminDashboard() {
   const { list: listNotices } = useNotices();
   const { list: listEvents } = useEvents();
   const { list: listProjects } = useProjects();
+  const { list: listResearch } = useResearch();
   const tasksApi = useTasks();
   const {
     listUsers,
@@ -180,6 +184,9 @@ export default function AdminDashboard() {
         .catch(() => {});
       listProjects({ status: "PENDING" })
         .then(setPendingProjects)
+        .catch(() => {});
+      listResearch({ status: "PENDING" })
+        .then(setPendingResearch)
         .catch(() => {});
       pendingSubsApi()
         .then(setPendingSubs)
@@ -510,6 +517,13 @@ export default function AdminDashboard() {
                     active: activeSection === "gallery",
                     onClick: () => setActiveSection("gallery"),
                   },
+                  {
+                    id: "research",
+                    label: "Research",
+                    icon: DocumentTextIcon,
+                    active: activeSection === "research",
+                    onClick: () => setActiveSection("research"),
+                  },
                 ],
               },
               {
@@ -642,137 +656,154 @@ export default function AdminDashboard() {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                 <div
                   onClick={() => setActiveSection("notices")}
-                  className="bg-gradient-to-br from-purple-900/30 to-purple-600/20 p-4 rounded-lg border border-purple-500/20 hover:border-purple-500/40 transition cursor-pointer"
+                  className="bg-gradient-to-br from-purple-900/30 to-purple-600/20 p-3 rounded-lg border border-purple-500/20 hover:border-purple-500/40 transition cursor-pointer group"
                 >
-                  <BellIcon className="w-8 h-8 mb-2 text-purple-400" />
-                  <h3 className="text-sm font-semibold mb-1">
+                  <BellIcon className="w-7 h-7 mb-1.5 text-purple-400 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-xs font-semibold mb-0.5">
                     Pending Notices
                   </h3>
-                  <p className="text-2xl font-bold text-purple-300">
+                  <p className="text-lg font-bold text-purple-300">
                     {pendingNotices.length}
                   </p>
                 </div>
                 <div
                   onClick={() => setActiveSection("blogs")}
-                  className="bg-gradient-to-br from-pink-900/30 to-pink-600/20 p-4 rounded-lg border border-pink-500/20 hover:border-pink-500/40 transition cursor-pointer"
+                  className="bg-gradient-to-br from-pink-900/30 to-pink-600/20 p-3 rounded-lg border border-pink-500/20 hover:border-pink-500/40 transition cursor-pointer group"
                 >
-                  <DocumentTextIcon className="w-8 h-8 mb-2 text-pink-400" />
-                  <h3 className="text-sm font-semibold mb-1">Pending Blogs</h3>
-                  <p className="text-2xl font-bold text-pink-300">
+                  <DocumentTextIcon className="w-7 h-7 mb-1.5 text-pink-400 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-xs font-semibold mb-0.5">
+                    Pending Blogs
+                  </h3>
+                  <p className="text-lg font-bold text-pink-300">
                     {pendingBlogs.length}
                   </p>
                 </div>
                 <div
                   onClick={() => setActiveSection("events")}
-                  className="bg-gradient-to-br from-blue-900/30 to-blue-600/20 p-4 rounded-lg border border-blue-500/20 hover:border-blue-500/40 transition cursor-pointer"
+                  className="bg-gradient-to-br from-blue-900/30 to-blue-600/20 p-3 rounded-lg border border-blue-500/20 hover:border-blue-500/40 transition cursor-pointer group"
                 >
-                  <CalendarIcon className="w-8 h-8 mb-2 text-blue-400" />
-                  <h3 className="text-sm font-semibold mb-1">Pending Events</h3>
-                  <p className="text-2xl font-bold text-blue-300">
+                  <CalendarIcon className="w-7 h-7 mb-1.5 text-blue-400 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-xs font-semibold mb-0.5">
+                    Pending Events
+                  </h3>
+                  <p className="text-lg font-bold text-blue-300">
                     {pendingEvents.length}
                   </p>
                 </div>
                 <div
                   onClick={() => setActiveSection("projects")}
-                  className="bg-gradient-to-br from-green-900/30 to-green-600/20 p-4 rounded-lg border border-green-500/20 hover:border-green-500/40 transition cursor-pointer"
+                  className="bg-gradient-to-br from-green-900/30 to-green-600/20 p-3 rounded-lg border border-green-500/20 hover:border-green-500/40 transition cursor-pointer group"
                 >
-                  <FolderIcon className="w-8 h-8 mb-2 text-green-400" />
-                  <h3 className="text-sm font-semibold mb-1">
+                  <FolderIcon className="w-7 h-7 mb-1.5 text-green-400 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-xs font-semibold mb-0.5">
                     Pending Projects
                   </h3>
-                  <p className="text-2xl font-bold text-green-300">
+                  <p className="text-lg font-bold text-green-300">
                     {pendingProjects.length}
+                  </p>
+                </div>
+                <div
+                  onClick={() => setActiveSection("research")}
+                  className="bg-gradient-to-br from-amber-900/30 to-amber-600/20 p-3 rounded-lg border border-amber-500/20 hover:border-amber-500/40 transition cursor-pointer group"
+                >
+                  <ChartBarIcon className="w-7 h-7 mb-1.5 text-amber-400 group-hover:scale-110 transition-transform" />
+                  <h3 className="text-xs font-semibold mb-0.5">
+                    Pending Research
+                  </h3>
+                  <p className="text-lg font-bold text-amber-300">
+                    {pendingResearch.length}
                   </p>
                 </div>
               </div>
 
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="bg-gray-900/50 backdrop-blur p-4 rounded-lg border border-gray-800">
-                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <ClipboardDocumentCheckIcon className="w-5 h-5 text-yellow-400" />
+              <div className="grid md:grid-cols-3 lg:grid-cols-2 gap-3">
+                <div className="bg-gray-900/50 backdrop-blur p-3 rounded-lg border border-gray-800">
+                  <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <ClipboardDocumentCheckIcon className="w-4 h-4 text-yellow-400" />
                     Quick Actions
                   </h3>
-                  <div className="space-y-2">
+                  <div className="grid grid-cols-2 gap-1.5">
                     <button
                       onClick={() => setActiveSection("notices")}
-                      className="w-full bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 p-2 rounded-lg transition flex items-center gap-2 text-sm"
+                      className="bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/30 p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-medium"
                     >
-                      <PlusCircleIcon className="w-4 h-4" /> Publish Notice
+                      <PlusCircleIcon className="w-3 h-3" /> Notice
                     </button>
                     <button
                       onClick={() => setActiveSection("blogs")}
-                      className="w-full bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/30 p-2 rounded-lg transition flex items-center gap-2 text-sm"
+                      className="bg-pink-600/20 hover:bg-pink-600/30 border border-pink-500/30 p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-medium"
                     >
-                      <PlusCircleIcon className="w-4 h-4" /> Publish Blog
+                      <PlusCircleIcon className="w-3 h-3" /> Blog
                     </button>
                     <button
                       onClick={() => setActiveSection("projects")}
-                      className="w-full bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 p-2 rounded-lg transition flex items-center gap-2 text-sm"
+                      className="bg-green-600/20 hover:bg-green-600/30 border border-green-500/30 p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-medium"
                     >
-                      <PlusCircleIcon className="w-4 h-4" /> Publish Project
+                      <PlusCircleIcon className="w-3 h-3" /> Project
+                    </button>
+                    <button
+                      onClick={() => setActiveSection("events")}
+                      className="bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/30 p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-medium"
+                    >
+                      <PlusCircleIcon className="w-3 h-3" /> Event
+                    </button>
+                    <button
+                      onClick={() => setActiveSection("gallery")}
+                      className="bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/30 p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-medium"
+                    >
+                      <PlusCircleIcon className="w-3 h-3" /> Gallery
+                    </button>
+                    <button
+                      onClick={() => setActiveSection("research")}
+                      className="bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/30 p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-medium"
+                    >
+                      <PlusCircleIcon className="w-3 h-3" /> Research
                     </button>
                     <button
                       onClick={() => setActiveSection("tasks")}
-                      className="w-full bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 p-2 rounded-lg transition flex items-center gap-2 text-sm"
+                      className="bg-yellow-600/20 hover:bg-yellow-600/30 border border-yellow-500/30 p-1.5 rounded-lg transition flex items-center gap-1 text-xs font-medium col-span-2"
                     >
-                      <PlusCircleIcon className="w-4 h-4" /> Assign Task
+                      <PlusCircleIcon className="w-3 h-3" /> Assign Task
                     </button>
                   </div>
                 </div>
-                <div className="bg-gray-900/50 backdrop-blur p-4 rounded-lg border border-gray-800">
-                  <h3 className="text-lg font-semibold mb-3">
-                    Recent Activity
-                  </h3>
-                  <div className="space-y-2 text-sm text-gray-300">
-                    <p>• {pendingSubs.length} pending task submissions</p>
-                    <p>
-                      •{" "}
-                      {
-                        assignees.filter((u: any) => u.role === "AMBASSADOR")
-                          .length
-                      }{" "}
-                      active ambassadors
-                    </p>
-                    <p>
-                      • Total pending approvals:{" "}
-                      {pendingBlogs.length +
-                        pendingNotices.length +
-                        pendingEvents.length +
-                        pendingProjects.length}
-                    </p>
-                  </div>
-                </div>
-                <div className="bg-gray-900/50 backdrop-blur p-4 rounded-lg border border-gray-800">
-                  <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
-                    <ChartBarIcon className="w-5 h-5 text-blue-400" />
+                <div className="bg-gray-900/50 backdrop-blur p-3 rounded-lg border border-gray-800">
+                  <h3 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                    <ChartBarIcon className="w-4 h-4 text-blue-400" />
                     Content Stats
                   </h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Total Blogs:</span>
+                  <div className="space-y-1">
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-400">Blogs:</span>
                       <span className="font-semibold text-pink-400">
-                        {latestBlogs.length}
+                        {pendingBlogs.length}
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Total Notices:</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-400">Notices:</span>
                       <span className="font-semibold text-purple-400">
                         {pendingNotices.length}
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Total Events:</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-400">Events:</span>
                       <span className="font-semibold text-blue-400">
                         {pendingEvents.length}
                       </span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-gray-400">Total Projects:</span>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-400">Projects:</span>
                       <span className="font-semibold text-green-400">
                         {pendingProjects.length}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-xs">
+                      <span className="text-gray-400">Research:</span>
+                      <span className="font-semibold text-amber-400">
+                        {pendingResearch.length}
                       </span>
                     </div>
                   </div>
@@ -993,6 +1024,9 @@ export default function AdminDashboard() {
             <AdminBlogsCrud useBlogsHook={useBlogs} role={role} toast={toast} />
           )}
           {activeSection === "gallery" && <AdminGalleryCrud toast={toast} />}
+          {activeSection === "research" && (
+            <AdminResearchCrud useResearchHook={useResearch} toast={toast} />
+          )}
 
           {activeSection === "users" && (
             <UsersCrud

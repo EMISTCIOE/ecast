@@ -10,6 +10,7 @@ import { useProjects } from "@/lib/hooks/projects";
 import { useEvents } from "@/lib/hooks/events";
 import { useTasks } from "@/lib/hooks/tasks";
 import { useGallery } from "@/lib/hooks/gallery";
+import { useResearch } from "@/lib/hooks/research";
 import MySubmissions from "@/components/MySubmissions";
 import { useToast } from "@/hooks/useToast";
 import { ToastContainer } from "@/components/Toast";
@@ -25,6 +26,10 @@ import BlogsSection from "@/components/dashboard-member/sections/BlogsSection";
 import ProjectsSection from "@/components/dashboard-member/sections/ProjectsSection";
 import EventsSection from "@/components/dashboard-member/sections/EventsSection";
 import GallerySection from "@/components/dashboard-member/sections/GallerySection";
+import ResearchSection from "@/components/dashboard-member/sections/ResearchSection";
+// Modals
+import CreateResearchModal from "@/components/dashboard-member/modals/CreateResearchModal";
+import EditResearchModal from "@/components/dashboard-member/modals/EditResearchModal";
 import {
   BellIcon,
   DocumentTextIcon,
@@ -191,6 +196,12 @@ export default function MemberDashboard() {
     list: listGallery,
     remove: deleteGallery,
   } = useGallery();
+  const {
+    create: createResearchApi,
+    list: listResearch,
+    update: updateResearch,
+    remove: deleteResearch,
+  } = useResearch();
   const { listAssigned, submit } = useTasks();
   const [role, setRole] = useState<string | null>(null);
   const [nTitle, setNTitle] = useState("");
@@ -203,6 +214,7 @@ export default function MemberDashboard() {
   const [myProjects, setMyProjects] = useState<any[]>([]);
   const [myEvents, setMyEvents] = useState<any[]>([]);
   const [myGallery, setMyGallery] = useState<any[]>([]);
+  const [myResearch, setMyResearch] = useState<any[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Blog
@@ -297,6 +309,9 @@ export default function MemberDashboard() {
         .catch(() => {});
       listGallery({ mine: "1" })
         .then(setMyGallery)
+        .catch(() => {});
+      listResearch({ mine: "1" })
+        .then(setMyResearch)
         .catch(() => {});
       listAssigned()
         .then((data: any[]) => {
@@ -473,11 +488,15 @@ export default function MemberDashboard() {
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [showCreateGalleryModal, setShowCreateGalleryModal] = useState(false);
+  const [showCreateResearchModal, setShowCreateResearchModal] = useState(false);
+  const [showEditResearchModal, setShowEditResearchModal] = useState(false);
+  const [editingResearch, setEditingResearch] = useState<any>(null);
 
   const menuItems = [
     { id: "overview", name: "Overview", icon: HomeIcon },
     { id: "notices", name: "My Notices", icon: BellIcon },
     { id: "blogs", name: "My Blogs", icon: DocumentTextIcon },
+    { id: "research", name: "My Research", icon: DocumentTextIcon },
     { id: "projects", name: "My Projects", icon: FolderIcon },
     { id: "events", name: "My Events", icon: CalendarIcon },
     { id: "gallery", name: "My Gallery", icon: PhotoIcon },
@@ -573,6 +592,13 @@ export default function MemberDashboard() {
                   onClick: () => setActiveSection("gallery"),
                 },
                 {
+                  id: "research",
+                  label: "My Research",
+                  icon: DocumentTextIcon as any,
+                  active: activeSection === "research",
+                  onClick: () => setActiveSection("research"),
+                },
+                {
                   id: "submit",
                   label: "Submit Task",
                   icon: PaperAirplaneIcon as any,
@@ -614,6 +640,7 @@ export default function MemberDashboard() {
               blogs={myBlogs}
               projects={myProjects}
               events={myEvents}
+              research={myResearch}
               onNavigate={setActiveSection}
               onTaskSelect={setSelTask}
             />
@@ -623,13 +650,13 @@ export default function MemberDashboard() {
           {activeSection === "submit" && (
             <div className="max-w-3xl mx-auto animate-fade-in">
               <div className="mb-8">
-                <h1 className="text-4xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold mb-3 flex items-center gap-3 bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                   <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-cyan-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/30">
                     <PaperAirplaneIcon className="w-7 h-7 text-white" />
                   </div>
                   Submit Task
                 </h1>
-                <p className="text-gray-400 text-lg">
+                <p className="text-gray-400 text-sm">
                   Complete your assigned tasks
                 </p>
               </div>
@@ -669,7 +696,7 @@ export default function MemberDashboard() {
               >
                 {subMsg && (
                   <div
-                    className={`p-5 rounded-2xl font-medium flex items-center gap-3 ${
+                    className={`p-5 rounded-2xl font-medium text-sm flex items-center gap-3 ${
                       subMsg.includes("fail")
                         ? "bg-red-900/30 border border-red-500/50 text-red-300"
                         : "bg-green-900/30 border border-green-500/50 text-green-300"
@@ -684,7 +711,7 @@ export default function MemberDashboard() {
                   </div>
                 )}
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                  <label className="block text-xs font-semibold text-gray-300 flex items-center gap-2">
                     <ClipboardDocumentCheckIcon className="w-5 h-5 text-blue-400" />
                     Select Task
                   </label>
@@ -705,12 +732,12 @@ export default function MemberDashboard() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                  <label className="block text-xs font-semibold text-gray-300 flex items-center gap-2">
                     <DocumentTextIcon className="w-5 h-5 text-blue-400" />
                     Submission Notes
                   </label>
                   <textarea
-                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 resize-none font-medium"
+                    className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 resize-none text-sm font-medium"
                     rows={5}
                     placeholder="Add details about your submission, challenges faced, or any notes for reviewers..."
                     value={subText}
@@ -718,7 +745,7 @@ export default function MemberDashboard() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+                  <label className="block text-xs font-semibold text-gray-300 flex items-center gap-2">
                     <ArrowUpTrayIcon className="w-5 h-5 text-blue-400" />
                     Attachment{" "}
                     {subFile && (
@@ -739,7 +766,7 @@ export default function MemberDashboard() {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-700 hover:via-blue-800 hover:to-cyan-700 p-5 rounded-xl font-bold text-lg shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+                  className="w-full bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 hover:from-blue-700 hover:via-blue-800 hover:to-cyan-700 p-5 rounded-xl font-bold text-base shadow-2xl hover:shadow-blue-500/30 transition-all duration-300 hover:scale-[1.02] flex items-center justify-center gap-3 group disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {isSubmitting ? (
                     <>
@@ -761,10 +788,10 @@ export default function MemberDashboard() {
           {activeSection === "submissions" && (
             <div className="animate-fade-in">
               <div className="mb-8">
-                <h1 className="text-4xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
+                <h1 className="text-2xl font-bold mb-3 bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
                   My Submissions
                 </h1>
-                <p className="text-gray-400 text-lg">
+                <p className="text-gray-400 text-sm">
                   Track all your submissions and their status
                 </p>
               </div>
@@ -828,6 +855,27 @@ export default function MemberDashboard() {
                 await deleteGallery(id);
               }}
               onRefresh={() => listGallery({ mine: "1" }).then(setMyGallery)}
+            />
+          )}
+
+          {/* My Research Section */}
+          {activeSection === "research" && (
+            <ResearchSection
+              myResearch={myResearch}
+              onCreateClick={() => setShowCreateResearchModal(true)}
+              onEditClick={(research) => {
+                setEditingResearch(research);
+                setShowEditResearchModal(true);
+              }}
+              onDeleteClick={async (slug: string) => {
+                try {
+                  await deleteResearch(slug);
+                  toast.success("Research paper deleted successfully");
+                  listResearch({ mine: "1" }).then(setMyResearch);
+                } catch (error) {
+                  toast.error("Failed to delete research paper");
+                }
+              }}
             />
           )}
         </div>
@@ -924,6 +972,30 @@ export default function MemberDashboard() {
               "Image uploaded successfully! It will be reviewed by admins."
             );
             listGallery({ mine: "1" }).then(setMyGallery);
+          }}
+        />
+
+        <CreateResearchModal
+          isOpen={showCreateResearchModal}
+          onClose={() => setShowCreateResearchModal(false)}
+          onSubmit={async (formData) => {
+            await createResearchApi(formData);
+            toast.success("Research paper submitted for review successfully!");
+            listResearch({ mine: "1" }).then(setMyResearch);
+          }}
+        />
+
+        <EditResearchModal
+          isOpen={showEditResearchModal}
+          onClose={() => {
+            setShowEditResearchModal(false);
+            setEditingResearch(null);
+          }}
+          research={editingResearch}
+          onSubmit={async (slug, data) => {
+            await updateResearch(slug, data);
+            toast.success("Research paper updated successfully!");
+            listResearch({ mine: "1" }).then(setMyResearch);
           }}
         />
       </div>

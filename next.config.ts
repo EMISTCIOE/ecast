@@ -1,65 +1,48 @@
-import path from 'path';
-import type { NextConfig } from 'next';
+import type { NextConfig } from "next";
 
-// Add MDX support by using @next/mdx with custom config
 const nextConfig: NextConfig = {
   reactStrictMode: false,
-  // Do not block production builds on ESLint issues; we surface them in dev
   eslint: { ignoreDuringBuilds: true },
-  // Allow shipping even with type errors in edge cases; keep dev experience strict
   typescript: { ignoreBuildErrors: true },
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'avatars.githubusercontent.com',
+        protocol: "https",
+        hostname: "avatars.githubusercontent.com",
       },
       {
-        protocol: 'https',
-        hostname: 'shotcan.com',
+        protocol: "https",
+        hostname: "shotcan.com",
       },
       {
-        protocol: 'https',
-        hostname: 'app.svgator.com',
+        protocol: "https",
+        hostname: "app.svgator.com",
       },
       {
-        protocol: 'https',
-        hostname: 'cdn.svgator.com',
+        protocol: "https",
+        hostname: "cdn.svgator.com",
       },
       {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com',
+        protocol: "https",
+        hostname: "res.cloudinary.com",
       },
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '8000',
+        protocol: "http",
+        hostname: "localhost",
+        port: "8000",
       },
       {
-        protocol: 'http',
-        hostname: '127.0.0.1',
-        port: '8000',
+        protocol: "http",
+        hostname: "127.0.0.1",
+        port: "8000",
       },
-
-
-      
-     
+      {
+        protocol: "https",
+        hostname: "ecast-backend.tcioe.edu.np",
+      },
     ],
   },
-  pageExtensions: ['ts', 'tsx', 'mdx'], // Add MDX file support as page extensions
-  webpack(config) {
-    // Add MDX loader to handle .mdx files
-    config.module.rules.push({
-      test: /\.mdx$/,
-      use: [
-        {
-          loader: '@mdx-js/loader', // Use MDX loader to process .mdx files
-        },
-      ],
-    });
-
-    return config;
-  },
+  pageExtensions: ["ts", "tsx", "mdx"],
 };
 
 export default nextConfig;
