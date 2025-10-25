@@ -2,6 +2,13 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import NavBar from "@/components/nav"; 
 import Footer from "@/components/footar";
+import NoticesSection from "@/components/homepage/NoticesSection";
+import BlogsSection from "@/components/homepage/BlogsSection";
+import EventsSection from "@/components/homepage/EventsSection";
+import GallerySection from "@/components/homepage/GallerySection";
+import LatestContentSection from "@/components/homepage/LatestContentSection";
+import UserCountsSection from "@/components/homepage/UserCountsSection";
+import { fetchHomepageData } from "@/lib/homepage-api";
 
 const Typewriter = ({ text, speed }: { text: string; speed?: number }) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -23,6 +30,20 @@ const Typewriter = ({ text, speed }: { text: string; speed?: number }) => {
 
 const Home = () => {
   const router = useRouter();
+  const [homepageData, setHomepageData] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchHomepageData()
+      .then((data) => {
+        setHomepageData(data);
+        setLoading(false);
+      })
+      .catch((error) => {
+        console.error("Error loading homepage data:", error);
+        setLoading(false);
+      });
+  }, []);
 
   const eventsClick = () => {
     router.push("/ourevents");
@@ -78,6 +99,40 @@ const Home = () => {
           </div>
         </div>
       </main>
+
+      {/* Homepage Content Sections */}
+      {!loading && homepageData && (
+        <>
+          {/* Recent Notices */}
+          <NoticesSection notices={homepageData.notices} />
+
+          {/* Latest Blogs */}
+          <BlogsSection blogs={homepageData.blogs} />
+
+          {/* Upcoming Events */}
+          <EventsSection events={homepageData.events} />
+
+          {/* Gallery Highlights */}
+          <GallerySection images={homepageData.gallery} />
+
+          {/* Latest Project or Research */}
+          <LatestContentSection content={homepageData.latestContent} />
+
+          {/* User Counts (Ambassadors & Alumni) */}
+          <UserCountsSection 
+            ambassadors={homepageData.userCounts.ambassadors} 
+            alumni={homepageData.userCounts.alumni} 
+          />
+        </>
+      )}
+
+      {/* Loading State */}
+      {loading && (
+        <div className="py-16 text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
+          <p className="mt-4 text-gray-600">Loading content...</p>
+        </div>
+      )}
 
       {/* Inline Style for Animations */}
       <style jsx>{`
