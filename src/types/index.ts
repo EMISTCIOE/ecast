@@ -51,6 +51,8 @@ export interface Notice {
   content: string;
   attachment?: string | null;
   audience?: string;
+  pinned?: boolean;
+  published_by?: number;
   published_by_username?: string;
   status?: "PENDING" | "APPROVED" | "REJECTED";
   created_at?: string;
@@ -62,12 +64,20 @@ export interface Event {
   slug: string;
   title: string;
   description?: string;
-  event_image?: string;
-  start_date?: string;
-  end_date?: string;
-  venue?: string;
-  registration_link?: string;
+  date?: string;
+  end_date?: string | null;
+  time?: string | null;
+  location?: string;
+  image?: string;
+  registration_required?: boolean;
+  registration_deadline?: string | null;
+  max_attendees?: number | null;
+  contact_email?: string;
+  featured?: boolean;
+  coming_soon?: boolean;
+  form_link?: string | null;
   status?: "PENDING" | "APPROVED" | "REJECTED";
+  event_status?: "upcoming" | "running" | "past";
   created_at?: string;
   updated_at?: string;
 }

@@ -1,9 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
-import { 
-  DocumentTextIcon, 
-  ArrowRightIcon 
-} from "@heroicons/react/24/outline";
+import { DocumentTextIcon } from "@heroicons/react/24/outline";
 
 interface Blog {
   id: string;
@@ -27,62 +23,60 @@ export default function BlogsSection({ blogs }: BlogsSectionProps) {
   }
 
   return (
-    <section className="py-16 bg-white">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold flex items-center gap-2">
-            <DocumentTextIcon className="w-8 h-8 text-yellow-500" />
+    <section className="py-8 bg-black border-b border-gray-800">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-2 text-white">
+            <DocumentTextIcon className="w-5 h-5" />
             Latest Blogs
           </h2>
-          <Link 
+          <Link
             href="/blogs"
-            className="flex items-center gap-2 text-yellow-500 hover:text-yellow-600 transition-colors"
+            className="text-sm text-blue-400 hover:text-blue-300 font-medium"
           >
             View All
-            <ArrowRightIcon className="w-5 h-5" />
           </Link>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-3">
           {blogs.map((blog) => (
-            <div 
+            <Link
               key={blog.id}
-              className="bg-gray-50 rounded-lg shadow-md hover:shadow-xl transition-shadow overflow-hidden"
+              href={`/blogs/${blog.slug || blog.id}`}
+              className="block"
             >
-              {blog.cover_image && (
-                <div className="relative h-48 w-full">
-                  <Image
-                    src={blog.cover_image.startsWith('http') ? blog.cover_image : `${BASE_URL}${blog.cover_image}`}
-                    alt={blog.title}
-                    fill
-                    className="object-cover"
-                  />
-                </div>
-              )}
-              
-              <div className="p-6">
-                <h3 className="text-xl font-semibold text-gray-800 mb-2">
-                  {blog.title}
-                </h3>
-                
-                <p className="text-gray-600 mb-4 line-clamp-3">
-                  {blog.description}
-                </p>
-                
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">
-                    by {blog.author_username || 'ECAST'}
-                  </span>
-                  <Link
-                    href={`/blogs/${blog.slug || blog.id}`}
-                    className="inline-flex items-center text-yellow-500 hover:text-yellow-600 font-medium transition-colors"
-                  >
-                    Read More
-                    <ArrowRightIcon className="w-4 h-4 ml-1" />
-                  </Link>
+              <div className="border border-gray-800 rounded-lg p-3 hover:border-blue-500 hover:bg-gray-900 transition-all bg-gray-900/50">
+                <div className="flex gap-3">
+                  {/* Left side - Content */}
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-white text-sm line-clamp-2 mb-1">
+                      {blog.title}
+                    </h3>
+                    <p className="text-xs text-gray-500 mb-1">
+                      by {blog.author_username || "ECAST"}
+                    </p>
+                    <p className="text-xs text-gray-400 line-clamp-2">
+                      {blog.description}
+                    </p>
+                  </div>
+
+                  {/* Right side - Cover Image */}
+                  <div className="flex-shrink-0">
+                    {blog.cover_image ? (
+                      <img
+                        src={`${blog.cover_image}`}
+                        alt={blog.title}
+                        className="w-20 h-20 object-cover rounded-md"
+                      />
+                    ) : (
+                      <div className="w-20 h-20 bg-gray-800 rounded-md flex items-center justify-center">
+                        <DocumentTextIcon className="w-8 h-8 text-gray-600" />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       </div>

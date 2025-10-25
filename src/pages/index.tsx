@@ -1,13 +1,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import NavBar from "@/components/nav"; 
+import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
-import NoticesSection from "@/components/homepage/NoticesSection";
-import BlogsSection from "@/components/homepage/BlogsSection";
-import EventsSection from "@/components/homepage/EventsSection";
+import NoticesAndEventsSection from "@/components/homepage/NoticesAndEventsSection";
+import BlogsAndContentSection from "@/components/homepage/BlogsAndContentSection";
 import GallerySection from "@/components/homepage/GallerySection";
-import LatestContentSection from "@/components/homepage/LatestContentSection";
-import UserCountsSection from "@/components/homepage/UserCountsSection";
 import { fetchHomepageData } from "@/lib/homepage-api";
 
 const Typewriter = ({ text, speed }: { text: string; speed?: number }) => {
@@ -57,27 +54,30 @@ const Home = () => {
         style={{ backgroundImage: `url('/assets/Thapathali.jpg')` }} // Ensure image is in the public folder
       >
         <div className="static p-2 text-white flex flex-col w-full h-full justify-evenly items-center z-10 backdrop-blur-sm backdrop-brightness-50 bg-no-repeat bg-cover">
-        <div className="relative p-6 rounded-lg text-9xl">
-          <h1
-            className="text-6xl sm:text-9xl lg:text-10xl font-extralight tracking-wide hover:bg-white hover:text-yellow-500 transition-all duration-300"
-            style={{
-              animation: "gradientText 5s ease-in-out infinite, fadeToWhite 6s ease-in-out infinite 5s",
-              backgroundSize: "200% 200%",
-              backgroundImage: "linear-gradient(90deg, gray, white)",
-              backgroundClip: "text",
-              WebkitBackgroundClip: "text",
-              color: "transparent", // Make sure text color is transparent for the gradient
-            }}
-          >
-            
-            ECAST
-          </h1>
+          <div className="relative p-6 rounded-lg text-9xl">
+            <h1
+              className="text-6xl sm:text-9xl lg:text-10xl font-extralight tracking-wide hover:bg-white hover:text-yellow-500 transition-all duration-300"
+              style={{
+                animation:
+                  "gradientText 5s ease-in-out infinite, fadeToWhite 6s ease-in-out infinite 5s",
+                backgroundSize: "200% 200%",
+                backgroundImage: "linear-gradient(90deg, gray, white)",
+                backgroundClip: "text",
+                WebkitBackgroundClip: "text",
+                color: "transparent", // Make sure text color is transparent for the gradient
+              }}
+            >
+              ECAST
+            </h1>
           </div>
           <h2 className="lg:text-xl text-center lg:text-left font-mono">
             "Electronics and Computer Community Amidst Students, Thapathali"
             <br />
             <span className="block text-center">
-              <Typewriter text='"Connecting the brightest young minds in Engineering"' speed={50} />
+              <Typewriter
+                text='"Connecting the brightest young minds in Engineering"'
+                speed={50}
+              />
             </span>
           </h2>
           <div className="sm:flex-row flex flex-col lg:w-[50%] w-[auto] justify-center gap-8 mb-4">
@@ -103,26 +103,21 @@ const Home = () => {
       {/* Homepage Content Sections */}
       {!loading && homepageData && (
         <>
-          {/* Recent Notices */}
-          <NoticesSection notices={homepageData.notices} />
+          {/* Recent Notices and Events */}
+          <NoticesAndEventsSection
+            notices={homepageData.notices}
+            events={homepageData.events}
+            userCounts={homepageData.userCounts}
+          />
 
-          {/* Latest Blogs */}
-          <BlogsSection blogs={homepageData.blogs} />
-
-          {/* Upcoming Events */}
-          <EventsSection events={homepageData.events} />
+          {/* Latest Blogs and Content */}
+          <BlogsAndContentSection
+            blogs={homepageData.blogs}
+            content={homepageData.latestContent}
+          />
 
           {/* Gallery Highlights */}
           <GallerySection images={homepageData.gallery} />
-
-          {/* Latest Project or Research */}
-          <LatestContentSection content={homepageData.latestContent} />
-
-          {/* User Counts (Ambassadors & Alumni) */}
-          <UserCountsSection 
-            ambassadors={homepageData.userCounts.ambassadors} 
-            alumni={homepageData.userCounts.alumni} 
-          />
         </>
       )}
 

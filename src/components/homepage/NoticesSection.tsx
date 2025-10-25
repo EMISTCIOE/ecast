@@ -1,9 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
-import { 
-  BellIcon, 
-  ArrowRightIcon 
-} from "@heroicons/react/24/outline";
+import { BellIcon } from "@heroicons/react/24/outline";
 
 interface Notice {
   id: string;
@@ -12,6 +8,7 @@ interface Notice {
   created_at: string;
   attachment?: string;
   slug?: string;
+  tags?: string[];
 }
 
 interface NoticesSectionProps {
@@ -26,49 +23,75 @@ export default function NoticesSection({ notices }: NoticesSectionProps) {
   }
 
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold flex items-center gap-2">
-            <BellIcon className="w-8 h-8 text-yellow-500" />
+    <section className="py-8 bg-black border-b border-gray-800">
+      <div className="container mx-auto px-4 max-w-6xl">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-bold flex items-center gap-2 text-white">
+            <BellIcon className="w-5 h-5" />
             Recent Notices
           </h2>
-          <Link 
+          <Link
             href="/notices"
-            className="flex items-center gap-2 text-yellow-500 hover:text-yellow-600 transition-colors"
+            className="text-sm text-blue-400 hover:text-blue-300 font-medium"
           >
             View All
-            <ArrowRightIcon className="w-5 h-5" />
           </Link>
         </div>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="space-y-3">
           {notices.map((notice) => (
-            <div 
+            <Link
               key={notice.id}
-              className="bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow p-6"
+              href={`/notices/${notice.slug || notice.id}`}
+              className="block"
             >
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="text-xl font-semibold text-gray-800 flex-1">
-                  {notice.title}
-                </h3>
-                <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
-                  {new Date(notice.created_at).toLocaleDateString()}
-                </span>
+              <div className="border border-gray-800 rounded-lg p-3 hover:border-blue-500 hover:bg-gray-900 transition-all bg-gray-900/50">
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <h3 className="font-semibold text-white text-sm flex-1 line-clamp-1">
+                    {notice.title}
+                  </h3>
+                  <span className="text-xs text-gray-400 whitespace-nowrap flex items-center gap-1">
+                    <svg
+                      className="w-3 h-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                      />
+                    </svg>
+                    {new Date(notice.created_at).toLocaleDateString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
+                    })}
+                  </span>
+                </div>
+                {notice.content && (
+                  <p className="text-xs text-gray-400 line-clamp-2 mb-2">
+                    {notice.content}
+                  </p>
+                )}
+                {(notice as any).tags && (notice as any).tags.length > 0 && (
+                  <div className="flex gap-2">
+                    {(notice as any).tags
+                      .slice(0, 2)
+                      .map((tag: string, idx: number) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-0.5 bg-blue-900/50 text-blue-300 text-xs rounded"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                  </div>
+                )}
               </div>
-              
-              <p className="text-gray-600 mb-4 line-clamp-3">
-                {notice.content.replace(/<[^>]*>/g, '')}
-              </p>
-              
-              <Link
-                href={`/notices/${notice.slug || notice.id}`}
-                className="inline-flex items-center text-yellow-500 hover:text-yellow-600 font-medium transition-colors"
-              >
-                Read More
-                <ArrowRightIcon className="w-4 h-4 ml-1" />
-              </Link>
-            </div>
+            </Link>
           ))}
         </div>
       </div>
