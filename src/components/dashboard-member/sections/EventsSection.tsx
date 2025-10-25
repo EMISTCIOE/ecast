@@ -197,7 +197,7 @@ export default function EventsSection({
                                   ? dateObj.toLocaleDateString()
                                   : "Invalid Date";
                               } catch {
-                                return "Invalid Date";
+                                return "ILinks	";
                               }
                             })()}
                           </div>

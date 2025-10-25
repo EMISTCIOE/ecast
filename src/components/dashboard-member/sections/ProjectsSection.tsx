@@ -3,16 +3,22 @@ import {
   PlusIcon,
   LinkIcon,
   GlobeAltIcon,
+  PencilIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 
 interface ProjectsSectionProps {
   myProjects: any[];
   onCreateClick: () => void;
+  onEditClick?: (project: any) => void;
+  onDeleteClick?: (projectId: string) => void;
 }
 
 export default function ProjectsSection({
   myProjects,
   onCreateClick,
+  onEditClick,
+  onDeleteClick,
 }: ProjectsSectionProps) {
   return (
     <div className="animate-fade-in">
@@ -99,9 +105,6 @@ export default function ProjectsSection({
                       >
                         {p.status}
                       </span>
-                      <span className="text-sm text-gray-400">
-                        {new Date(p.created_at).toLocaleDateString()}
-                      </span>
                     </div>
                     {(p.repo_link || p.live_link) && (
                       <div className="flex gap-3 mt-2">
@@ -130,6 +133,38 @@ export default function ProjectsSection({
                       </div>
                     )}
                   </div>
+
+                  {/* Action buttons - show only for pending projects */}
+                  {p.status === "PENDING" && (onEditClick || onDeleteClick) && (
+                    <div className="flex gap-2 ml-auto">
+                      {onEditClick && (
+                        <button
+                          onClick={() => onEditClick(p)}
+                          className="p-2 bg-blue-500/20 hover:bg-blue-500/30 text-blue-400 rounded-lg transition-colors border border-blue-500/30"
+                          title="Edit project"
+                        >
+                          <PencilIcon className="w-5 h-5" />
+                        </button>
+                      )}
+                      {onDeleteClick && (
+                        <button
+                          onClick={() => {
+                            if (
+                              confirm(
+                                `Are you sure you want to delete "${p.title}"?`
+                              )
+                            ) {
+                              onDeleteClick(p.id);
+                            }
+                          }}
+                          className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-lg transition-colors border border-red-500/30"
+                          title="Delete project"
+                        >
+                          <TrashIcon className="w-5 h-5" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

@@ -24,7 +24,8 @@ interface CreateEventModalProps {
     title: string;
     description: string;
     date: string;
-    time: string;
+    end_date?: string;
+    time?: string;
     location: string;
     image: File | null;
     contact_email: string;
@@ -41,6 +42,7 @@ export default function CreateEventModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [time, setTime] = useState("");
   const [location, setLocation] = useState("");
   const [image, setImage] = useState<File | null>(null);
@@ -81,7 +83,8 @@ export default function CreateEventModal({
         title,
         description,
         date,
-        time,
+        end_date: endDate.trim() || undefined,
+        time: time.trim() || undefined,
         location,
         image,
         contact_email: contactEmail,
@@ -93,6 +96,7 @@ export default function CreateEventModal({
         setTitle("");
         setDescription("");
         setDate("");
+        setEndDate("");
         setTime("");
         setLocation("");
         setImage(null);
@@ -122,6 +126,7 @@ export default function CreateEventModal({
       setTitle("");
       setDescription("");
       setDate("");
+      setEndDate("");
       setTime("");
       setLocation("");
       setImage(null);
@@ -221,7 +226,7 @@ export default function CreateEventModal({
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
               <CalendarIcon className="w-5 h-5 text-emerald-400" />
-              Date
+              Start Date *
             </label>
             <input
               className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white ${
@@ -248,32 +253,59 @@ export default function CreateEventModal({
           </div>
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-              <ClockIcon className="w-5 h-5 text-emerald-400" />
-              Time
+              <CalendarIcon className="w-5 h-5 text-purple-400" />
+              End Date (Optional)
             </label>
             <input
-              className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white ${
-                errors.time ? "border-red-500" : "border-gray-700"
+              className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 font-medium text-white ${
+                errors.end_date ? "border-red-500" : "border-gray-700"
               }`}
-              type="time"
-              value={time}
+              type="date"
+              value={endDate}
               onChange={(e) => {
-                setTime(e.target.value);
-                if (errors.time) {
+                setEndDate(e.target.value);
+                if (errors.end_date) {
                   const newErrors = { ...errors };
-                  delete newErrors.time;
+                  delete newErrors.end_date;
                   setErrors(newErrors);
                 }
               }}
-              required
             />
-            {errors.time && (
+            {errors.end_date && (
               <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
                 <XCircleIcon className="w-4 h-4" />
-                {errors.time}
+                {errors.end_date}
               </p>
             )}
           </div>
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+            <ClockIcon className="w-5 h-5 text-emerald-400" />
+            Time (Optional)
+          </label>
+          <input
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white ${
+              errors.time ? "border-red-500" : "border-gray-700"
+            }`}
+            type="time"
+            value={time}
+            onChange={(e) => {
+              setTime(e.target.value);
+              if (errors.time) {
+                const newErrors = { ...errors };
+                delete newErrors.time;
+                setErrors(newErrors);
+              }
+            }}
+          />
+          {errors.time && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.time}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">

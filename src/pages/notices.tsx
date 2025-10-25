@@ -90,27 +90,32 @@ const NoticesPage: React.FC<NoticesPageProps> = ({
   return (
     <>
       <Navbar />
-      <div className="flex justify-center bg-[#1a1f3a] w-full min-h-screen">
+      <div className="flex justify-center bg-black w-full min-h-screen">
         <div className="w-full max-w-7xl px-4 lg:px-8 py-8">
           {/* Header */}
-          <h1 className="text-white text-center text-5xl lg:text-6xl font-bold mb-8">
-            Notices
-          </h1>
+          <div className="text-center mb-12">
+            <h1 className="text-white text-5xl lg:text-6xl font-bold mb-4">
+              Notices
+            </h1>
+            <p className="text-gray-400 text-lg max-w-3xl mx-auto">
+              Stay informed with important announcements, deadlines, and updates
+            </p>
+          </div>
 
           {/* Search Section */}
-          <div className="bg-gradient-to-r from-purple-900/40 to-indigo-900/40 border border-purple-600/20 rounded-xl p-6 mb-8 shadow-md">
-            <div className="flex flex-col md:flex-row items-center gap-4">
-              {/* Search Input */}
-              <div className="relative flex-1 w-full">
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4">
+              {/* Search Bar */}
+              <div className="flex-1 relative">
                 <input
                   type="text"
                   placeholder="Search notices..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full px-4 py-3 pl-10 rounded-lg focus:outline-none bg-black/40 border border-purple-700/30 text-white placeholder:text-gray-400"
+                  className="w-full px-5 py-3 pl-12 bg-gray-900/60 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                 />
                 <svg
-                  className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -130,76 +135,100 @@ const NoticesPage: React.FC<NoticesPageProps> = ({
 
           {/* Notices List */}
           {filteredNotices.length === 0 ? (
-            <div className="text-center text-gray-300 text-xl py-12 bg-[#2a2f4a] rounded-lg">
+            <div className="text-center text-gray-300 text-xl py-12 bg-gray-900/60 rounded-lg border border-gray-800">
               No notices found matching your criteria.
             </div>
           ) : (
             <>
-              <div className="space-y-6 pb-9">
+              <div className="space-y-4 pb-9">
                 {filteredNotices.map((notice) => {
                   const fileType = getFileType(notice.attachment);
                   const fullAttachmentUrl = getFullUrl(notice.attachment);
                   const isExpanded = expandedNotice === notice.id;
                   const contentPreview =
-                    notice.content.length > 150
-                      ? notice.content.substring(0, 150) + "..."
+                    notice.content.length > 120
+                      ? notice.content.substring(0, 120) + "..."
                       : notice.content;
 
                   return (
                     <div
                       key={notice.id}
-                      className="bg-gray-900/60 border border-gray-800 rounded-xl p-6 shadow-md hover:shadow-lg transition-all duration-300"
+                      className="bg-gradient-to-r from-gray-900/70 to-gray-800/60 backdrop-blur-sm border-l-4 border-purple-500 rounded-lg p-4 shadow-lg hover:shadow-2xl hover:border-purple-400 transition-all duration-300 group relative overflow-hidden"
                     >
-                      {/* Header Row */}
-                      <div className="flex justify-between items-start mb-4">
+                      {/* Notification accent */}
+                      <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/5 rounded-full blur-3xl"></div>
+
+                      {/* Header Row - More Compact */}
+                      <div className="flex justify-between items-start mb-2 relative z-10">
                         <div className="flex-1">
-                          <div className="flex items-center gap-2 text-sm text-gray-400 mb-2">
-                            <span>{formatDate(notice.created_at)}</span>
-                            <span>|</span>
-                            <span>Audience: {notice.audience}</span>
-                          </div>
-                          <h2 className="text-2xl font-bold text-white mb-0">
+                          <h2 className="text-xl font-bold text-white mb-1 group-hover:text-purple-300 transition-colors leading-tight">
                             {notice.title}
                           </h2>
+                          <div className="flex items-center gap-3 text-xs text-gray-400">
+                            <span className="flex items-center gap-1">
+                              <svg
+                                className="w-3.5 h-3.5"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              {formatDate(notice.created_at)}
+                            </span>
+                            <span>•</span>
+                            <span className="flex items-center gap-1">
+                              <svg
+                                className="w-3.5 h-3.5"
+                                fill="currentColor"
+                                viewBox="0 0 20 20"
+                              >
+                                <path
+                                  fillRule="evenodd"
+                                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                                  clipRule="evenodd"
+                                />
+                              </svg>
+                              {notice.published_by_username}
+                            </span>
+                          </div>
                         </div>
-                        <span className="bg-purple-600/20 text-purple-300 text-xs font-bold px-3 py-1 rounded whitespace-nowrap ml-4 uppercase border border-purple-600/30">
-                          {notice.audience}
-                        </span>
+                        {/* Notification Badge */}
+                        <div className="flex items-center gap-2">
+                          <span className="bg-purple-500/20 text-purple-300 text-xs font-semibold px-2.5 py-1 rounded-full border border-purple-500/30 animate-pulse">
+                            NEW
+                          </span>
+                        </div>
                       </div>
 
-                      {/* Content */}
-                      <p className="text-gray-300 mb-3 leading-relaxed">
+                      {/* Content - More Compact */}
+                      <p className="text-gray-300 text-sm mb-3 leading-relaxed relative z-10">
                         {isExpanded ? notice.content : contentPreview}
                       </p>
 
-                      {/* Author Info */}
-                      <p className="text-sm text-gray-400 mb-4">
-                        Posted by:{" "}
-                        <span className="font-semibold text-gray-200">
-                          {notice.published_by_username}
-                        </span>
-                      </p>
-
-                      {/* Action Buttons */}
-                      <div className="flex items-center justify-between pt-2">
+                      {/* Action Buttons - More Compact */}
+                      <div className="flex items-center justify-between pt-1 relative z-10">
                         <button
                           onClick={() => toggleExpand(notice.id)}
-                          className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold py-2.5 px-6 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg"
+                          className="bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-medium py-1.5 px-4 rounded-md transition-all duration-200 text-sm border border-purple-500/30 hover:border-purple-400/50"
                         >
                           {isExpanded ? "Show Less" : "Read More"}
                         </button>
 
                         {fileType && (
-                          <div className="flex gap-4">
+                          <div className="flex gap-3">
                             <button
                               onClick={() =>
                                 handlePreview(fullAttachmentUrl, fileType)
                               }
-                              className="text-purple-600 hover:text-purple-800 transition-colors transform hover:scale-110"
+                              className="text-purple-400 hover:text-purple-300 transition-colors transform hover:scale-110"
                               title="Preview"
                             >
                               <svg
-                                className="w-6 h-6"
+                                className="w-5 h-5"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -227,11 +256,11 @@ const NoticesPage: React.FC<NoticesPageProps> = ({
                                   }`
                                 )
                               }
-                              className="text-purple-600 hover:text-purple-800 transition-colors transform hover:scale-110"
+                              className="text-purple-400 hover:text-purple-300 transition-colors transform hover:scale-110"
                               title="Download"
                             >
                               <svg
-                                className="w-6 h-6"
+                                className="w-5 h-5"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -260,8 +289,8 @@ const NoticesPage: React.FC<NoticesPageProps> = ({
                     className={clsx(
                       "px-5 py-2 rounded-lg font-semibold transition-colors",
                       currentPage === 1
-                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-800 hover:bg-gray-100"
+                        ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                        : "bg-purple-600 text-white hover:bg-purple-700"
                     )}
                     onClick={(e) => currentPage === 1 && e.preventDefault()}
                   >
@@ -278,7 +307,7 @@ const NoticesPage: React.FC<NoticesPageProps> = ({
                             "px-4 py-2 rounded-lg font-semibold transition-colors",
                             page === currentPage
                               ? "bg-purple-600 text-white"
-                              : "bg-white text-gray-800 hover:bg-gray-100"
+                              : "bg-gray-800 text-gray-300 hover:bg-gray-700"
                           )}
                         >
                           {page}
@@ -292,8 +321,8 @@ const NoticesPage: React.FC<NoticesPageProps> = ({
                     className={clsx(
                       "px-5 py-2 rounded-lg font-semibold transition-colors",
                       currentPage === totalPages
-                        ? "bg-gray-600 text-gray-400 cursor-not-allowed"
-                        : "bg-white text-gray-800 hover:bg-gray-100"
+                        ? "bg-gray-700 text-gray-400 cursor-not-allowed"
+                        : "bg-purple-600 text-white hover:bg-purple-700"
                     )}
                     onClick={(e) =>
                       currentPage === totalPages && e.preventDefault()
@@ -347,13 +376,15 @@ const NoticesPage: React.FC<NoticesPageProps> = ({
         </div>
       )}
 
-      {/* Newsletter Subscription */}
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <NewsletterSubscribe
-          category="NOTICES"
-          title="Subscribe to Notice Updates"
-          description="Get notified instantly when important notices are posted. Stay informed about announcements, deadlines, and important information."
-        />
+      {/* Newsletter Subscription - Matching background */}
+      <div className="bg-black py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <NewsletterSubscribe
+            category="NOTICES"
+            title="Subscribe to Notice Updates"
+            description="Get notified instantly when important notices are posted. Stay informed about announcements, deadlines, and important information."
+          />
+        </div>
       </div>
 
       <Footer />

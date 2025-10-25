@@ -49,13 +49,14 @@ export default function EditProjectModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Client-side validation
+    // Client-side validation with isUpdate flag
     const validationErrors = validateProjectForm({
       title,
       description,
       repoLink,
       liveLink,
       image,
+      isUpdate: true, // This makes image optional
     });
 
     if (Object.keys(validationErrors).length > 0) {
@@ -68,7 +69,7 @@ export default function EditProjectModal({
       const formData = new FormData();
       formData.append("title", title);
       formData.append("description", description);
-      formData.append("repo_link", repoLink);
+      if (repoLink) formData.append("repo_link", repoLink);
       if (liveLink) formData.append("live_link", liveLink);
       if (image) {
         formData.append("image", image);

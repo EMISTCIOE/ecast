@@ -32,6 +32,7 @@ export default function EventsCrud({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [time, setTime] = useState("");
   const [location, setLocation] = useState("");
   const [image, setImage] = useState<File | null>(null);
@@ -44,6 +45,7 @@ export default function EventsCrud({
   const [editSlug, setEditSlug] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDate, setEditDate] = useState("");
+  const [editEndDate, setEditEndDate] = useState("");
   const [editTime, setEditTime] = useState("");
   const [editLocation, setEditLocation] = useState("");
   const [editDesc, setEditDesc] = useState("");
@@ -80,7 +82,8 @@ export default function EventsCrud({
     form.append("title", title);
     form.append("description", description);
     form.append("date", date);
-    form.append("time", time);
+    if (endDate.trim()) form.append("end_date", endDate.trim());
+    if (time.trim()) form.append("time", time.trim());
     form.append("location", location);
     if (image) form.append("image", image);
     if (contactEmail) form.append("contact_email", contactEmail);
@@ -93,6 +96,7 @@ export default function EventsCrud({
       setTitle("");
       setDescription("");
       setDate("");
+      setEndDate("");
       setTime("");
       setLocation("");
       setImage(null);
@@ -113,6 +117,7 @@ export default function EventsCrud({
     setEditSlug(event.slug);
     setEditTitle(event.title || "");
     setEditDate(event.date || "");
+    setEditEndDate(event.end_date || "");
     setEditTime(event.time || "");
     setEditLocation(event.location || "");
     setEditDesc(event.description || "");
@@ -131,7 +136,9 @@ export default function EventsCrud({
     const form = new FormData();
     form.append("title", editTitle);
     form.append("date", editDate);
-    form.append("time", editTime);
+    // Always send end_date and time (even if empty) to allow clearing them
+    form.append("end_date", editEndDate.trim());
+    form.append("time", editTime.trim());
     form.append("location", editLocation);
     form.append("description", editDesc);
     if (editContactEmail) form.append("contact_email", editContactEmail);
@@ -264,6 +271,11 @@ export default function EventsCrud({
                       </td>
                       <td className="p-4">
                         <div className="text-white">{event.date}</div>
+                        {event.end_date && (
+                          <div className="text-sm text-gray-400">
+                            to {event.end_date}
+                          </div>
+                        )}
                         {event.time && (
                           <div className="text-sm text-gray-400">
                             {event.time}
@@ -392,7 +404,7 @@ export default function EventsCrud({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Date *
+                    Start Date *
                   </label>
                   <input
                     type="date"
@@ -404,14 +416,24 @@ export default function EventsCrud({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Time *
+                    End Date (Optional)
+                  </label>
+                  <input
+                    type="date"
+                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Time (Optional)
                   </label>
                   <input
                     type="time"
                     className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                     value={time}
                     onChange={(e) => setTime(e.target.value)}
-                    required
                   />
                 </div>
                 <div className="md:col-span-2">
@@ -549,7 +571,7 @@ export default function EventsCrud({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Date *
+                    Start Date *
                   </label>
                   <input
                     type="date"
@@ -561,14 +583,24 @@ export default function EventsCrud({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Time *
+                    End Date (Optional)
+                  </label>
+                  <input
+                    type="date"
+                    className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
+                    value={editEndDate}
+                    onChange={(e) => setEditEndDate(e.target.value)}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
+                    Time (Optional)
                   </label>
                   <input
                     type="time"
                     className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                     value={editTime}
                     onChange={(e) => setEditTime(e.target.value)}
-                    required
                   />
                 </div>
                 <div className="md:col-span-2">

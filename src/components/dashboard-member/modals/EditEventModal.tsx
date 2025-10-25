@@ -32,6 +32,7 @@ export default function EditEventModal({
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [date, setDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [time, setTime] = useState("");
   const [location, setLocation] = useState("");
   const [contactEmail, setContactEmail] = useState("");
@@ -44,6 +45,7 @@ export default function EditEventModal({
       setTitle(event.title || "");
       setDescription(event.description || "");
       setDate(event.date || "");
+      setEndDate(event.end_date || "");
       setTime(event.time || "");
       setLocation(event.location || "");
       setContactEmail(event.contact_email || "");
@@ -56,16 +58,18 @@ export default function EditEventModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Client-side validation
+    // Client-side validation with isUpdate flag
     const validationErrors = validateEventForm({
       title,
       description,
       date,
+      end_date: endDate,
       time,
       location,
       contactEmail,
       formLink,
       image,
+      isUpdate: true, // This makes image optional
     });
 
     if (Object.keys(validationErrors).length > 0) {
@@ -79,7 +83,9 @@ export default function EditEventModal({
       formData.append("title", title);
       formData.append("description", description);
       formData.append("date", date);
-      formData.append("time", time);
+      // Always send end_date and time (even if empty) to allow clearing them
+      formData.append("end_date", endDate.trim());
+      formData.append("time", time.trim());
       formData.append("location", location);
       formData.append("contact_email", contactEmail);
       if (formLink.trim()) formData.append("form_link", formLink.trim());
@@ -171,12 +177,12 @@ export default function EditEventModal({
             )}
           </div>
 
-          {/* Date and Time */}
+          {/* Date, End Date and Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
                 <CalendarIcon className="w-4 h-4 text-emerald-400" />
-                Date
+                Start Date *
               </label>
               <input
                 type="date"
@@ -202,31 +208,58 @@ export default function EditEventModal({
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
-                <ClockIcon className="w-4 h-4 text-emerald-400" />
-                Time
+                <CalendarIcon className="w-4 h-4 text-purple-400" />
+                End Date (Optional)
               </label>
               <input
-                type="time"
-                required
+                type="date"
                 className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
-                  errors.time ? "border-red-500" : "border-emerald-500/50"
-                } focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all`}
-                value={time}
+                  errors.end_date ? "border-red-500" : "border-purple-500/50"
+                } focus:ring-2 focus:ring-purple-500 focus:border-transparent text-white transition-all`}
+                value={endDate}
                 onChange={(e) => {
-                  setTime(e.target.value);
-                  if (errors.time) {
-                    const { time, ...rest } = errors;
+                  setEndDate(e.target.value);
+                  if (errors.end_date) {
+                    const { end_date, ...rest } = errors;
                     setErrors(rest);
                   }
                 }}
               />
-              {errors.time && (
+              {errors.end_date && (
                 <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
                   <XCircleIcon className="w-4 h-4" />
-                  {errors.time}
+                  {errors.end_date}
                 </p>
               )}
             </div>
+          </div>
+
+          {/* Time */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+              <ClockIcon className="w-4 h-4 text-emerald-400" />
+              Time (Optional)
+            </label>
+            <input
+              type="time"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.time ? "border-red-500" : "border-emerald-500/50"
+              } focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all`}
+              value={time}
+              onChange={(e) => {
+                setTime(e.target.value);
+                if (errors.time) {
+                  const { time, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
+            />
+            {errors.time && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.time}
+              </p>
+            )}
           </div>
 
           {/* Location */}

@@ -45,11 +45,12 @@ export default function EditNoticeModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Client-side validation
+    // Client-side validation with isUpdate flag
     const validationErrors = validateNoticeForm({
       title,
       content,
       attachment: file,
+      isUpdate: true, // This makes attachment optional
     });
 
     if (Object.keys(validationErrors).length > 0) {

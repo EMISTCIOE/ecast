@@ -39,7 +39,10 @@ export function useProjects() {
         .json()
         .catch(() => ({ detail: "Unknown error" }));
       console.error("Project creation failed:", errorData);
-      throw new Error(JSON.stringify(errorData));
+      // Create an error object with response data
+      const error: any = new Error("Project creation failed");
+      error.response = { data: errorData };
+      throw error;
     }
     return res.json();
   }, []);
@@ -50,7 +53,15 @@ export function useProjects() {
       method: "PATCH",
       body: form,
     } as any);
-    if (!res.ok) throw new Error("update project failed");
+    if (!res.ok) {
+      const errorData = await res
+        .json()
+        .catch(() => ({ detail: "Unknown error" }));
+      console.error("Project update failed:", errorData);
+      const error: any = new Error("Project update failed");
+      error.response = { data: errorData };
+      throw error;
+    }
     return res.json();
   }, []);
 
@@ -60,6 +71,19 @@ export function useProjects() {
       method: "DELETE",
     });
     if (!res.ok) throw new Error("delete project failed");
+    // DELETE returns 204 No Content with no body, don't try to parse
+    if (res.status === 204 || res.status === 200) {
+      // Check if there's actually content to parse
+      const text = await res.text();
+      if (!text || text.trim() === "") {
+        return { success: true };
+      }
+      try {
+        return JSON.parse(text);
+      } catch {
+        return { success: true };
+      }
+    }
     return res.json();
   }, []);
 

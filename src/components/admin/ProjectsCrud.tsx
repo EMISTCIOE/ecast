@@ -36,7 +36,7 @@ export default function ProjectsCrud({
   const [image, setImage] = useState<File | null>(null);
 
   // Edit state
-  const [editSlug, setEditSlug] = useState<string | null>(null);
+  const [editId, setEditId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState("");
   const [editDescription, setEditDescription] = useState("");
   const [editRepoLink, setEditRepoLink] = useState("");
@@ -69,8 +69,13 @@ export default function ProjectsCrud({
     const form = new FormData();
     form.append("title", title);
     form.append("description", description);
-    if (repoLink) form.append("repo_link", repoLink);
-    if (liveLink) form.append("live_link", liveLink);
+    // Only append optional fields if they have actual values
+    if (repoLink && repoLink.trim()) {
+      form.append("repo_link", repoLink.trim());
+    }
+    if (liveLink && liveLink.trim()) {
+      form.append("live_link", liveLink.trim());
+    }
     if (image) form.append("image", image);
     try {
       await create(form);
@@ -82,15 +87,21 @@ export default function ProjectsCrud({
       setImage(null);
       toast.success("Project created successfully!");
       refresh();
-    } catch {
-      toast.error("Failed to create project");
+    } catch (error: any) {
+      const errorMsg =
+        error?.response?.data?.detail ||
+        error?.response?.data?.repo_link?.[0] ||
+        error?.response?.data?.live_link?.[0] ||
+        error?.response?.data?.image?.[0] ||
+        "Failed to create project";
+      toast.error(errorMsg);
     } finally {
       setIsCreating(false);
     }
   };
 
   const startEdit = (p: any) => {
-    setEditSlug(p.slug);
+    setEditId(p.id);
     setEditTitle(p.title);
     setEditDescription(p.description || "");
     setEditRepoLink(p.repo_link || "");
@@ -106,31 +117,44 @@ export default function ProjectsCrud({
 
   const doEdit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editSlug) return;
+    if (!editId) {
+      toast.error("No project selected for editing");
+      return;
+    }
     setIsUpdating(true);
     const form = new FormData();
     form.append("title", editTitle);
     form.append("description", editDescription);
-    if (editRepoLink) form.append("repo_link", editRepoLink);
-    if (editLiveLink) form.append("live_link", editLiveLink);
+    // Only append optional fields if they have actual values
+    if (editRepoLink && editRepoLink.trim()) {
+      form.append("repo_link", editRepoLink.trim());
+    }
+    if (editLiveLink && editLiveLink.trim()) {
+      form.append("live_link", editLiveLink.trim());
+    }
     if (editImage) form.append("image", editImage);
     try {
-      await update(editSlug, form);
+      await update(editId, form);
       setShowEditModal(false);
-      setEditSlug(null);
+      setEditId(null);
       toast.success("Project updated successfully!");
       refresh();
-    } catch {
-      toast.error("Failed to update project");
+    } catch (error: any) {
+      const errorMsg =
+        error?.response?.data?.detail ||
+        error?.response?.data?.repo_link?.[0] ||
+        error?.response?.data?.live_link?.[0] ||
+        "Failed to update project";
+      toast.error(errorMsg);
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const onApprove = async (slug: string) => {
-    setApprovingSlug(slug);
+  const onApprove = async (id: string) => {
+    setApprovingSlug(id);
     try {
-      await approve(slug);
+      await approve(id);
       toast.success("Project approved!");
       refresh();
     } catch {
@@ -140,10 +164,10 @@ export default function ProjectsCrud({
     }
   };
 
-  const onReject = async (slug: string) => {
-    setRejectingSlug(slug);
+  const onReject = async (id: string) => {
+    setRejectingSlug(id);
     try {
-      await reject(slug as any);
+      await reject(id as any);
       toast.success("Project rejected");
       refresh();
     } catch {
@@ -162,12 +186,13 @@ export default function ProjectsCrud({
     if (!selectedProject) return;
     setIsDeleting(true);
     try {
-      await remove(selectedProject.slug);
+      await remove(selectedProject.id);
       setShowDeleteModal(false);
       setSelectedProject(null);
       toast.success("Project deleted successfully!");
       refresh();
-    } catch {
+    } catch (error) {
+      console.error("Delete error:", error);
       toast.error("Failed to delete project");
     } finally {
       setIsDeleting(false);
@@ -233,24 +258,30 @@ export default function ProjectsCrud({
                         <div className="text-white font-medium">{p.title}</div>
                       </td>
                       <td className="p-4">
-                        <div className="text-sm text-blue-300 space-y-1">
-                          {p.repo_link && (
+                        <div className="space-y-1">
+                          {p.repo_link ? (
                             <a
                               href={p.repo_link}
                               target="_blank"
-                              className="underline"
+                              rel="noopener noreferrer"
+                              className="text-blue-400 hover:text-blue-300 underline text-sm block"
                             >
-                              Repo
+                              View Repo
                             </a>
+                          ) : (
+                            <span className="text-gray-500 text-sm">-</span>
                           )}
-                          {p.live_link && (
+                          {p.live_link ? (
                             <a
                               href={p.live_link}
                               target="_blank"
-                              className="underline"
+                              rel="noopener noreferrer"
+                              className="text-green-400 hover:text-green-300 underline text-sm block"
                             >
-                              Live
+                              View Demo
                             </a>
+                          ) : (
+                            <span className="text-gray-500 text-sm">-</span>
                           )}
                         </div>
                       </td>
@@ -291,14 +322,14 @@ export default function ProjectsCrud({
                           {p.status === "PENDING" && isAdmin && (
                             <>
                               <button
-                                onClick={() => onApprove(p.slug)}
+                                onClick={() => onApprove(p.id)}
                                 className="p-2 hover:bg-green-600/20 rounded-lg"
                                 title="Approve"
                               >
                                 <CheckCircleIcon className="w-5 h-5 text-green-400" />
                               </button>
                               <button
-                                onClick={() => onReject(p.slug)}
+                                onClick={() => onReject(p.id)}
                                 className="p-2 hover:bg-yellow-600/20 rounded-lg"
                                 title="Reject"
                               >
@@ -379,27 +410,29 @@ export default function ProjectsCrud({
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Repository Link
+                    Repository Link (optional)
                   </label>
                   <input
                     className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                     value={repoLink}
                     onChange={(e) => setRepoLink(e.target.value)}
+                    placeholder="https://github.com/username/repo"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Live Link
+                    Live Link (optional)
                   </label>
                   <input
                     className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                     value={liveLink}
                     onChange={(e) => setLiveLink(e.target.value)}
+                    placeholder="https://your-project-demo.com"
                   />
                 </div>
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Project Image
+                    Project Image (optional)
                   </label>
                   <input
                     type="file"
@@ -407,6 +440,9 @@ export default function ProjectsCrud({
                     onChange={(e) => setImage(e.target.files?.[0] || null)}
                     className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer hover:file:bg-blue-700"
                   />
+                  <p className="text-xs text-gray-400 mt-1">
+                    Supported: JPG, PNG, GIF, WebP, BMP, SVG (Max: 5MB)
+                  </p>
                 </div>
               </div>
               <div className="flex gap-3 pt-4">
@@ -475,28 +511,30 @@ export default function ProjectsCrud({
               <div className="grid md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Repository Link
+                    Repository Link (optional)
                   </label>
                   <input
                     className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                     value={editRepoLink}
                     onChange={(e) => setEditRepoLink(e.target.value)}
+                    placeholder="https://github.com/username/repo"
                   />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Live Link
+                    Live Link (optional)
                   </label>
                   <input
                     className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white"
                     value={editLiveLink}
                     onChange={(e) => setEditLiveLink(e.target.value)}
+                    placeholder="https://your-project-demo.com"
                   />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
-                  Project Image
+                  Project Image (optional)
                 </label>
                 {currentImageUrl && !editImage && (
                   <div className="mb-2">
@@ -514,6 +552,9 @@ export default function ProjectsCrud({
                   onChange={(e) => setEditImage(e.target.files?.[0] || null)}
                   className="w-full bg-[#252b47] border border-gray-600 p-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600 file:text-white file:cursor-pointer hover:file:bg-blue-700"
                 />
+                <p className="text-xs text-gray-400 mt-1">
+                  Supported: JPG, PNG, GIF, WebP, BMP, SVG (Max: 5MB)
+                </p>
               </div>
               <div className="flex gap-3 pt-4">
                 <button

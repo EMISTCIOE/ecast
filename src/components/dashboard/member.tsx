@@ -30,6 +30,7 @@ import ResearchSection from "@/components/dashboard-member/sections/ResearchSect
 // Modals
 import CreateResearchModal from "@/components/dashboard-member/modals/CreateResearchModal";
 import EditResearchModal from "@/components/dashboard-member/modals/EditResearchModal";
+import EditProjectModal from "@/components/dashboard-member/modals/EditProjectModal";
 import {
   BellIcon,
   DocumentTextIcon,
@@ -184,7 +185,12 @@ export default function MemberDashboard() {
     update: updateBlog,
     remove: deleteBlog,
   } = useBlogs();
-  const { create: createProjectApi, list: listProjects } = useProjects();
+  const {
+    create: createProjectApi,
+    list: listProjects,
+    update: updateProject,
+    remove: deleteProject,
+  } = useProjects();
   const {
     create: createEventApi,
     list: listEvents,
@@ -486,6 +492,8 @@ export default function MemberDashboard() {
   const [showCreateNoticeModal, setShowCreateNoticeModal] = useState(false);
   const [showCreateBlogModal, setShowCreateBlogModal] = useState(false);
   const [showCreateProjectModal, setShowCreateProjectModal] = useState(false);
+  const [showEditProjectModal, setShowEditProjectModal] = useState(false);
+  const [editingProject, setEditingProject] = useState<any>(null);
   const [showCreateEventModal, setShowCreateEventModal] = useState(false);
   const [showCreateGalleryModal, setShowCreateGalleryModal] = useState(false);
   const [showCreateResearchModal, setShowCreateResearchModal] = useState(false);
@@ -830,6 +838,20 @@ export default function MemberDashboard() {
             <ProjectsSection
               myProjects={myProjects}
               onCreateClick={() => setShowCreateProjectModal(true)}
+              onEditClick={(project) => {
+                setEditingProject(project);
+                setShowEditProjectModal(true);
+              }}
+              onDeleteClick={async (projectId: string) => {
+                try {
+                  await deleteProject(projectId);
+                  toast.success("Project deleted successfully!");
+                  listProjects({ mine: "1" }).then(setMyProjects);
+                } catch (error) {
+                  console.error("Project deletion error:", error);
+                  toast.error("Failed to delete project");
+                }
+              }}
             />
           )}
 
@@ -932,11 +954,34 @@ export default function MemberDashboard() {
               await createProjectApi(form);
               toast.success("Project submitted for review successfully!");
               listProjects({ mine: "1" }).then(setMyProjects);
+              setShowCreateProjectModal(false);
             } catch (error) {
               console.error("Project creation error:", error);
               toast.error(
                 "Failed to create project. Please check your inputs."
               );
+              throw error;
+            }
+          }}
+        />
+
+        <EditProjectModal
+          project={editingProject}
+          isOpen={showEditProjectModal}
+          onClose={() => {
+            setShowEditProjectModal(false);
+            setEditingProject(null);
+          }}
+          onSave={async (formData) => {
+            try {
+              await updateProject(editingProject.id, formData);
+              toast.success("Project updated successfully!");
+              listProjects({ mine: "1" }).then(setMyProjects);
+              setShowEditProjectModal(false);
+              setEditingProject(null);
+            } catch (error) {
+              console.error("Project update error:", error);
+              toast.error("Failed to update project");
               throw error;
             }
           }}
@@ -950,7 +995,8 @@ export default function MemberDashboard() {
             form.append("title", data.title);
             form.append("description", data.description);
             form.append("date", data.date);
-            form.append("time", data.time);
+            if (data.end_date) form.append("end_date", data.end_date);
+            if (data.time) form.append("time", data.time);
             form.append("location", data.location);
             form.append("contact_email", data.contact_email);
             form.append("coming_soon", String(data.coming_soon));

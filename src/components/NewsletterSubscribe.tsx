@@ -63,17 +63,17 @@ const NewsletterSubscribe: React.FC<NewsletterSubscribeProps> = ({
   const getCategoryInfo = () => {
     switch (category) {
       case "EVENTS":
-        return { emoji: "", color: "purple", label: "Events" };
+        return { color: "purple", label: "Events" };
       case "BLOGS":
-        return { emoji: "", color: "blue", label: "Blogs" };
+        return { color: "blue", label: "Blogs" };
       case "RESEARCH":
-        return { emoji: "", color: "green", label: "Research" };
+        return { color: "green", label: "Research" };
       case "NOTICES":
-        return { emoji: "", color: "yellow", label: "Notices" };
+        return { color: "yellow", label: "Notices" };
       case "PROJECTS":
-        return { emoji: "", color: "pink", label: "Projects" };
+        return { color: "pink", label: "Projects" };
       default:
-        return { emoji: "", color: "indigo", label: "General Updates" };
+        return { color: "indigo", label: "General Updates" };
     }
   };
 
@@ -124,16 +124,13 @@ const NewsletterSubscribe: React.FC<NewsletterSubscribeProps> = ({
   }
 
   return (
-    <div className="bg-slate-900 rounded-xl shadow-xl overflow-hidden my-8 border border-white border-opacity-10">
+    <div className="bg-slate-900 rounded-xl shadow-xl overflow-hidden my-7 border border-white border-opacity-10">
       <div className="p-6 text-white">
-        <div className="flex items-center gap-3 mb-3">
-          <span className="text-3xl">{categoryInfo.emoji}</span>
-          <div>
-            <h3 className="text-xl font-bold">{title}</h3>
-            <p className="text-gray-400 text-sm">
-              Subscribe to {categoryInfo.label}
-            </p>
-          </div>
+        <div className="mb-4">
+          <h3 className="text-xl font-bold mb-1">{title}</h3>
+          <p className="text-gray-400 text-sm">
+            Subscribe to {categoryInfo.label}
+          </p>
         </div>
 
         <p className="text-gray-300 text-sm mb-5">{description}</p>

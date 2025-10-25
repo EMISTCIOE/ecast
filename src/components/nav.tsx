@@ -7,6 +7,11 @@ import {
   ChevronDownIcon,
   ArrowRightOnRectangleIcon,
   RectangleStackIcon,
+  UserGroupIcon,
+  AcademicCapIcon,
+  StarIcon,
+  PhotoIcon,
+  CodeBracketIcon,
 } from "@heroicons/react/24/outline";
 
 const NavBar: React.FC = () => {
@@ -82,358 +87,394 @@ const NavBar: React.FC = () => {
   };
 
   return (
-    <nav className="sticky top-0 left-0 z-50 w-full h-20 bg-slate-900/90 backdrop-filter backdrop-blur-lg border-b border-white/10 shadow-lg flex">
-      <div className="flex w-[100%] items-center justify-between m-auto">
-        <div className="flex px-4 items-center">
+    <nav className="sticky top-0 left-0 z-50 w-full bg-slate-900/95 backdrop-filter backdrop-blur-xl border-b border-white/10 shadow-2xl">
+      {/* Animated Background Pattern */}
+      <div className="absolute inset-0 opacity-5 pointer-events-none">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `radial-gradient(circle at 2px 2px, #3b82f6 1px, transparent 0)`,
+            backgroundSize: "40px 40px",
+          }}
+        ></div>
+      </div>
+
+      <div className="relative w-full px-6 h-20 flex items-center justify-between">
+        {/* Logo Section - Forced Left */}
+        <div className="flex items-center flex-shrink-0">
           <Link href="/" onClick={closeMenu}>
             <div className="flex items-center gap-3 group">
-              <Image
-                src={Logo}
-                alt="Logo"
-                className="h-14 w-14 transition-transform group-hover:scale-110 duration-300"
-              />
-              <span className="text-white text-3xl font-black tracking-tight">
-                ECAST
-              </span>
+              <div className="relative">
+                <div className="absolute inset-0 bg-blue-500/20 blur-xl rounded-full group-hover:bg-blue-400/30 transition-all duration-300"></div>
+                <Image
+                  src={Logo}
+                  alt="Logo"
+                  className="relative h-14 w-14 transition-transform group-hover:scale-110 group-hover:rotate-6 duration-300"
+                />
+              </div>
+              <div>
+                <span className="text-white text-3xl font-black tracking-tight group-hover:text-blue-400 transition-colors duration-300">
+                  ECAST
+                </span>
+                <p className="text-xs text-blue-400/80 font-medium -mt-1">
+                  Thapathali Campus
+                </p>
+              </div>
             </div>
           </Link>
         </div>
-      </div>
 
-      {/* Desktop Menu */}
-      <div className="hidden mx-11 lg:flex items-center text-white gap-1">
-        <Navlink to="/" onClick={closeMenu} currentRoute={router.pathname}>
-          Home
-        </Navlink>
-        <Navlink to="/about" onClick={closeMenu} currentRoute={router.pathname}>
-          About
-        </Navlink>
-
-        {/* Community Dropdown */}
-        <div className="relative community-dropdown-container">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setCommunityOpen(!communityOpen);
-              setResourcesOpen(false);
-            }}
-            className={`p-2 opacity-90 font-semibold uppercase tracking-wide transition-all duration-300 flex items-center gap-1 ${
-              router.pathname.includes("/committee") ||
-              router.pathname.includes("/alumni") ||
-              router.pathname.includes("/ambassadors")
-                ? "text-blue-400"
-                : "text-white hover:text-blue-400"
-            }`}
+        {/* Desktop Menu - All Options Visible & Right Aligned */}
+        <div className="hidden lg:flex items-center text-white gap-1 ml-auto">
+          <Navlink to="/" onClick={closeMenu} currentRoute={router.pathname}>
+            Home
+          </Navlink>
+          <Navlink
+            to="/about"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
           >
-            Community
-            <ChevronDownIcon
-              className={`w-4 h-4 transition-transform ${
-                communityOpen ? "rotate-180" : ""
-              }`}
-            />
-          </button>
+            About
+          </Navlink>
 
-          {communityOpen && (
-            <div className="absolute top-full left-0 mt-2 w-48 bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl overflow-hidden">
-              <Link
-                href="/committee"
-                onClick={() => {
-                  setCommunityOpen(false);
-                  closeMenu();
-                }}
-                className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 transition-colors border-b border-white/10"
-              >
-                Committee
-              </Link>
-              <Link
-                href="/alumni"
-                onClick={() => {
-                  setCommunityOpen(false);
-                  closeMenu();
-                }}
-                className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 transition-colors border-b border-white/10"
-              >
-                Alumni
-              </Link>
-              <Link
-                href="/ambassadors"
-                onClick={() => {
-                  setCommunityOpen(false);
-                  closeMenu();
-                }}
-                className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 transition-colors"
-              >
-                Ambassadors
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Resources Dropdown */}
-        <div className="relative resources-dropdown-container">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setResourcesOpen(!resourcesOpen);
-              setCommunityOpen(false);
-            }}
-            className={`p-2 opacity-90 font-semibold uppercase tracking-wide transition-all duration-300 flex items-center gap-1 ${
-              router.pathname.includes("/ourevents") ||
-              router.pathname.includes("/notices") ||
-              router.pathname.includes("/projects") ||
-              router.pathname.includes("/gallery") ||
-              router.pathname.includes("/blogs") ||
-              router.pathname.includes("/research")
-                ? "text-blue-400"
-                : "text-white hover:text-blue-400"
-            }`}
+          <Navlink
+            to="/committee"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
           >
-            Resources
-            <ChevronDownIcon
-              className={`w-4 h-4 transition-transform ${
-                resourcesOpen ? "rotate-180" : ""
+            Committee
+          </Navlink>
+
+          {/* All Other Links - Visible */}
+          <Navlink
+            to="/ourevents"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
+          >
+            Events
+          </Navlink>
+          <Navlink
+            to="/notices"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
+          >
+            Notices
+          </Navlink>
+          <Navlink
+            to="/research"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
+          >
+            Research
+          </Navlink>
+
+          {/* Resources Dropdown */}
+
+          <Navlink
+            to="/blogs"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
+          >
+            Blogs
+          </Navlink>
+          <Navlink
+            to="/contact-us"
+            onClick={closeMenu}
+            currentRoute={router.pathname}
+          >
+            Contact
+          </Navlink>
+          <div className="relative resources-dropdown-container">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setResourcesOpen(!resourcesOpen);
+                setCommunityOpen(false);
+              }}
+              className={`px-3 py-2 font-semibold text-sm uppercase tracking-wide transition-all duration-300 flex items-center gap-1.5 rounded-lg ${
+                router.pathname.includes("/gallery") ||
+                router.pathname.includes("/projects")
+                  ? "text-blue-400 bg-blue-500/10"
+                  : "text-white hover:text-blue-400 hover:bg-white/5"
               }`}
-            />
-          </button>
+            >
+              Resources
+              <ChevronDownIcon
+                className={`w-4 h-4 transition-transform duration-300 ${
+                  resourcesOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
 
-          {resourcesOpen && (
-            <div className="absolute top-full left-0 mt-2 w-48 bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-lg shadow-2xl overflow-hidden">
-              <Link
-                href="/ourevents"
-                onClick={() => {
-                  setResourcesOpen(false);
-                  closeMenu();
-                }}
-                className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 transition-colors border-b border-white/10"
-              >
-                Events
-              </Link>
-              <Link
-                href="/notices"
-                onClick={() => {
-                  setResourcesOpen(false);
-                  closeMenu();
-                }}
-                className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 transition-colors border-b border-white/10"
-              >
-                Notices
-              </Link>
-              <Link
-                href="/research"
-                onClick={() => {
-                  setResourcesOpen(false);
-                  closeMenu();
-                }}
-                className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 transition-colors border-b border-white/10"
-              >
-                Research
-              </Link>
-              <Link
-                href="/projects"
-                onClick={() => {
-                  setResourcesOpen(false);
-                  closeMenu();
-                }}
-                className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 transition-colors border-b border-white/10"
-              >
-                Projects
-              </Link>
-              <Link
-                href="/blogs"
-                onClick={() => {
-                  setResourcesOpen(false);
-                  closeMenu();
-                }}
-                className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 transition-colors border-b border-white/10"
-              >
-                Blogs
-              </Link>
-              <Link
-                href="/gallery"
-                onClick={() => {
-                  setResourcesOpen(false);
-                  closeMenu();
-                }}
-                className="block px-4 py-3 text-sm text-gray-300 hover:bg-white/5 hover:text-blue-400 transition-colors"
-              >
-                Gallery
-              </Link>
-            </div>
-          )}
-        </div>
+            {resourcesOpen && (
+              <div className="absolute top-full left-0 mt-3 w-56 bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-1.5">
+                  <Link
+                    href="/projects"
+                    onClick={() => {
+                      setResourcesOpen(false);
+                      closeMenu();
+                    }}
+                    className="group flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-blue-600/10 hover:text-blue-400 transition-all rounded-lg"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                      <CodeBracketIcon className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium">Projects</span>
+                  </Link>
+                  <Link
+                    href="/gallery"
+                    onClick={() => {
+                      setResourcesOpen(false);
+                      closeMenu();
+                    }}
+                    className="group flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-blue-600/10 hover:text-blue-400 transition-all rounded-lg"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                      <PhotoIcon className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium">Gallery</span>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
 
-        <Navlink
-          to="/contact-us"
-          onClick={closeMenu}
-          currentRoute={router.pathname}
-        >
-          Contact
-        </Navlink>
+          {/* Community Dropdown */}
+          <div className="relative community-dropdown-container">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                setCommunityOpen(!communityOpen);
+                setResourcesOpen(false);
+              }}
+              className={`px-3 py-2 font-semibold text-sm uppercase tracking-wide transition-all duration-300 flex items-center gap-1.5 rounded-lg ${
+                router.pathname.includes("/alumni") ||
+                router.pathname.includes("/ambassadors")
+                  ? "text-blue-400 bg-blue-500/10"
+                  : "text-white hover:text-blue-400 hover:bg-white/5"
+              }`}
+            >
+              Community
+              <ChevronDownIcon
+                className={`w-4 h-4 transition-transform duration-300 ${
+                  communityOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
 
-        <div className="relative ml-4 user-dropdown-container">
-          {me ? (
-            <>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setUserOpen((v) => !v);
-                }}
-                className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-400/50 px-5 py-2.5 rounded-lg transition-all shadow-md hover:shadow-lg min-w-[180px]"
-              >
-                {me.user_photo || me.committee_member_photo ? (
-                  <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-blue-400 flex-shrink-0">
-                    <Image
-                      src={
-                        (me.user_photo || me.committee_member_photo).startsWith(
-                          "http"
-                        )
-                          ? me.user_photo || me.committee_member_photo
-                          : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${
-                              me.user_photo || me.committee_member_photo
-                            }`
-                      }
-                      alt={me.full_name || me.username || "User"}
-                      width={40}
-                      height={40}
-                      className="w-full h-full object-cover"
-                      unoptimized
-                    />
-                  </div>
-                ) : (
-                  <span className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center text-base font-bold border-2 border-blue-400">
-                    {(me.full_name || me.username || "?")
-                      .trim()
-                      .charAt(0)
-                      .toUpperCase()}
-                  </span>
-                )}
-                <span className="text-sm font-medium flex-1 text-left truncate">
-                  {(me.full_name || me.username) +
-                    (roleLabel() ? ` · ${roleLabel()}` : "")}
-                </span>
-                <ChevronDownIcon
-                  className={`w-4 h-4 transition-transform flex-shrink-0 ${
-                    userOpen ? "rotate-180" : ""
-                  }`}
-                />
-              </button>
-              {userOpen && (
-                <div className="absolute right-0 mt-3 w-64 bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl z-50 overflow-hidden">
-                  {/* User Info Header */}
-                  <div className="px-4 py-4 bg-gradient-to-r from-blue-500/10 to-blue-600/10 border-b border-white/10">
-                    <div className="flex items-center gap-3 mb-2">
-                      {me.user_photo || me.committee_member_photo ? (
-                        <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-blue-400 shadow-lg flex-shrink-0">
-                          <Image
-                            src={
-                              (
+            {communityOpen && (
+              <div className="absolute top-full left-0 mt-3 w-56 bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="p-1.5">
+                  <Link
+                    href="/alumni"
+                    onClick={() => {
+                      setCommunityOpen(false);
+                      closeMenu();
+                    }}
+                    className="group flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-blue-600/10 hover:text-blue-400 transition-all rounded-lg"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                      <AcademicCapIcon className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium">Alumni</span>
+                  </Link>
+                  <Link
+                    href="/ambassadors"
+                    onClick={() => {
+                      setCommunityOpen(false);
+                      closeMenu();
+                    }}
+                    className="group flex items-center gap-3 px-4 py-3 text-sm text-gray-300 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-blue-600/10 hover:text-blue-400 transition-all rounded-lg"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                      <StarIcon className="w-5 h-5" />
+                    </div>
+                    <span className="font-medium">Ambassadors</span>
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="relative ml-3 user-dropdown-container">
+            {me ? (
+              <>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setUserOpen((v) => !v);
+                  }}
+                  className="flex items-center gap-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-blue-400/50 px-4 py-2.5 rounded-xl transition-all shadow-lg hover:shadow-blue-500/20 min-w-[200px]"
+                >
+                  {me.user_photo || me.committee_member_photo ? (
+                    <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-blue-400 flex-shrink-0 ring-2 ring-blue-400/20">
+                      <Image
+                        src={
+                          (
+                            me.user_photo || me.committee_member_photo
+                          ).startsWith("http")
+                            ? me.user_photo || me.committee_member_photo
+                            : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${
                                 me.user_photo || me.committee_member_photo
-                              ).startsWith("http")
-                                ? me.user_photo || me.committee_member_photo
-                                : `${
-                                    process.env.NEXT_PUBLIC_BACKEND_URL || ""
-                                  }${
-                                    me.user_photo || me.committee_member_photo
-                                  }`
-                            }
-                            alt={me.full_name || me.username || "User"}
-                            width={56}
-                            height={56}
-                            className="w-full h-full object-cover"
-                            unoptimized
-                          />
-                        </div>
-                      ) : (
-                        <span className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center text-xl font-bold border-2 border-blue-400 shadow-lg">
-                          {(me.full_name || me.username || "?")
-                            .trim()
-                            .charAt(0)
-                            .toUpperCase()}
-                        </span>
-                      )}
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-semibold text-white truncate">
-                          {me.full_name || me.username}
-                        </div>
-                        <div className="text-xs text-blue-400 capitalize">
-                          {roleLabel()}
+                              }`
+                        }
+                        alt={me.full_name || me.username || "User"}
+                        width={36}
+                        height={36}
+                        className="w-full h-full object-cover"
+                        unoptimized
+                      />
+                    </div>
+                  ) : (
+                    <span className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center text-sm font-bold border-2 border-blue-400 ring-2 ring-blue-400/20">
+                      {(me.full_name || me.username || "?")
+                        .trim()
+                        .charAt(0)
+                        .toUpperCase()}
+                    </span>
+                  )}
+                  <div className="flex-1 text-left min-w-0">
+                    <div className="text-sm font-semibold text-white truncate">
+                      {me.full_name || me.username}
+                    </div>
+                    {roleLabel() && (
+                      <div className="text-xs text-blue-400 truncate">
+                        {roleLabel()}
+                      </div>
+                    )}
+                  </div>
+                  <ChevronDownIcon
+                    className={`w-4 h-4 transition-transform flex-shrink-0 text-gray-400 ${
+                      userOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+                {userOpen && (
+                  <div className="absolute right-0 mt-3 w-72 bg-slate-800/95 backdrop-blur-xl border border-white/20 rounded-xl shadow-2xl z-50 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                    {/* User Info Header */}
+                    <div className="px-5 py-4 bg-gradient-to-br from-blue-500/10 via-blue-600/5 to-transparent border-b border-white/10">
+                      <div className="flex items-center gap-4 mb-2">
+                        {me.user_photo || me.committee_member_photo ? (
+                          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-blue-400 shadow-xl flex-shrink-0 ring-4 ring-blue-400/10">
+                            <Image
+                              src={
+                                (
+                                  me.user_photo || me.committee_member_photo
+                                ).startsWith("http")
+                                  ? me.user_photo || me.committee_member_photo
+                                  : `${
+                                      process.env.NEXT_PUBLIC_BACKEND_URL || ""
+                                    }${
+                                      me.user_photo || me.committee_member_photo
+                                    }`
+                              }
+                              alt={me.full_name || me.username || "User"}
+                              width={64}
+                              height={64}
+                              className="w-full h-full object-cover"
+                              unoptimized
+                            />
+                          </div>
+                        ) : (
+                          <span className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center text-2xl font-bold border-2 border-blue-400 shadow-xl ring-4 ring-blue-400/10">
+                            {(me.full_name || me.username || "?")
+                              .trim()
+                              .charAt(0)
+                              .toUpperCase()}
+                          </span>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <div className="text-base font-bold text-white truncate">
+                            {me.full_name || me.username}
+                          </div>
+                          <div className="text-xs text-blue-400 font-semibold uppercase tracking-wide mt-0.5">
+                            {roleLabel()}
+                          </div>
                         </div>
                       </div>
+                      <div className="text-xs text-gray-400 truncate px-1">
+                        {me.email || me.username}
+                      </div>
                     </div>
-                    <div className="text-xs text-gray-400 truncate">
-                      {me.email || me.username}
+
+                    {/* Menu Items */}
+                    <div className="p-2">
+                      <Link
+                        href={`/${
+                          me.role === "ADMIN"
+                            ? "me"
+                            : me.role === "AMBASSADOR"
+                            ? "me"
+                            : me.role === "ALUMNI"
+                            ? "me"
+                            : "me"
+                        }`}
+                        onClick={() => setUserOpen(false)}
+                        className="group flex items-center gap-3 px-4 py-3 hover:bg-gradient-to-r hover:from-blue-500/10 hover:to-blue-600/10 rounded-lg transition-all text-gray-200 hover:text-white"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                          <RectangleStackIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-400" />
+                        </div>
+                        <span className="text-sm font-medium">Dashboard</span>
+                      </Link>
+                    </div>
+
+                    {/* Logout Button */}
+                    <div className="border-t border-white/10 p-2">
+                      <button
+                        onClick={logout}
+                        className="w-full group flex items-center gap-3 px-4 py-3 hover:bg-gradient-to-r hover:from-red-500/10 hover:to-red-600/10 rounded-lg transition-all text-red-400 hover:text-red-300"
+                      >
+                        <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center group-hover:bg-red-500/20 transition-colors">
+                          <ArrowRightOnRectangleIcon className="w-5 h-5" />
+                        </div>
+                        <span className="text-sm font-medium">Log out</span>
+                      </button>
                     </div>
                   </div>
-
-                  {/* Menu Items */}
-                  <div className="py-2">
-                    <Link
-                      href={`/${
-                        me.role === "ADMIN"
-                          ? "/me"
-                          : me.role === "AMBASSADOR"
-                          ? "/me"
-                          : me.role === "ALUMNI"
-                          ? "/me"
-                          : "/me"
-                      }`}
-                      onClick={() => setUserOpen(false)}
-                      className="flex items-center gap-3 px-4 py-2.5 hover:bg-white/5 transition-colors text-gray-200 hover:text-white group"
-                    >
-                      <RectangleStackIcon className="w-5 h-5 text-gray-400 group-hover:text-blue-400" />
-                      <span className="text-sm font-medium">Dashboard</span>
-                    </Link>
-                  </div>
-
-                  {/* Logout Button */}
-                  <div className="border-t border-white/10">
-                    <button
-                      onClick={logout}
-                      className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-red-500/10 transition-colors text-red-400 hover:text-red-300 group"
-                    >
-                      <ArrowRightOnRectangleIcon className="w-5 h-5" />
-                      <span className="text-sm font-medium">Log out</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-            </>
-          ) : (
-            <Link
-              href="/login"
-              className="text-white hover:text-blue-400 transition-colors px-4 py-2 font-medium"
-            >
-              Login
-            </Link>
-          )}
+                )}
+              </>
+            ) : (
+              <Link
+                href="/login"
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-xl transition-all duration-300 transform hover:scale-105 hover:shadow-lg hover:shadow-blue-500/30"
+              >
+                Login
+              </Link>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Mobile Menu Toggle */}
-      <div
-        className="sm:hidden text-white hover:text-theme mx-4 my-6 transition-color duration-500"
-        onClick={handleMenuToggle}
-      >
-        <svg
-          className="h-8 w-8"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 20 20"
-          fill="currentColor"
+        {/* Mobile Menu Toggle */}
+        <div
+          className="lg:hidden flex items-center justify-center w-12 h-12 mr-4 text-white hover:text-blue-400 transition-colors duration-300 cursor-pointer"
+          onClick={handleMenuToggle}
         >
-          {isMenuOpen ? (
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M5 5h21v2H4V6zm0 5h6v2H4v2zm0 5h21v2H4v-2z"
-            />
-          ) : (
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M5 5h15v2H4V6zm0 5h15v2H4v2zm0 5h15v2H4v-2z"
-            />
-          )}
-        </svg>
+          <svg
+            className="h-7 w-7"
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {isMenuOpen ? (
+              <>
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </>
+            ) : (
+              <>
+                <line x1="3" y1="6" x2="21" y2="6"></line>
+                <line x1="3" y1="12" x2="21" y2="12"></line>
+                <line x1="3" y1="18" x2="21" y2="18"></line>
+              </>
+            )}
+          </svg>
+        </div>
       </div>
 
       {/* Mobile Menu */}
@@ -629,13 +670,16 @@ const Navlink: React.FC<NavlinkProps> = ({
   return (
     <Link href={to} onClick={onClick}>
       <div
-        className={`p-2 opacity-90 font-semibold uppercase tracking-wide transition-all duration-300 ${
+        className={`px-3 py-2 font-semibold text-sm uppercase tracking-wide transition-all duration-300 rounded-lg relative ${
           isActive
-            ? "text-blue-400 border-b-2 border-blue-400"
-            : "text-white hover:text-blue-400"
+            ? "text-blue-400 bg-blue-500/10"
+            : "text-white hover:text-blue-400 hover:bg-white/5"
         }`}
       >
         {children}
+        {isActive && (
+          <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-0.5 bg-blue-400 rounded-full"></span>
+        )}
       </div>
     </Link>
   );

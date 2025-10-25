@@ -47,12 +47,13 @@ export default function EditBlogModal({
     e.preventDefault();
     setErrors({});
 
-    // Client-side validation
+    // Client-side validation with isUpdate flag
     const validationErrors = validateBlogForm({
       title,
       description,
       content,
       coverImage,
+      isUpdate: true, // This makes cover image optional
     });
 
     if (Object.keys(validationErrors).length > 0) {

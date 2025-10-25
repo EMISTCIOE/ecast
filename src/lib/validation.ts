@@ -70,7 +70,7 @@ export const validateDate = (value: string): string | null => {
 };
 
 export const validateTime = (value: string): string | null => {
-  if (!value) return "Time is required.";
+  if (!value || value.trim().length === 0) return null; // Optional field
 
   const timeRegex = /^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$/;
   if (!timeRegex.test(value)) {
@@ -185,6 +185,7 @@ export const validateBlogForm = (data: {
   description: string;
   content: string;
   coverImage?: File | null;
+  isUpdate?: boolean; // Flag to indicate if this is an update operation
 }): ValidationErrors => {
   const errors: ValidationErrors = {};
 
@@ -201,6 +202,7 @@ export const validateBlogForm = (data: {
   const contentError = validateRequired(data.content, "Content");
   if (contentError) errors.content = contentError;
 
+  // Cover image validation - only validate if provided (always optional for updates)
   if (data.coverImage) {
     const imageError = validateImageFile(data.coverImage);
     if (imageError) errors.cover_image = imageError;
@@ -213,11 +215,13 @@ export const validateEventForm = (data: {
   title: string;
   description: string;
   date: string;
-  time: string;
+  end_date?: string;
+  time?: string;
   location: string;
   contactEmail?: string;
   formLink?: string;
   image?: File | null;
+  isUpdate?: boolean; // Flag to indicate if this is an update operation
 }): ValidationErrors => {
   const errors: ValidationErrors = {};
 
@@ -232,24 +236,32 @@ export const validateEventForm = (data: {
   const dateError = validateDate(data.date);
   if (dateError) errors.date = dateError;
 
-  const timeError = validateTime(data.time);
-  if (timeError) errors.time = timeError;
+  if (data.end_date && data.end_date.trim()) {
+    const endDateError = validateDate(data.end_date);
+    if (endDateError) errors.end_date = endDateError;
+  }
+
+  if (data.time && data.time.trim()) {
+    const timeError = validateTime(data.time);
+    if (timeError) errors.time = timeError;
+  }
 
   const locError =
     validateRequired(data.location, "Location") ||
     validateMaxLength(data.location, 300, "Location");
   if (locError) errors.location = locError;
 
-  if (data.contactEmail) {
+  if (data.contactEmail && data.contactEmail.trim()) {
     const emailError = validateEmail(data.contactEmail);
     if (emailError) errors.contact_email = emailError;
   }
 
-  if (data.formLink) {
+  if (data.formLink && data.formLink.trim()) {
     const urlError = validateURL(data.formLink);
     if (urlError) errors.form_link = urlError;
   }
 
+  // Image validation - only validate if provided (always optional for updates)
   if (data.image) {
     const imageError = validateImageFile(data.image);
     if (imageError) errors.image = imageError;
@@ -262,6 +274,7 @@ export const validateNoticeForm = (data: {
   title: string;
   content: string;
   attachment?: File | null;
+  isUpdate?: boolean; // Flag to indicate if this is an update operation
 }): ValidationErrors => {
   const errors: ValidationErrors = {};
 
@@ -273,6 +286,7 @@ export const validateNoticeForm = (data: {
   const contentError = validateRequired(data.content, "Content");
   if (contentError) errors.content = contentError;
 
+  // Attachment validation - only validate if provided (always optional)
   if (data.attachment) {
     const fileError = validateFileSize(data.attachment, 10, "Attachment");
     if (fileError) errors.attachment = fileError;
@@ -287,6 +301,7 @@ export const validateProjectForm = (data: {
   repoLink?: string;
   liveLink?: string;
   image?: File | null;
+  isUpdate?: boolean; // Flag to indicate if this is an update operation
 }): ValidationErrors => {
   const errors: ValidationErrors = {};
 
@@ -309,7 +324,8 @@ export const validateProjectForm = (data: {
   if (data.image) {
     const imageError = validateFileSize(data.image, 5, "Image");
     if (imageError) errors.image = imageError;
-  } else {
+  } else if (!data.isUpdate) {
+    // Image is required only for create, not for update
     errors.image = "Project image is required.";
   }
 
