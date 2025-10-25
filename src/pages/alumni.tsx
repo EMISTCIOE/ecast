@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
+import SEO from "@/components/SEO";
+import { generateBreadcrumbJsonLd } from "@/lib/seo";
 import { TrophyIcon, AcademicCapIcon } from "@heroicons/react/24/outline";
 import { authedFetch } from "@/lib/apiClient";
 import Link from "next/link";
@@ -26,6 +28,11 @@ export default function AlumniPage() {
     Record<number, AlumniUser[]>
   >({});
   const [loading, setLoading] = useState(true);
+
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: "Home", url: "/" },
+    { name: "Alumni", url: "/alumni" },
+  ]);
 
   useEffect(() => {
     loadAlumniData();
@@ -87,6 +94,18 @@ export default function AlumniPage() {
   if (loading) {
     return (
       <>
+        <SEO
+          title="Alumni Leaderboard"
+          description="Celebrating our outstanding alumni and their contributions to ECAST - Electronic and Communication Arts and Science at Thapathali Campus."
+          url="/alumni"
+          keywords={[
+            "ECAST Alumni",
+            "Thapathali Campus Alumni",
+            "Engineering Alumni",
+            "IOE Alumni",
+          ]}
+          jsonLd={breadcrumbJsonLd}
+        />
         <NavBar />
         <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen flex items-center justify-center">
           <div className="text-center">
@@ -101,6 +120,18 @@ export default function AlumniPage() {
 
   return (
     <>
+      <SEO
+        title="Alumni Leaderboard"
+        description="Celebrating our outstanding alumni and their contributions to ECAST - Electronic and Communication Arts and Science at Thapathali Campus."
+        url="/alumni"
+        keywords={[
+          "ECAST Alumni",
+          "Thapathali Campus Alumni",
+          "Engineering Alumni",
+          "IOE Alumni",
+        ]}
+        jsonLd={breadcrumbJsonLd}
+      />
       <NavBar />
       <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen">
         <div className="container mx-auto px-4 py-24">

@@ -1,9 +1,12 @@
 import { GetServerSideProps } from "next";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
+import SEO from "@/components/SEO";
+import { generateArticleJsonLd } from "@/lib/seo";
 import styles from "../../components/css/file2.module.css";
 import React, { useState, useEffect } from "react";
 import Image from "next/image";
+
 interface BlogProps {
   blog: {
     title: string;
@@ -11,6 +14,9 @@ interface BlogProps {
     description: string;
     thumbnail: string;
     content: string;
+    created_at?: string;
+    updated_at?: string;
+    slug: string;
   };
 }
 
@@ -33,8 +39,41 @@ const BlogPost: React.FC<BlogProps> = ({ blog }) => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
+  const jsonLd = generateArticleJsonLd({
+    title: blog.title,
+    description: blog.description,
+    image: blog.thumbnail,
+    datePublished: blog.created_at || new Date().toISOString(),
+    dateModified:
+      blog.updated_at || blog.created_at || new Date().toISOString(),
+    author: blog.author,
+    url: `/blogs/${blog.slug}`,
+  });
+
   return (
     <>
+      <SEO
+        title={blog.title}
+        description={blog.description}
+        image={blog.thumbnail}
+        url={`/blogs/${blog.slug}`}
+        type="article"
+        author={blog.author}
+        publishedTime={blog.created_at}
+        modifiedTime={blog.updated_at}
+        section="Blog"
+        tags={[
+          "ECAST",
+          "Blog",
+          "Technology",
+          "Electronics",
+          "TCIOE",
+          "IOE",
+          "thapathali",
+          "engineering",
+        ]}
+        jsonLd={jsonLd}
+      />
       <NavBar />
       <div className="bg-black w-full">
         <div className="flex justify-center bg-black w-full">
@@ -93,6 +132,9 @@ export const getServerSideProps: GetServerSideProps = async ({
       description: it.description || "",
       thumbnail: it.cover_image || "/assets/placeholder.png",
       content: it.content,
+      created_at: it.created_at,
+      updated_at: it.updated_at,
+      slug: it.slug || slug,
     };
     return { props: { blog } };
   } catch (_e) {

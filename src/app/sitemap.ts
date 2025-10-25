@@ -19,12 +19,16 @@ async function fetchData(endpoint: string) {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Fetch all dynamic content
-  const [blogs, events, projects, notices] = await Promise.all([
-    fetchData("/api/blog/"),
-    fetchData("/api/event/"),
-    fetchData("/api/project/"),
-    fetchData("/api/notice/"),
-  ]);
+  const [blogs, events, projects, notices, research, alumni, ambassadors] =
+    await Promise.all([
+      fetchData("/api/blog/"),
+      fetchData("/api/event/"),
+      fetchData("/api/project/"),
+      fetchData("/api/notice/"),
+      fetchData("/api/research/"),
+      fetchData("/api/auth/leaderboard/alumni/"),
+      fetchData("/api/auth/leaderboard/ambassadors/"),
+    ]);
 
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
@@ -39,6 +43,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/whatisecast`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
     },
     {
       url: `${BASE_URL}/blogs`,
@@ -59,9 +69,39 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.8,
     },
     {
+      url: `${BASE_URL}/research`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
       url: `${BASE_URL}/committee`,
       lastModified: new Date(),
       changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/alumni`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/ambassadors`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/leaderboard`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/gallery`,
+      lastModified: new Date(),
+      changeFrequency: "weekly",
       priority: 0.7,
     },
     {
@@ -71,10 +111,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.6,
     },
     {
-      url: `${BASE_URL}/research`,
+      url: `${BASE_URL}/join-us`,
       lastModified: new Date(),
-      changeFrequency: "weekly",
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/workshop`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.7,
+    },
+    {
+      url: `${BASE_URL}/notices`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
       priority: 0.8,
+    },
+    {
+      url: `${BASE_URL}/certificates`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
     },
   ];
 
@@ -92,7 +150,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const eventPages: MetadataRoute.Sitemap = events
     .filter((event: any) => event.status === "APPROVED")
     .map((event: any) => ({
-      url: `${BASE_URL}/ourevents/${event.slug || event.id}`,
+      url: `${BASE_URL}/events/${event.slug || event.id}`,
       lastModified: new Date(event.updated_at || event.created_at),
       changeFrequency: "weekly" as const,
       priority: 0.7,
@@ -118,11 +176,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.7,
     }));
 
+  // Dynamic research pages
+  const researchPages: MetadataRoute.Sitemap = research
+    .filter((item: any) => item.status === "APPROVED")
+    .map((item: any) => ({
+      url: `${BASE_URL}/research/${item.slug || item.id}`,
+      lastModified: new Date(item.updated_at || item.created_at),
+      changeFrequency: "monthly" as const,
+      priority: 0.75,
+    }));
+
+  // Dynamic alumni profile pages
+  const alumniPages: MetadataRoute.Sitemap = alumni
+    .filter((user: any) => user.username)
+    .map((user: any) => ({
+      url: `${BASE_URL}/alumni/${user.username}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }));
+
+  // Dynamic ambassador profile pages
+  const ambassadorPages: MetadataRoute.Sitemap = ambassadors
+    .filter((user: any) => user.username)
+    .map((user: any) => ({
+      url: `${BASE_URL}/ambassadors/${user.username}`,
+      lastModified: new Date(),
+      changeFrequency: "monthly" as const,
+      priority: 0.6,
+    }));
+
   return [
     ...staticPages,
     ...blogPages,
     ...eventPages,
     ...projectPages,
     ...noticePages,
+    ...researchPages,
+    ...alumniPages,
+    ...ambassadorPages,
   ];
 }

@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
+import SEO from "@/components/SEO";
+import { generateBreadcrumbJsonLd } from "@/lib/seo";
 import Link from "next/link";
 import {
   TrophyIcon,
@@ -37,6 +39,11 @@ export default function AmbassadorsPage() {
   const [currentBatchYear, setCurrentBatchYear] = useState(
     parseInt(process.env.NEXT_PUBLIC_CURRENT_BATCH_YEAR || "2082", 10)
   );
+
+  const breadcrumbJsonLd = generateBreadcrumbJsonLd([
+    { name: "Home", url: "/" },
+    { name: "Ambassadors", url: "/ambassadors" },
+  ]);
 
   useEffect(() => {
     loadAmbassadorsData();
@@ -116,6 +123,18 @@ export default function AmbassadorsPage() {
   if (loading) {
     return (
       <>
+        <SEO
+          title="Ambassadors Leaderboard"
+          description="Celebrating our current ambassadors and their contributions to ECAST - Electronic and Communication Arts and Science at Thapathali Campus."
+          url="/ambassadors"
+          keywords={[
+            "ECAST Ambassadors",
+            "Student Ambassadors",
+            "Thapathali Campus",
+            "Engineering Club",
+          ]}
+          jsonLd={breadcrumbJsonLd}
+        />
         <NavBar />
         <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen flex items-center justify-center">
           <div className="text-center">
@@ -130,6 +149,18 @@ export default function AmbassadorsPage() {
 
   return (
     <>
+      <SEO
+        title="Ambassadors Leaderboard"
+        description="Celebrating our current ambassadors and their contributions to ECAST - Electronic and Communication Arts and Science at Thapathali Campus."
+        url="/ambassadors"
+        keywords={[
+          "ECAST Ambassadors",
+          "Student Ambassadors",
+          "Thapathali Campus",
+          "Engineering Club",
+        ]}
+        jsonLd={breadcrumbJsonLd}
+      />
       <NavBar />
       <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen">
         <div className="container mx-auto px-4 py-24">

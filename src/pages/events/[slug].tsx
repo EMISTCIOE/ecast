@@ -1,6 +1,8 @@
 import { GetServerSideProps } from "next";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
+import SEO from "@/components/SEO";
+import { generateEventJsonLd } from "@/lib/seo";
 import React, { useEffect } from "react";
 import Image from "next/image";
 import {
@@ -29,6 +31,7 @@ interface EventProps {
     featured: boolean;
     form_link?: string;
     event_status?: string;
+    slug?: string;
   };
 }
 
@@ -62,8 +65,37 @@ const EventDetail: React.FC<EventProps> = ({ event }) => {
     return null;
   };
 
+  const jsonLd = generateEventJsonLd({
+    name: event.title,
+    description: event.description,
+    image: event.image,
+    startDate: event.date,
+    endDate: event.end_date,
+    location: event.location,
+    url: `/events/${event.slug || event.id}`,
+  });
+
   return (
     <>
+      <SEO
+        title={event.title}
+        description={event.description}
+        image={event.image}
+        url={`/events/${event.slug || event.id}`}
+        type="article"
+        section="Events"
+        tags={[
+          "ECAST",
+          "Event",
+          "Workshop",
+          "Technology",
+          "Education",
+          "TCIOE",
+          "IOE",
+          "thapathali",
+        ]}
+        jsonLd={jsonLd}
+      />
       <NavBar />
       <div className="bg-black min-h-screen py-8">
         {/* Content Section */}

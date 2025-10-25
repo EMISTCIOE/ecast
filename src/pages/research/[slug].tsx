@@ -1,6 +1,8 @@
 import { GetServerSideProps } from "next";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
+import SEO from "@/components/SEO";
+import { generateResearchJsonLd } from "@/lib/seo";
 import React from "react";
 import { Research } from "../../types";
 import Link from "next/link";
@@ -10,8 +12,28 @@ interface ResearchProps {
 }
 
 const ResearchDetail: React.FC<ResearchProps> = ({ research }) => {
+  const jsonLd = generateResearchJsonLd({
+    title: research.title,
+    description: research.abstract || "",
+    authors: research.authors,
+    datePublished: research.publication_date || new Date().toISOString(),
+    journalName: research.journal_name,
+    url: `/research/${research.slug || research.id}`,
+  });
+
   return (
     <>
+      <SEO
+        title={research.title}
+        description={research.abstract || ""}
+        url={`/research/${research.slug || research.id}`}
+        type="article"
+        author={research.authors}
+        publishedTime={research.publication_date}
+        section="Research"
+        tags={["ECAST", "Research", "Academic", "Publication"]}
+        jsonLd={jsonLd}
+      />
       <NavBar />
       <div className="bg-black w-full min-h-screen">
         <div className="flex justify-center bg-black w-full">
