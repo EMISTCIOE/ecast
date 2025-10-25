@@ -1,10 +1,11 @@
 import Footer from "@/components/footar";
 import NavBar from "@/components/nav";
+import NewsletterSubscribe from "@/components/NewsletterSubscribe";
 import Image from "next/image";
 import { useEffect, useState } from "react";
 import { useProjects } from "@/lib/hooks/projects";
 
-const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 const Project = () => {
   const [projects, setProjects] = useState<any[]>([]);
@@ -70,6 +71,17 @@ const Project = () => {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Newsletter Subscription */}
+        <div className="py-8 px-4">
+          <div className="container mx-auto max-w-4xl">
+            <NewsletterSubscribe
+              category="PROJECTS"
+              title="Subscribe to Project Updates"
+              description="Discover new innovative projects from our talented members. Get notified about latest showcases and developments."
+            />
+          </div>
         </div>
       </div>
       <Footer />

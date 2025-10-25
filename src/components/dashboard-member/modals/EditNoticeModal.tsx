@@ -1,5 +1,15 @@
 import { useState, useEffect } from "react";
-import { ArrowUpTrayIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowUpTrayIcon,
+  XMarkIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
+import {
+  validateNoticeForm,
+  parseBackendErrors,
+  scrollToFirstError,
+  type ValidationErrors,
+} from "@/lib/validation";
 
 interface EditNoticeModalProps {
   notice: any;
@@ -20,6 +30,7 @@ export default function EditNoticeModal({
   const [content, setContent] = useState("");
   const [audience, setAudience] = useState("ALL");
   const [file, setFile] = useState<File | null>(null);
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   useEffect(() => {
     if (notice) {
@@ -27,19 +38,42 @@ export default function EditNoticeModal({
       setContent(notice.content || "");
       setAudience(notice.audience || "ALL");
       setFile(null);
+      setErrors({});
     }
   }, [notice]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("content", content);
-    formData.append("audience", audience);
-    if (file) {
-      formData.append("attachment", file);
+
+    // Client-side validation
+    const validationErrors = validateNoticeForm({
+      title,
+      content,
+      attachment: file,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      scrollToFirstError();
+      return;
     }
-    await onSave(formData);
+
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("content", content);
+      formData.append("audience", audience);
+      if (file) {
+        formData.append("attachment", file);
+      }
+      await onSave(formData);
+    } catch (error: any) {
+      if (error.response?.data) {
+        const backendErrors = parseBackendErrors(error.response.data);
+        setErrors(backendErrors);
+        scrollToFirstError();
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -66,11 +100,25 @@ export default function EditNoticeModal({
             <input
               type="text"
               required
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 focus:border-transparent font-semibold text-lg text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.title ? "border-red-500" : "border-purple-500/50"
+              } focus:ring-2 focus:ring-purple-500 focus:border-transparent font-semibold text-lg text-white transition-all`}
               placeholder="Enter notice title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (errors.title) {
+                  const { title, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.title && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.title}
+              </p>
+            )}
           </div>
 
           {/* Content */}
@@ -80,12 +128,26 @@ export default function EditNoticeModal({
             </label>
             <textarea
               required
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-purple-500/50 focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.content ? "border-red-500" : "border-purple-500/50"
+              } focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none text-white transition-all`}
               placeholder="Enter notice content"
               rows={6}
               value={content}
-              onChange={(e) => setContent(e.target.value)}
+              onChange={(e) => {
+                setContent(e.target.value);
+                if (errors.content) {
+                  const { content, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.content && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.content}
+              </p>
+            )}
           </div>
 
           {/* Audience */}
@@ -122,8 +184,20 @@ export default function EditNoticeModal({
               type="file"
               accept="application/pdf,image/*"
               className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-purple-500/30 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600/20 file:text-purple-300 hover:file:bg-purple-600/30 file:transition-all cursor-pointer text-sm text-white"
-              onChange={(e) => setFile(e.target.files?.[0] || null)}
+              onChange={(e) => {
+                setFile(e.target.files?.[0] || null);
+                if (errors.attachment) {
+                  const { attachment, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.attachment && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.attachment}
+              </p>
+            )}
             {file && file.type?.startsWith("image/") && (
               <div className="mt-3">
                 <img

@@ -65,7 +65,8 @@ export default function AccountFirstLogin() {
 
     setIsLoading(true);
     try {
-      const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+      const base =
+        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
       const r = await fetch(`${base}/api/auth/password/change/`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

@@ -99,7 +99,7 @@ export default function ProjectsCrud({
     const imageUrl =
       p.image && (p.image as string).startsWith("http")
         ? p.image
-        : `${process.env.NEXT_PUBLIC_API_BASE || ""}${p.image || ""}`;
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${p.image || ""}`;
     setCurrentImageUrl(p.image ? imageUrl : null);
     setShowEditModal(true);
   };
@@ -221,7 +221,7 @@ export default function ProjectsCrud({
                   const imgUrl =
                     p.image && p.image.startsWith("http")
                       ? p.image
-                      : `${process.env.NEXT_PUBLIC_API_BASE || ""}${
+                      : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${
                           p.image || ""
                         }`;
                   return (

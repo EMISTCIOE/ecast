@@ -85,7 +85,7 @@ export default function Sidebar({
                     src={
                       user.avatarUrl.startsWith("http")
                         ? user.avatarUrl
-                        : `${process.env.NEXT_PUBLIC_API_BASE || ""}${
+                        : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${
                             user.avatarUrl
                           }`
                     }

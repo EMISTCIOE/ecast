@@ -5,7 +5,7 @@ export default async function handler(
   res: NextApiResponse
 ) {
   const { author } = req.query;
-  const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
   const url = `${base}/api/research/?author=${author}`;
   const auth =
     (req.headers["authorization"] as string) ||

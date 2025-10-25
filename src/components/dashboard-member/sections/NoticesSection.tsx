@@ -7,7 +7,7 @@ import {
 } from "@heroicons/react/24/outline";
 import EditNoticeModal from "../modals/EditNoticeModal";
 
-const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 const isImagePath = (p?: string) =>
   /\.(png|jpe?g|gif|webp|bmp|svg)$/i.test(p || "");
 

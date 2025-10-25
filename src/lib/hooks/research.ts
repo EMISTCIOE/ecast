@@ -24,21 +24,26 @@ export function useResearch() {
   }, []);
 
   const approve = useCallback(async (slug: string) => {
-    const res = await authedFetch("/api/app/research/approve", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug }),
-    });
+    const res = await authedFetch(
+      `/api/app/research/approve?slug=${encodeURIComponent(slug)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
     if (!res.ok) throw new Error("approve research failed");
     return res.json();
   }, []);
 
   const reject = useCallback(async (slug: string, reason?: string) => {
-    const res = await authedFetch("/api/app/research/reject", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, reason }),
-    });
+    const res = await authedFetch(
+      `/api/app/research/reject?slug=${encodeURIComponent(slug)}`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason }),
+      }
+    );
     if (!res.ok) throw new Error("reject research failed");
     return res.json();
   }, []);
@@ -47,11 +52,18 @@ export function useResearch() {
     async (payload: FormData | Record<string, any>) => {
       const isForm =
         typeof FormData !== "undefined" && payload instanceof FormData;
-      const res = await authedFetch("/api/app/research/create", {
+
+      const options: RequestInit = {
         method: "POST",
-        headers: isForm ? {} : { "Content-Type": "application/json" },
         body: isForm ? (payload as any) : JSON.stringify(payload),
-      } as any);
+      };
+
+      // Only set Content-Type for JSON, let browser set it for FormData
+      if (!isForm) {
+        options.headers = { "Content-Type": "application/json" };
+      }
+
+      const res = await authedFetch("/api/app/research/create", options as any);
       if (!res.ok) throw new Error("create research failed");
       return res.json();
     },
@@ -62,13 +74,21 @@ export function useResearch() {
     async (slug: string, payload: FormData | Record<string, any>) => {
       const isForm =
         typeof FormData !== "undefined" && payload instanceof FormData;
-      const res = await authedFetch("/api/app/research/update", {
+
+      const options: RequestInit = {
         method: "PATCH",
-        headers: isForm
-          ? { "x-research-slug": slug }
-          : { "Content-Type": "application/json", "x-research-slug": slug },
         body: isForm ? (payload as any) : JSON.stringify(payload),
-      } as any);
+      };
+
+      // Only set Content-Type for JSON, let browser set it for FormData
+      if (!isForm) {
+        options.headers = { "Content-Type": "application/json" };
+      }
+
+      const res = await authedFetch(
+        `/api/app/research/update?slug=${encodeURIComponent(slug)}`,
+        options as any
+      );
       if (!res.ok) throw new Error("update research failed");
       return res.json();
     },
@@ -76,10 +96,12 @@ export function useResearch() {
   );
 
   const remove = useCallback(async (slug: string) => {
-    const res = await authedFetch("/api/app/research/delete", {
-      method: "DELETE",
-      headers: { "x-research-slug": slug },
-    });
+    const res = await authedFetch(
+      `/api/app/research/delete?slug=${encodeURIComponent(slug)}`,
+      {
+        method: "DELETE",
+      }
+    );
     if (!res.ok) throw new Error("delete research failed");
     return true;
   }, []);

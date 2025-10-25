@@ -160,7 +160,7 @@ export default function GalleryCrud({
                   src={
                     g.image?.startsWith("http")
                       ? g.image
-                      : `${process.env.NEXT_PUBLIC_API_BASE || ""}${
+                      : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${
                           g.image || ""
                         }`
                   }
@@ -169,7 +169,7 @@ export default function GalleryCrud({
                     setPreviewImage(
                       g.image?.startsWith("http")
                         ? g.image
-                        : `${process.env.NEXT_PUBLIC_API_BASE || ""}${
+                        : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${
                             g.image || ""
                           }`
                     );

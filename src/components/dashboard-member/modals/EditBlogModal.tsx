@@ -1,6 +1,16 @@
 import { useState, useEffect } from "react";
-import { ArrowUpTrayIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import {
+  ArrowUpTrayIcon,
+  XMarkIcon,
+  XCircleIcon,
+} from "@heroicons/react/24/outline";
 import RichTextEditor from "@/components/RichTextEditor";
+import {
+  validateBlogForm,
+  parseBackendErrors,
+  scrollToFirstError,
+  type ValidationErrors,
+} from "@/lib/validation";
 
 interface EditBlogModalProps {
   blog: any;
@@ -21,6 +31,7 @@ export default function EditBlogModal({
   const [description, setDescription] = useState("");
   const [content, setContent] = useState("");
   const [coverImage, setCoverImage] = useState<File | null>(null);
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   useEffect(() => {
     if (blog) {
@@ -28,19 +39,45 @@ export default function EditBlogModal({
       setDescription(blog.description || "");
       setContent(blog.content || "");
       setCoverImage(null);
+      setErrors({}); // Clear errors when blog changes
     }
   }, [blog]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("content", content);
-    if (coverImage) {
-      formData.append("cover_image", coverImage);
+    setErrors({});
+
+    // Client-side validation
+    const validationErrors = validateBlogForm({
+      title,
+      description,
+      content,
+      coverImage,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      scrollToFirstError();
+      return;
     }
-    await onSave(formData);
+
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("content", content);
+      if (coverImage) {
+        formData.append("cover_image", coverImage);
+      }
+      await onSave(formData);
+    } catch (error: any) {
+      // Parse backend validation errors
+      if (error?.response?.data) {
+        const backendErrors = parseBackendErrors(error.response.data);
+        setErrors(backendErrors);
+        scrollToFirstError();
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -67,11 +104,26 @@ export default function EditBlogModal({
             <input
               type="text"
               required
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 focus:border-transparent font-semibold text-lg text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border focus:ring-2 focus:ring-pink-500 focus:border-transparent font-semibold text-lg text-white transition-all ${
+                errors.title ? "border-red-500" : "border-pink-500/50"
+              }`}
               placeholder="Enter blog title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (errors.title) {
+                  const newErrors = { ...errors };
+                  delete newErrors.title;
+                  setErrors(newErrors);
+                }
+              }}
             />
+            {errors.title && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.title}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -82,11 +134,26 @@ export default function EditBlogModal({
             <input
               type="text"
               required
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-pink-500/50 focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border focus:ring-2 focus:ring-pink-500 focus:border-transparent text-white transition-all ${
+                errors.description ? "border-red-500" : "border-pink-500/50"
+              }`}
               placeholder="Brief description for the blog preview"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                if (errors.description) {
+                  const newErrors = { ...errors };
+                  delete newErrors.description;
+                  setErrors(newErrors);
+                }
+              }}
             />
+            {errors.description && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.description}
+              </p>
+            )}
           </div>
 
           {/* Content */}
@@ -94,13 +161,30 @@ export default function EditBlogModal({
             <label className="block text-sm font-semibold text-gray-300">
               Blog Content
             </label>
-            <div className="bg-gray-900/90 rounded-xl border border-pink-500/50 overflow-hidden">
+            <div
+              className={`bg-gray-900/90 rounded-xl border overflow-hidden ${
+                errors.content ? "border-red-500" : "border-pink-500/50"
+              }`}
+            >
               <RichTextEditor
                 value={content}
-                onChange={setContent}
+                onChange={(newContent) => {
+                  setContent(newContent);
+                  if (errors.content) {
+                    const newErrors = { ...errors };
+                    delete newErrors.content;
+                    setErrors(newErrors);
+                  }
+                }}
                 className="min-h-[350px]"
               />
             </div>
+            {errors.content && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.content}
+              </p>
+            )}
           </div>
 
           {/* Cover Image Upload */}
@@ -122,8 +206,17 @@ export default function EditBlogModal({
             <input
               type="file"
               accept="image/*"
-              className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-pink-500/30 rounded-xl hover:border-pink-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-pink-600/20 file:text-pink-300 hover:file:bg-pink-600/30 file:transition-all cursor-pointer text-sm text-white"
-              onChange={(e) => setCoverImage(e.target.files?.[0] || null)}
+              className={`w-full p-3 bg-gray-900/90 border-2 border-dashed rounded-xl hover:border-pink-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-pink-600/20 file:text-pink-300 hover:file:bg-pink-600/30 file:transition-all cursor-pointer text-sm text-white ${
+                errors.cover_image ? "border-red-500" : "border-pink-500/30"
+              }`}
+              onChange={(e) => {
+                setCoverImage(e.target.files?.[0] || null);
+                if (errors.cover_image) {
+                  const newErrors = { ...errors };
+                  delete newErrors.cover_image;
+                  setErrors(newErrors);
+                }
+              }}
             />
             {coverImage && coverImage.type?.startsWith("image/") && (
               <div className="mt-3">
@@ -142,6 +235,12 @@ export default function EditBlogModal({
                   className="max-h-48 w-full object-cover rounded-lg border border-pink-500/30"
                 />
               </div>
+            )}
+            {errors.cover_image && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.cover_image}
+              </p>
             )}
           </div>
 

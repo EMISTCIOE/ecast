@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
 
-const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 type Blog = {
   id: string;
@@ -78,17 +78,35 @@ export default function AmbassadorDetail() {
           {/* User Profile Section */}
           <div className="bg-gray-900 p-6 rounded-lg border border-gray-800 mb-8">
             <div className="flex items-start gap-6">
-              <img
-                src={
-                  user.photo
-                    ? user.photo.startsWith("http")
+              {user.photo ? (
+                <img
+                  src={
+                    user.photo.startsWith("http")
                       ? user.photo
                       : `${base}${user.photo}`
-                    : "/assets/placeholder.png"
-                }
-                alt={user.username}
-                className="w-24 h-24 rounded-full object-cover border-2 border-gray-700"
-              />
+                  }
+                  alt={user.username}
+                  className="w-24 h-24 rounded-full object-cover border-2 border-gray-700"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = "none";
+                    if (target.nextElementSibling) {
+                      (target.nextElementSibling as HTMLElement).style.display =
+                        "flex";
+                    }
+                  }}
+                />
+              ) : null}
+              <div
+                className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-600 to-cyan-600 border-2 border-gray-700 flex items-center justify-center text-white font-bold text-3xl"
+                style={{
+                  display: user.photo ? "none" : "flex",
+                }}
+              >
+                {(user.full_name || user.username || "?")
+                  .charAt(0)
+                  .toUpperCase()}
+              </div>
               <div className="flex-1">
                 <h1 className="text-3xl font-bold mb-2">
                   {user.full_name || user.username}

@@ -2,7 +2,7 @@ import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
 import { useEffect, useState } from "react";
 
-const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 const currentBatchYear = process.env.NEXT_PUBLIC_CURRENT_BATCH_YEAR || "2082";
 
 export default function LeaderboardPage() {

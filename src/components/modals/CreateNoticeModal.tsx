@@ -8,6 +8,12 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
+import {
+  validateNoticeForm,
+  parseBackendErrors,
+  scrollToFirstError,
+  type ValidationErrors,
+} from "@/lib/validation";
 
 interface CreateNoticeModalProps {
   isOpen: boolean;
@@ -31,11 +37,27 @@ export default function CreateNoticeModal({
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setErrors({});
     setMessage("");
+
+    // Client-side validation
+    const validationErrors = validateNoticeForm({
+      title,
+      content,
+      attachment: file,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      scrollToFirstError();
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       await onSubmit({ title, content, audience, file });
@@ -47,10 +69,18 @@ export default function CreateNoticeModal({
         setAudience("ALL");
         setFile(null);
         setMessage("");
+        setErrors({});
         onClose();
       }, 1500);
-    } catch (error) {
-      setMessage("Failed to submit notice");
+    } catch (error: any) {
+      // Parse backend validation errors
+      if (error?.response?.data) {
+        const backendErrors = parseBackendErrors(error.response.data);
+        setErrors(backendErrors);
+        scrollToFirstError();
+      } else {
+        setMessage("Failed to submit notice");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -98,12 +128,27 @@ export default function CreateNoticeModal({
             Notice Title
           </label>
           <input
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 font-medium text-lg text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 font-medium text-lg text-white ${
+              errors.title ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="Enter a clear and concise title..."
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (errors.title) {
+                const newErrors = { ...errors };
+                delete newErrors.title;
+                setErrors(newErrors);
+              }
+            }}
             required
           />
+          {errors.title && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.title}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -112,13 +157,28 @@ export default function CreateNoticeModal({
             Notice Content
           </label>
           <textarea
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 resize-none font-medium text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 resize-none font-medium text-white ${
+              errors.content ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="Write your notice content here. Be clear and informative..."
             rows={6}
             value={content}
-            onChange={(e) => setContent(e.target.value)}
+            onChange={(e) => {
+              setContent(e.target.value);
+              if (errors.content) {
+                const newErrors = { ...errors };
+                delete newErrors.content;
+                setErrors(newErrors);
+              }
+            }}
             required
           />
+          {errors.content && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.content}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -149,8 +209,17 @@ export default function CreateNoticeModal({
             key={file ? "has-file" : "no-file"}
             type="file"
             accept="application/pdf,image/*"
-            className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-purple-600 file:to-pink-600 file:text-white file:font-semibold hover:file:from-purple-700 hover:file:to-pink-700 file:shadow-lg file:transition-all cursor-pointer text-white"
-            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className={`w-full p-4 bg-gray-900/80 border-2 border-dashed rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-purple-600 file:to-pink-600 file:text-white file:font-semibold hover:file:from-purple-700 hover:file:to-pink-700 file:shadow-lg file:transition-all cursor-pointer text-white ${
+              errors.attachment ? "border-red-500" : "border-gray-700"
+            }`}
+            onChange={(e) => {
+              setFile(e.target.files?.[0] || null);
+              if (errors.attachment) {
+                const newErrors = { ...errors };
+                delete newErrors.attachment;
+                setErrors(newErrors);
+              }
+            }}
           />
           {file && file.type?.startsWith("image/") && (
             <div className="mt-3">
@@ -164,6 +233,12 @@ export default function CreateNoticeModal({
           <p className="text-xs text-gray-500 mt-1">
             Supported: PDF, JPG, PNG (Max 10MB)
           </p>
+          {errors.attachment && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.attachment}
+            </p>
+          )}
         </div>
 
         <div className="flex gap-3 pt-4">

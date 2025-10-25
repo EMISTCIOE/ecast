@@ -28,7 +28,7 @@ export const NoticePreview: React.FC<NoticePreviewProps> = ({
     });
   };
 
-  const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
   const fullAttachmentUrl = notice.attachment
     ? notice.attachment.startsWith("http")
       ? notice.attachment
@@ -141,7 +141,7 @@ export const BlogPreview: React.FC<BlogPreviewProps> = ({
   onApprove,
   onReject,
 }) => {
-  const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
   const coverImage =
     blog.cover_image || blog.thumbnail || "/assets/placeholder.png";
   const fullCoverUrl = coverImage.startsWith("http")
@@ -231,7 +231,7 @@ export const ProjectPreview: React.FC<ProjectPreviewProps> = ({
   onApprove,
   onReject,
 }) => {
-  const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
   const projectImage =
     project.image || project.imageUrl || "/assets/placeholder.png";
   const fullImageUrl = projectImage.startsWith("http")
@@ -327,7 +327,7 @@ export const EventPreview: React.FC<EventPreviewProps> = ({
   onApprove,
   onReject,
 }) => {
-  const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
   const eventImage = event.image || "/assets/placeholder.png";
   const fullImageUrl = eventImage.startsWith("http")
     ? eventImage

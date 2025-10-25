@@ -8,7 +8,7 @@ jobs:
     name: Build & Deploy to VPS
     runs-on: self-hosted
     env:
-      NEXT_PUBLIC_API_BASE: ${{ secrets.NEXT_PUBLIC_API_BASE }}
+      NEXT_PUBLIC_BACKEND_URL: ${{ secrets.NEXT_PUBLIC_BACKEND_URL }}
       NEXT_PUBLIC_CURRENT_BATCH_YEAR: ${{ secrets.NEXT_PUBLIC_CURRENT_BATCH_YEAR }}
 
     steps:

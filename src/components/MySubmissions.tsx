@@ -24,7 +24,7 @@ type Props = {
   showTasks?: boolean;
 };
 
-const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export default function MySubmissions({ role, showTasks = true }: Props) {
   const [status, setStatus] = useState<"PENDING" | "APPROVED" | "REJECTED">(

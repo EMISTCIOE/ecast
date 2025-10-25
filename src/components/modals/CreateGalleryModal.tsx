@@ -3,7 +3,14 @@ import {
   XMarkIcon,
   PhotoIcon,
   CloudArrowUpIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
+import {
+  validateGalleryForm,
+  parseBackendErrors,
+  scrollToFirstError,
+  type ValidationErrors,
+} from "@/lib/validation";
 
 interface CreateGalleryModalProps {
   isOpen: boolean;
@@ -22,6 +29,7 @@ export default function CreateGalleryModal({
   const [imagePreview, setImagePreview] = useState<string>("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [errors, setErrors] = useState<ValidationErrors>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,23 +42,37 @@ export default function CreateGalleryModal({
       };
       reader.readAsDataURL(file);
       setError("");
+      // Clear image error if exists
+      if (errors.image) {
+        const newErrors = { ...errors };
+        delete newErrors.image;
+        setErrors(newErrors);
+      }
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrors({});
+    setError("");
 
-    if (!image) {
-      setError("Please select an image to upload");
+    // Client-side validation
+    const validationErrors = validateGalleryForm({
+      title,
+      image,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      scrollToFirstError();
       return;
     }
 
     setIsSubmitting(true);
-    setError("");
 
     try {
       const formData = new FormData();
-      formData.append("image", image);
+      formData.append("image", image!);
       if (title.trim()) formData.append("title", title.trim());
       if (description.trim())
         formData.append("description", description.trim());
@@ -62,9 +84,17 @@ export default function CreateGalleryModal({
       setDescription("");
       setImage(null);
       setImagePreview("");
+      setErrors({});
       onClose();
     } catch (err: any) {
-      setError(err.message || "Failed to upload image");
+      // Parse backend validation errors
+      if (err?.response?.data) {
+        const backendErrors = parseBackendErrors(err.response.data);
+        setErrors(backendErrors);
+        scrollToFirstError();
+      } else {
+        setError(err.message || "Failed to upload image");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -120,7 +150,11 @@ export default function CreateGalleryModal({
             </label>
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="relative border-2 border-dashed border-gray-600 hover:border-cyan-500/50 rounded-xl p-8 cursor-pointer transition-all group"
+              className={`relative border-2 border-dashed rounded-xl p-8 cursor-pointer transition-all group ${
+                errors.image
+                  ? "border-red-500"
+                  : "border-gray-600 hover:border-cyan-500/50"
+              }`}
             >
               {imagePreview ? (
                 <div className="relative">
@@ -153,22 +187,43 @@ export default function CreateGalleryModal({
                 disabled={isSubmitting}
               />
             </div>
+            {errors.image && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.image}
+              </p>
+            )}
           </div>
 
           {/* Title */}
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-300">
-              Title <span className="text-gray-500">(Optional)</span>
+              Title <span className="text-red-400">*</span>
             </label>
             <input
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (errors.title) {
+                  const newErrors = { ...errors };
+                  delete newErrors.title;
+                  setErrors(newErrors);
+                }
+              }}
               placeholder="e.g., Tech Fest 2025"
-              className="w-full px-4 py-3 bg-gray-800/50 border border-gray-700 rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-white placeholder-gray-500"
+              className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all text-white placeholder-gray-500 ${
+                errors.title ? "border-red-500" : "border-gray-700"
+              }`}
               disabled={isSubmitting}
               maxLength={150}
             />
+            {errors.title && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.title}
+              </p>
+            )}
           </div>
 
           {/* Description */}

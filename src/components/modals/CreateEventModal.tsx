@@ -10,6 +10,12 @@ import {
   CheckCircleIcon,
   XCircleIcon,
 } from "@heroicons/react/24/outline";
+import {
+  validateEventForm,
+  parseBackendErrors,
+  scrollToFirstError,
+  type ValidationErrors,
+} from "@/lib/validation";
 
 interface CreateEventModalProps {
   isOpen: boolean;
@@ -43,11 +49,32 @@ export default function CreateEventModal({
   const [formLink, setFormLink] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setErrors({});
     setMessage("");
+
+    // Client-side validation
+    const validationErrors = validateEventForm({
+      title,
+      description,
+      date,
+      time,
+      location,
+      contactEmail,
+      formLink,
+      image,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      scrollToFirstError();
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       await onSubmit({
@@ -73,10 +100,18 @@ export default function CreateEventModal({
         setComingSoon(false);
         setFormLink("");
         setMessage("");
+        setErrors({});
         onClose();
       }, 1500);
-    } catch (error) {
-      setMessage("Failed to submit event");
+    } catch (error: any) {
+      // Parse backend validation errors
+      if (error?.response?.data) {
+        const backendErrors = parseBackendErrors(error.response.data);
+        setErrors(backendErrors);
+        scrollToFirstError();
+      } else {
+        setMessage("Failed to submit event");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -129,12 +164,27 @@ export default function CreateEventModal({
             Event Title
           </label>
           <input
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-lg text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-lg text-white ${
+              errors.title ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="Enter event name..."
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (errors.title) {
+                const newErrors = { ...errors };
+                delete newErrors.title;
+                setErrors(newErrors);
+              }
+            }}
             required
           />
+          {errors.title && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.title}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -143,13 +193,28 @@ export default function CreateEventModal({
             Description
           </label>
           <textarea
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 resize-none font-medium text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 resize-none font-medium text-white ${
+              errors.description ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="Describe what attendees can expect..."
             rows={4}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              if (errors.description) {
+                const newErrors = { ...errors };
+                delete newErrors.description;
+                setErrors(newErrors);
+              }
+            }}
             required
           />
+          {errors.description && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.description}
+            </p>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -159,12 +224,27 @@ export default function CreateEventModal({
               Date
             </label>
             <input
-              className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white"
+              className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white ${
+                errors.date ? "border-red-500" : "border-gray-700"
+              }`}
               type="date"
               value={date}
-              onChange={(e) => setDate(e.target.value)}
+              onChange={(e) => {
+                setDate(e.target.value);
+                if (errors.date) {
+                  const newErrors = { ...errors };
+                  delete newErrors.date;
+                  setErrors(newErrors);
+                }
+              }}
               required
             />
+            {errors.date && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.date}
+              </p>
+            )}
           </div>
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
@@ -172,12 +252,27 @@ export default function CreateEventModal({
               Time
             </label>
             <input
-              className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white"
+              className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white ${
+                errors.time ? "border-red-500" : "border-gray-700"
+              }`}
               type="time"
               value={time}
-              onChange={(e) => setTime(e.target.value)}
+              onChange={(e) => {
+                setTime(e.target.value);
+                if (errors.time) {
+                  const newErrors = { ...errors };
+                  delete newErrors.time;
+                  setErrors(newErrors);
+                }
+              }}
               required
             />
+            {errors.time && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.time}
+              </p>
+            )}
           </div>
         </div>
 
@@ -187,12 +282,27 @@ export default function CreateEventModal({
             Location
           </label>
           <input
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white ${
+              errors.location ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="Where will the event take place?"
             value={location}
-            onChange={(e) => setLocation(e.target.value)}
+            onChange={(e) => {
+              setLocation(e.target.value);
+              if (errors.location) {
+                const newErrors = { ...errors };
+                delete newErrors.location;
+                setErrors(newErrors);
+              }
+            }}
             required
           />
+          {errors.location && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.location}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -215,12 +325,27 @@ export default function CreateEventModal({
           </label>
           <input
             type="email"
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white ${
+              errors.contact_email ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="Contact email for inquiries"
             value={contactEmail}
-            onChange={(e) => setContactEmail(e.target.value)}
+            onChange={(e) => {
+              setContactEmail(e.target.value);
+              if (errors.contact_email) {
+                const newErrors = { ...errors };
+                delete newErrors.contact_email;
+                setErrors(newErrors);
+              }
+            }}
             required
           />
+          {errors.contact_email && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.contact_email}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -246,15 +371,30 @@ export default function CreateEventModal({
           </label>
           <input
             type="url"
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all duration-300 hover:border-emerald-500/50 font-medium text-white ${
+              errors.form_link ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="Google Forms, registration link, etc."
             value={formLink}
-            onChange={(e) => setFormLink(e.target.value)}
+            onChange={(e) => {
+              setFormLink(e.target.value);
+              if (errors.form_link) {
+                const newErrors = { ...errors };
+                delete newErrors.form_link;
+                setErrors(newErrors);
+              }
+            }}
           />
           <p className="text-xs text-gray-500 mt-1">
             Add a link for registration forms or event details (e.g., Google
             Forms)
           </p>
+          {errors.form_link && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.form_link}
+            </p>
+          )}
         </div>
 
         <div className="space-y-3">
@@ -285,8 +425,17 @@ export default function CreateEventModal({
           <input
             type="file"
             accept="image/*"
-            className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-emerald-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-emerald-600 file:to-green-600 file:text-white file:font-semibold hover:file:from-emerald-700 hover:file:to-green-700 file:shadow-lg file:transition-all cursor-pointer text-white"
-            onChange={(e) => setImage(e.target.files?.[0] || null)}
+            className={`w-full p-4 bg-gray-900/80 border-2 border-dashed rounded-xl hover:border-emerald-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-emerald-600 file:to-green-600 file:text-white file:font-semibold hover:file:from-emerald-700 hover:file:to-green-700 file:shadow-lg file:transition-all cursor-pointer text-white ${
+              errors.image ? "border-red-500" : "border-gray-700"
+            }`}
+            onChange={(e) => {
+              setImage(e.target.files?.[0] || null);
+              if (errors.image) {
+                const newErrors = { ...errors };
+                delete newErrors.image;
+                setErrors(newErrors);
+              }
+            }}
           />
           {image && (
             <div className="mt-3">
@@ -300,6 +449,12 @@ export default function CreateEventModal({
           <p className="text-xs text-gray-500 mt-1">
             Supported: JPG, PNG, GIF (Max 5MB)
           </p>
+          {errors.image && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.image}
+            </p>
+          )}
         </div>
 
         <button

@@ -26,7 +26,7 @@ This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-appl
 
 ## Backend integration
 
-- Set the backend API base URL via env: `NEXT_PUBLIC_API_BASE=http://localhost:8000`
+- Set the backend API base URL via env: `NEXT_PUBLIC_BACKEND_URL=http://localhost:8000`
 - Blogs are now dynamic (fetched from `/api/blog/posts/`) instead of static MDX.
 - Dashboards:
   - Login at `/login`

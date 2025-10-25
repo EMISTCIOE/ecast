@@ -68,7 +68,7 @@ export default function AnalyticsOverview({ blogs }: AnalyticsOverviewProps) {
       // Fetch analytics from your analytics API
       const response = await fetch(
         `${
-          process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000"
+          process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
         }/analytics/summary${filterPath}`,
         {
           headers: {

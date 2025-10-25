@@ -5,6 +5,7 @@ import { Blog } from "../../store/src/lib/blog/types";
 import styles from "../../components/css/file1.module.css"; // Import the CSS module
 import Navbar from "@/components/nav"; // Updated Navbar import
 import Footer from "@/components/footar";
+import NewsletterSubscribe from "@/components/NewsletterSubscribe";
 import clsx from "clsx";
 
 interface BlogListProps {
@@ -75,6 +76,18 @@ const BlogList: React.FC<BlogListProps> = ({ blogs }) => {
           </div>
         </div>
       </div>
+
+      {/* Newsletter Subscription */}
+      <div className="bg-black py-8">
+        <div className="container mx-auto px-4 max-w-4xl">
+          <NewsletterSubscribe
+            category="BLOGS"
+            title="Subscribe to Our Blog"
+            description="Get notified when we publish new blog posts. Stay updated with insights, stories, and knowledge from the ECAST community."
+          />
+        </div>
+      </div>
+
       <Footer />
     </>
   );

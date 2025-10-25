@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Research } from "../../types";
 import Navbar from "@/components/nav";
 import Footer from "@/components/footar";
+import NewsletterSubscribe from "@/components/NewsletterSubscribe";
 import clsx from "clsx";
 
 interface ResearchListProps {
@@ -15,99 +16,119 @@ const ResearchList: React.FC<ResearchListProps> = ({ research }) => {
       <Navbar />
       <div className="flex justify-center bg-black w-full min-h-screen">
         <div className="container max-w-7xl px-4 lg:px-8 py-8">
-          <h1 className="text-white text-center text-6xl font-bold my-8">
-            Research Publications
-          </h1>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 pb-9">
+          <div className="text-center mb-12">
+            <h1 className="text-white text-5xl lg:text-6xl font-bold mb-4">
+              Research Publications
+            </h1>
+            <p className="text-gray-400 text-lg max-w-3xl mx-auto">
+              Explore cutting-edge research and academic contributions from our
+              community
+            </p>
+          </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pb-9">
             {research.map((paper) => (
               <div
                 key={paper.id}
                 className={clsx(
-                  "bg-gray-900 p-6 rounded-lg",
-                  "border-4",
-                  "border-transparent",
-                  "hover:border-[#5f20ff]",
-                  "animate-pulse-border-shadow-green",
-                  "flex flex-col"
+                  "bg-gray-900/50 backdrop-blur-sm p-8 rounded-xl",
+                  "border border-gray-800",
+                  "hover:border-purple-500/50",
+                  "hover:shadow-xl hover:shadow-purple-500/10",
+                  "transition-all duration-300",
+                  "flex flex-col",
+                  "group"
                 )}
               >
                 <Link href={`/research/${paper.slug}`}>
-                  <div>
-                    <h2 className="text-white text-2xl font-semibold mb-3 hover:text-[#5f20ff] transition-colors">
+                  <div className="mb-5">
+                    <h2 className="text-white text-2xl font-bold mb-2 hover:text-purple-400 transition-colors leading-tight">
                       {paper.title}
                     </h2>
                   </div>
                 </Link>
 
-                <div className="text-gray-400 text-sm mb-4 space-y-1">
-                  <p>
-                    <span className="font-semibold text-gray-300">
-                      Authors:
-                    </span>{" "}
-                    {paper.authors}
-                  </p>
+                <div className="text-gray-400 text-sm mb-5 space-y-2.5">
+                  <div className="flex flex-col gap-0.5">
+                    <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      Authors
+                    </span>
+                    <span className="text-gray-300">{paper.authors}</span>
+                  </div>
+
                   {paper.co_authors && paper.co_authors.length > 0 && (
-                    <p>
-                      <span className="font-semibold text-gray-300">
-                        Club Co-Authors:
-                      </span>{" "}
-                      {paper.co_authors
-                        .map((ca: any) => ca.full_name || ca.username)
-                        .join(", ")}
-                    </p>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Club Co-Authors
+                      </span>
+                      <span className="text-gray-300">
+                        {paper.co_authors
+                          .map((ca: any) => ca.full_name || ca.username)
+                          .join(", ")}
+                      </span>
+                    </div>
                   )}
+
                   {paper.journal_name && (
-                    <p>
-                      <span className="font-semibold text-gray-300">
-                        Journal:
-                      </span>{" "}
-                      {paper.journal_name}
-                    </p>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Journal
+                      </span>
+                      <span className="text-gray-300">
+                        {paper.journal_name}
+                      </span>
+                    </div>
                   )}
+
                   {paper.publication_date && (
-                    <p>
-                      <span className="font-semibold text-gray-300">
-                        Published:
-                      </span>{" "}
-                      {new Date(paper.publication_date).toLocaleDateString(
-                        "en-US",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        }
-                      )}
-                    </p>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Published
+                      </span>
+                      <span className="text-gray-300">
+                        {new Date(paper.publication_date).toLocaleDateString(
+                          "en-US",
+                          {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                          }
+                        )}
+                      </span>
+                    </div>
                   )}
+
                   {paper.created_by && (
-                    <p>
-                      <span className="font-semibold text-gray-300">
-                        Submitted by:
-                      </span>{" "}
-                      {paper.created_by.full_name || paper.created_by.username}
-                    </p>
+                    <div className="flex flex-col gap-0.5">
+                      <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        Submitted by
+                      </span>
+                      <span className="text-gray-300">
+                        {paper.created_by.full_name ||
+                          paper.created_by.username}
+                      </span>
+                    </div>
                   )}
                 </div>
 
-                <p className="text-gray-300 mb-4 line-clamp-3">
+                <p className="text-gray-400 mb-6 line-clamp-3 leading-relaxed">
                   {paper.abstract}
                 </p>
 
-                <div className="mt-auto flex gap-3">
+                <div className="mt-auto flex flex-wrap gap-3">
                   <Link
                     href={`/research/${paper.slug}`}
-                    className="text-blue-500 hover:underline"
+                    className="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
                   >
-                    Read more...
+                    View Details
                   </Link>
                   {paper.url && (
                     <a
                       href={paper.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-green-500 hover:underline"
+                      className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
                     >
-                      View Paper ↗
+                      Full Paper
                     </a>
                   )}
                   {paper.document && (
@@ -115,9 +136,9 @@ const ResearchList: React.FC<ResearchListProps> = ({ research }) => {
                       href={paper.document}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-purple-400 hover:underline"
+                      className="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors"
                     >
-                      Download 📄
+                      Download
                     </a>
                   )}
                 </div>
@@ -130,6 +151,17 @@ const ResearchList: React.FC<ResearchListProps> = ({ research }) => {
               <p className="text-xl">No research publications found.</p>
             </div>
           )}
+
+          {/* Newsletter Subscription */}
+          <div className="py-8 px-4">
+            <div className="max-w-4xl mx-auto">
+              <NewsletterSubscribe
+                category="RESEARCH"
+                title="Subscribe to Research Updates"
+                description="Stay informed about cutting-edge research publications from our community. Get notified about new papers, findings, and academic contributions."
+              />
+            </div>
+          </div>
         </div>
       </div>
       <Footer />

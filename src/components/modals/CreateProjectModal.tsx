@@ -10,6 +10,12 @@ import {
   XCircleIcon,
   FolderIcon,
 } from "@heroicons/react/24/outline";
+import {
+  validateProjectForm,
+  parseBackendErrors,
+  scrollToFirstError,
+  type ValidationErrors,
+} from "@/lib/validation";
 
 interface CreateProjectModalProps {
   isOpen: boolean;
@@ -35,11 +41,29 @@ export default function CreateProjectModal({
   const [image, setImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setErrors({});
     setMessage("");
+
+    // Client-side validation
+    const validationErrors = validateProjectForm({
+      title,
+      description,
+      repoLink: repoUrl,
+      liveLink: liveUrl,
+      image,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      scrollToFirstError();
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       await onSubmit({
@@ -57,10 +81,18 @@ export default function CreateProjectModal({
         setLiveUrl("");
         setImage(null);
         setMessage("");
+        setErrors({});
         onClose();
       }, 1500);
-    } catch (error) {
-      setMessage("Failed to submit project");
+    } catch (error: any) {
+      // Parse backend validation errors
+      if (error?.response?.data) {
+        const backendErrors = parseBackendErrors(error.response.data);
+        setErrors(backendErrors);
+        scrollToFirstError();
+      } else {
+        setMessage("Failed to submit project");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -109,12 +141,27 @@ export default function CreateProjectModal({
             Project Title
           </label>
           <input
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 font-medium text-lg text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 font-medium text-lg text-white ${
+              errors.title ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="Enter your project name..."
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (errors.title) {
+                const newErrors = { ...errors };
+                delete newErrors.title;
+                setErrors(newErrors);
+              }
+            }}
             required
           />
+          {errors.title && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.title}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -123,13 +170,28 @@ export default function CreateProjectModal({
             Description
           </label>
           <textarea
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 resize-none font-medium text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 resize-none font-medium text-white ${
+              errors.description ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="Describe what makes your project unique..."
             rows={4}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              if (errors.description) {
+                const newErrors = { ...errors };
+                delete newErrors.description;
+                setErrors(newErrors);
+              }
+            }}
             required
           />
+          {errors.description && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.description}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -139,11 +201,26 @@ export default function CreateProjectModal({
             <span className="text-xs text-gray-500">(optional)</span>
           </label>
           <input
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 font-medium text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 font-medium text-white ${
+              errors.repo_link ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="https://github.com/username/repo"
             value={repoUrl}
-            onChange={(e) => setRepoUrl(e.target.value)}
+            onChange={(e) => {
+              setRepoUrl(e.target.value);
+              if (errors.repo_link) {
+                const newErrors = { ...errors };
+                delete newErrors.repo_link;
+                setErrors(newErrors);
+              }
+            }}
           />
+          {errors.repo_link && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.repo_link}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -152,11 +229,26 @@ export default function CreateProjectModal({
             Live URL <span className="text-xs text-gray-500">(optional)</span>
           </label>
           <input
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 font-medium text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:border-blue-500/50 font-medium text-white ${
+              errors.live_link ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="https://your-project-demo.com"
             value={liveUrl}
-            onChange={(e) => setLiveUrl(e.target.value)}
+            onChange={(e) => {
+              setLiveUrl(e.target.value);
+              if (errors.live_link) {
+                const newErrors = { ...errors };
+                delete newErrors.live_link;
+                setErrors(newErrors);
+              }
+            }}
           />
+          {errors.live_link && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.live_link}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -171,8 +263,17 @@ export default function CreateProjectModal({
             type="file"
             accept="image/*"
             required
-            className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-blue-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-blue-600 file:to-cyan-600 file:text-white file:font-semibold hover:file:from-blue-700 hover:file:to-cyan-700 file:shadow-lg file:transition-all cursor-pointer text-white"
-            onChange={(e) => setImage(e.target.files?.[0] || null)}
+            className={`w-full p-4 bg-gray-900/80 border-2 border-dashed rounded-xl hover:border-blue-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-blue-600 file:to-cyan-600 file:text-white file:font-semibold hover:file:from-blue-700 hover:file:to-cyan-700 file:shadow-lg file:transition-all cursor-pointer text-white ${
+              errors.image ? "border-red-500" : "border-gray-700"
+            }`}
+            onChange={(e) => {
+              setImage(e.target.files?.[0] || null);
+              if (errors.image) {
+                const newErrors = { ...errors };
+                delete newErrors.image;
+                setErrors(newErrors);
+              }
+            }}
           />
           {image && (
             <div className="mt-3">
@@ -186,6 +287,12 @@ export default function CreateProjectModal({
           <p className="text-xs text-gray-500 mt-1">
             Supported: JPG, PNG, GIF (Max 5MB)
           </p>
+          {errors.image && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.image}
+            </p>
+          )}
         </div>
 
         <button

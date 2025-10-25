@@ -16,7 +16,7 @@ type EventItem = {
   description?: string;
 };
 
-const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 const UpcomingEvents: React.FC = () => {
   const [items, setItems] = useState<EventItem[]>([]);

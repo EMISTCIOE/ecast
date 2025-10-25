@@ -20,7 +20,9 @@ import AdminBlogsCrud from "@/components/admin/BlogsCrud";
 import AdminEventsCrud from "@/components/admin/EventsCrud";
 import AdminProjectsCrud from "@/components/admin/ProjectsCrud";
 import AdminGalleryCrud from "@/components/admin/GalleryCrud";
-import AdminResearchCrud from "@/components/admin/ResearchCrud";
+import ResearchSection from "@/components/dashboard-member/sections/ResearchSection";
+import CreateResearchModal from "@/components/dashboard-member/modals/CreateResearchModal";
+import EditResearchModal from "@/components/dashboard-member/modals/EditResearchModal";
 
 import { ComprehensiveAnalyticsDashboard } from "@/components/analytics/ComprehensiveAnalyticsDashboard";
 import { ChartCard } from "@/components/analytics/Charts";
@@ -44,7 +46,7 @@ import {
   UserPlusIcon,
 } from "@heroicons/react/24/outline";
 
-const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export default function AdminDashboard() {
   const [authReady, setAuthReady] = useState(false);
@@ -138,6 +140,15 @@ export default function AdminDashboard() {
   const [isCreatingUser, setIsCreatingUser] = useState(false);
   const [userMsg, setUserMsg] = useState("");
 
+  // Research states
+  const [myResearch, setMyResearch] = useState<any[]>([]);
+  const [showCreateResearchModal, setShowCreateResearchModal] = useState(false);
+  const [showEditResearchModal, setShowEditResearchModal] = useState(false);
+  const [showDeleteResearchModal, setShowDeleteResearchModal] = useState(false);
+  const [editingResearch, setEditingResearch] = useState<any>(null);
+  const [deletingResearch, setDeletingResearch] = useState<any>(null);
+  const researchApi = useResearch();
+
   useEffect(() => {
     const userStr = localStorage.getItem("user");
     const access = localStorage.getItem("access");
@@ -149,7 +160,7 @@ export default function AdminDashboard() {
         const avatar = raw
           ? raw.startsWith("http")
             ? raw
-            : `${process.env.NEXT_PUBLIC_API_BASE || ""}${raw}`
+            : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${raw}`
           : undefined;
         setSidebarUser({
           name: u.full_name || u.username,
@@ -458,6 +469,95 @@ export default function AdminDashboard() {
       .then((d: any[]) => setTasks(Array.isArray(d) ? d : []))
       .catch(() => {});
   };
+
+  // Research functions
+  const loadMyResearch = async () => {
+    try {
+      const data = await researchApi.list();
+      setMyResearch(data.results || data || []);
+    } catch (error) {
+      toast.error("Failed to load research papers");
+    }
+  };
+
+  const handleCreateResearch = async (formData: FormData) => {
+    try {
+      await researchApi.create(formData);
+      toast.success("Research paper created successfully");
+      setShowCreateResearchModal(false);
+      loadMyResearch();
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.detail || "Failed to create research paper"
+      );
+      throw error;
+    }
+  };
+
+  const handleEditResearch = async (slug: string, data: any) => {
+    try {
+      await researchApi.update(slug, data);
+      toast.success("Research paper updated successfully");
+      setShowEditResearchModal(false);
+      setEditingResearch(null);
+      loadMyResearch();
+    } catch (error: any) {
+      toast.error(
+        error.response?.data?.detail || "Failed to update research paper"
+      );
+      throw error;
+    }
+  };
+
+  const handleDeleteResearch = async (slug: string) => {
+    // Find the research paper to delete
+    const research = myResearch.find((r) => r.slug === slug);
+    if (research) {
+      setDeletingResearch(research);
+      setShowDeleteResearchModal(true);
+    }
+  };
+
+  const confirmDeleteResearch = async () => {
+    if (!deletingResearch) return;
+    try {
+      await researchApi.remove(deletingResearch.slug);
+      toast.success("Research paper deleted successfully");
+      setShowDeleteResearchModal(false);
+      setDeletingResearch(null);
+      loadMyResearch();
+    } catch (error) {
+      toast.error("Failed to delete research paper");
+    }
+  };
+
+  const handleApproveResearch = async (slug: string) => {
+    try {
+      await researchApi.approve(slug);
+      toast.success("Research paper approved");
+      loadMyResearch();
+    } catch (error) {
+      toast.error("Failed to approve research paper");
+    }
+  };
+
+  const handleRejectResearch = async (slug: string) => {
+    const reason = prompt("Enter rejection reason (optional):");
+    try {
+      await researchApi.reject(slug, reason || undefined);
+      toast.success("Research paper rejected");
+      loadMyResearch();
+    } catch (error) {
+      toast.error("Failed to reject research paper");
+    }
+  };
+
+  // Load research when section changes
+  useEffect(() => {
+    if (activeSection === "research") {
+      loadMyResearch();
+    }
+  }, [activeSection]);
 
   if (!authReady) return null;
 
@@ -1025,7 +1125,18 @@ export default function AdminDashboard() {
           )}
           {activeSection === "gallery" && <AdminGalleryCrud toast={toast} />}
           {activeSection === "research" && (
-            <AdminResearchCrud useResearchHook={useResearch} toast={toast} />
+            <ResearchSection
+              myResearch={myResearch}
+              onCreateClick={() => setShowCreateResearchModal(true)}
+              onEditClick={(research) => {
+                setEditingResearch(research);
+                setShowEditResearchModal(true);
+              }}
+              onDeleteClick={handleDeleteResearch}
+              isAdmin={true}
+              onApprove={handleApproveResearch}
+              onReject={handleRejectResearch}
+            />
           )}
 
           {activeSection === "users" && (
@@ -1323,7 +1434,7 @@ export default function AdminDashboard() {
                           const url = raw.startsWith("http")
                             ? raw
                             : `${
-                                process.env.NEXT_PUBLIC_API_BASE ||
+                                process.env.NEXT_PUBLIC_BACKEND_URL ||
                                 "http://localhost:8000"
                               }${raw}`;
                           if (isImage) {
@@ -1808,6 +1919,73 @@ export default function AdminDashboard() {
         </div>
       )}
 
+      {/* Research Modals */}
+      <CreateResearchModal
+        isOpen={showCreateResearchModal}
+        onClose={() => setShowCreateResearchModal(false)}
+        onSubmit={handleCreateResearch}
+      />
+      <EditResearchModal
+        isOpen={showEditResearchModal}
+        onClose={() => {
+          setShowEditResearchModal(false);
+          setEditingResearch(null);
+        }}
+        research={editingResearch}
+        onSubmit={handleEditResearch}
+      />
+
+      {/* Delete Research Confirmation Modal */}
+      {showDeleteResearchModal && deletingResearch && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#1a1f3a] rounded-2xl border border-gray-700 w-full max-w-md">
+            <div className="bg-[#252b47] px-6 py-4 flex items-center justify-between">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                <TrashIcon className="w-6 h-6 text-red-400" /> Delete Research
+              </h3>
+              <button
+                onClick={() => {
+                  setShowDeleteResearchModal(false);
+                  setDeletingResearch(null);
+                }}
+                className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+              >
+                <XMarkIcon className="w-6 h-6 text-gray-400" />
+              </button>
+            </div>
+            <div className="p-6">
+              <p className="text-gray-300 mb-4">
+                Are you sure you want to delete the research paper "
+                <span className="font-semibold text-white">
+                  {deletingResearch.title}
+                </span>
+                "?
+              </p>
+              <p className="text-sm text-gray-400 mb-6">
+                This action cannot be undone.
+              </p>
+              <div className="flex gap-3">
+                <button
+                  onClick={confirmDeleteResearch}
+                  className="flex-1 bg-red-600 hover:bg-red-700 px-6 py-3 rounded-xl font-semibold transition-all"
+                >
+                  Delete
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDeleteResearchModal(false);
+                    setDeletingResearch(null);
+                  }}
+                  className="flex-1 border border-gray-600 rounded-xl hover:bg-gray-700 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <Footer />
     </>
   );
@@ -2096,7 +2274,7 @@ function UsersCrud({
 
               // Otherwise, prepend the API base URL
               const base =
-                process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+                process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
               return `${base}${photoUrl}`;
             };
 

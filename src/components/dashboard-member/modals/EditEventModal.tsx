@@ -5,7 +5,14 @@ import {
   MapPinIcon,
   CalendarIcon,
   ClockIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
+import {
+  validateEventForm,
+  parseBackendErrors,
+  scrollToFirstError,
+  type ValidationErrors,
+} from "@/lib/validation";
 
 interface EditEventModalProps {
   event: any;
@@ -30,6 +37,7 @@ export default function EditEventModal({
   const [contactEmail, setContactEmail] = useState("");
   const [formLink, setFormLink] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   useEffect(() => {
     if (event) {
@@ -41,24 +49,52 @@ export default function EditEventModal({
       setContactEmail(event.contact_email || "");
       setFormLink(event.form_link || "");
       setImage(null);
+      setErrors({});
     }
   }, [event]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("date", date);
-    formData.append("time", time);
-    formData.append("location", location);
-    formData.append("contact_email", contactEmail);
-    if (formLink.trim()) formData.append("form_link", formLink.trim());
-    // Don't send featured/coming_soon - let backend/admins control these
-    if (image) {
-      formData.append("image", image);
+
+    // Client-side validation
+    const validationErrors = validateEventForm({
+      title,
+      description,
+      date,
+      time,
+      location,
+      contactEmail,
+      formLink,
+      image,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      scrollToFirstError();
+      return;
     }
-    await onSave(formData);
+
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("date", date);
+      formData.append("time", time);
+      formData.append("location", location);
+      formData.append("contact_email", contactEmail);
+      if (formLink.trim()) formData.append("form_link", formLink.trim());
+      // Don't send featured/coming_soon - let backend/admins control these
+      if (image) {
+        formData.append("image", image);
+      }
+      await onSave(formData);
+    } catch (error: any) {
+      if (error.response?.data) {
+        const backendErrors = parseBackendErrors(error.response.data);
+        setErrors(backendErrors);
+        scrollToFirstError();
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -85,11 +121,25 @@ export default function EditEventModal({
             <input
               type="text"
               required
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-emerald-500/50 focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-semibold text-lg text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.title ? "border-red-500" : "border-emerald-500/50"
+              } focus:ring-2 focus:ring-emerald-500 focus:border-transparent font-semibold text-lg text-white transition-all`}
               placeholder="Enter event title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (errors.title) {
+                  const { title, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.title && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.title}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -99,12 +149,26 @@ export default function EditEventModal({
             </label>
             <textarea
               required
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-emerald-500/50 focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.description ? "border-red-500" : "border-emerald-500/50"
+              } focus:ring-2 focus:ring-emerald-500 focus:border-transparent resize-none text-white transition-all`}
               placeholder="Describe your event"
               rows={4}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                if (errors.description) {
+                  const { description, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.description && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.description}
+              </p>
+            )}
           </div>
 
           {/* Date and Time */}
@@ -117,10 +181,24 @@ export default function EditEventModal({
               <input
                 type="date"
                 required
-                className="w-full bg-gray-900/90 p-3 rounded-xl border border-emerald-500/50 focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all"
+                className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                  errors.date ? "border-red-500" : "border-emerald-500/50"
+                } focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all`}
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  if (errors.date) {
+                    const { date, ...rest } = errors;
+                    setErrors(rest);
+                  }
+                }}
               />
+              {errors.date && (
+                <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                  <XCircleIcon className="w-4 h-4" />
+                  {errors.date}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
@@ -130,10 +208,24 @@ export default function EditEventModal({
               <input
                 type="time"
                 required
-                className="w-full bg-gray-900/90 p-3 rounded-xl border border-emerald-500/50 focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all"
+                className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                  errors.time ? "border-red-500" : "border-emerald-500/50"
+                } focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all`}
                 value={time}
-                onChange={(e) => setTime(e.target.value)}
+                onChange={(e) => {
+                  setTime(e.target.value);
+                  if (errors.time) {
+                    const { time, ...rest } = errors;
+                    setErrors(rest);
+                  }
+                }}
               />
+              {errors.time && (
+                <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                  <XCircleIcon className="w-4 h-4" />
+                  {errors.time}
+                </p>
+              )}
             </div>
           </div>
 
@@ -146,11 +238,25 @@ export default function EditEventModal({
             <input
               type="text"
               required
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-emerald-500/50 focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.location ? "border-red-500" : "border-emerald-500/50"
+              } focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all`}
               placeholder="Event location"
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
+              onChange={(e) => {
+                setLocation(e.target.value);
+                if (errors.location) {
+                  const { location, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.location && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.location}
+              </p>
+            )}
           </div>
 
           {/* Contact Email */}
@@ -175,11 +281,25 @@ export default function EditEventModal({
             <input
               type="email"
               required
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-emerald-500/50 focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.contactEmail ? "border-red-500" : "border-emerald-500/50"
+              } focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all`}
               placeholder="Contact email for inquiries"
               value={contactEmail}
-              onChange={(e) => setContactEmail(e.target.value)}
+              onChange={(e) => {
+                setContactEmail(e.target.value);
+                if (errors.contactEmail) {
+                  const { contactEmail, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.contactEmail && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.contactEmail}
+              </p>
+            )}
           </div>
 
           {/* Form Link */}
@@ -206,11 +326,25 @@ export default function EditEventModal({
             </label>
             <input
               type="url"
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-emerald-500/50 focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.formLink ? "border-red-500" : "border-emerald-500/50"
+              } focus:ring-2 focus:ring-emerald-500 focus:border-transparent text-white transition-all`}
               placeholder="Google Forms, registration link, etc."
               value={formLink}
-              onChange={(e) => setFormLink(e.target.value)}
+              onChange={(e) => {
+                setFormLink(e.target.value);
+                if (errors.formLink) {
+                  const { formLink, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.formLink && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.formLink}
+              </p>
+            )}
           </div>
 
           {/* Image Upload */}
@@ -231,8 +365,20 @@ export default function EditEventModal({
               type="file"
               accept="image/*"
               className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-emerald-500/30 rounded-xl hover:border-emerald-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-emerald-600/20 file:text-emerald-300 hover:file:bg-emerald-600/30 file:transition-all cursor-pointer text-sm text-white"
-              onChange={(e) => setImage(e.target.files?.[0] || null)}
+              onChange={(e) => {
+                setImage(e.target.files?.[0] || null);
+                if (errors.image) {
+                  const { image, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.image && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.image}
+              </p>
+            )}
             {image && image.type?.startsWith("image/") && (
               <div className="mt-3">
                 <img

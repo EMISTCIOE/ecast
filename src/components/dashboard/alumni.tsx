@@ -26,7 +26,7 @@ import {
 } from "@heroicons/react/24/outline";
 import { authedFetch } from "@/lib/apiClient";
 
-const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export default function AlumniDashboard() {
   const [authReady, setAuthReady] = useState(false);
@@ -73,7 +73,7 @@ export default function AlumniDashboard() {
         const avatar = raw
           ? raw.startsWith("http")
             ? raw
-            : `${process.env.NEXT_PUBLIC_API_BASE || ""}${raw}`
+            : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${raw}`
           : undefined;
         setSidebarUser({
           name: u.full_name || u.username,
@@ -227,7 +227,7 @@ export default function AlumniDashboard() {
     const avatar = raw
       ? raw.startsWith("http")
         ? raw
-        : `${process.env.NEXT_PUBLIC_API_BASE || ""}${raw}`
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${raw}`
       : undefined;
     // Update sidebar user
     setSidebarUser((prev) => ({

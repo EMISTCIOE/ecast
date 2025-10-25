@@ -8,6 +8,12 @@ import {
   XCircleIcon,
   PhotoIcon,
 } from "@heroicons/react/24/outline";
+import {
+  validateBlogForm,
+  parseBackendErrors,
+  scrollToFirstError,
+  type ValidationErrors,
+} from "@/lib/validation";
 
 interface CreateBlogModalProps {
   isOpen: boolean;
@@ -31,11 +37,28 @@ export default function CreateBlogModal({
   const [coverImage, setCoverImage] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
+    setErrors({});
     setMessage("");
+
+    // Client-side validation
+    const validationErrors = validateBlogForm({
+      title,
+      description,
+      content,
+      coverImage,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      scrollToFirstError();
+      return;
+    }
+
+    setIsSubmitting(true);
 
     try {
       await onSubmit({ title, description, content, coverImage });
@@ -46,10 +69,18 @@ export default function CreateBlogModal({
         setContent("");
         setCoverImage(null);
         setMessage("");
+        setErrors({});
         onClose();
       }, 1500);
-    } catch (error) {
-      setMessage("Failed to submit blog");
+    } catch (error: any) {
+      // Parse backend validation errors
+      if (error?.response?.data) {
+        const backendErrors = parseBackendErrors(error.response.data);
+        setErrors(backendErrors);
+        scrollToFirstError();
+      } else {
+        setMessage("Failed to submit blog");
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -97,12 +128,27 @@ export default function CreateBlogModal({
             Blog Title
           </label>
           <input
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 font-medium text-lg text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 font-medium text-lg text-white ${
+              errors.title ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="Enter an engaging blog title..."
             value={title}
-            onChange={(e) => setTitle(e.target.value)}
+            onChange={(e) => {
+              setTitle(e.target.value);
+              if (errors.title) {
+                const newErrors = { ...errors };
+                delete newErrors.title;
+                setErrors(newErrors);
+              }
+            }}
             required
           />
+          {errors.title && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.title}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -111,13 +157,28 @@ export default function CreateBlogModal({
             Short Description
           </label>
           <textarea
-            className="w-full p-4 bg-gray-900/80 border border-gray-700 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 resize-none font-medium text-white"
+            className={`w-full p-4 bg-gray-900/80 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 hover:border-purple-500/50 resize-none font-medium text-white ${
+              errors.description ? "border-red-500" : "border-gray-700"
+            }`}
             placeholder="Brief summary of your blog post..."
             rows={3}
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              if (errors.description) {
+                const newErrors = { ...errors };
+                delete newErrors.description;
+                setErrors(newErrors);
+              }
+            }}
             required
           />
+          {errors.description && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.description}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -133,8 +194,17 @@ export default function CreateBlogModal({
           <input
             type="file"
             accept="image/*"
-            className="w-full p-4 bg-gray-900/80 border-2 border-dashed border-gray-700 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-purple-600 file:to-pink-600 file:text-white file:font-semibold hover:file:from-purple-700 hover:file:to-pink-700 file:shadow-lg file:transition-all cursor-pointer text-white"
-            onChange={(e) => setCoverImage(e.target.files?.[0] || null)}
+            className={`w-full p-4 bg-gray-900/80 border-2 border-dashed rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-purple-600 file:to-pink-600 file:text-white file:font-semibold hover:file:from-purple-700 hover:file:to-pink-700 file:shadow-lg file:transition-all cursor-pointer text-white ${
+              errors.cover_image ? "border-red-500" : "border-gray-700"
+            }`}
+            onChange={(e) => {
+              setCoverImage(e.target.files?.[0] || null);
+              if (errors.cover_image) {
+                const newErrors = { ...errors };
+                delete newErrors.cover_image;
+                setErrors(newErrors);
+              }
+            }}
             required
           />
           {coverImage && (
@@ -146,6 +216,12 @@ export default function CreateBlogModal({
               />
             </div>
           )}
+          {errors.cover_image && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.cover_image}
+            </p>
+          )}
         </div>
 
         <div className="space-y-2">
@@ -154,6 +230,12 @@ export default function CreateBlogModal({
             Blog Content
           </label>
           <RichTextEditor value={content} onChange={setContent} />
+          {errors.content && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.content}
+            </p>
+          )}
         </div>
 
         <div className="flex gap-3 pt-4">

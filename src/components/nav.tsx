@@ -288,7 +288,7 @@ const NavBar: React.FC = () => {
                           "http"
                         )
                           ? me.user_photo || me.committee_member_photo
-                          : `${process.env.NEXT_PUBLIC_API_BASE || ""}${
+                          : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${
                               me.user_photo || me.committee_member_photo
                             }`
                       }
@@ -330,7 +330,9 @@ const NavBar: React.FC = () => {
                                 me.user_photo || me.committee_member_photo
                               ).startsWith("http")
                                 ? me.user_photo || me.committee_member_photo
-                                : `${process.env.NEXT_PUBLIC_API_BASE || ""}${
+                                : `${
+                                    process.env.NEXT_PUBLIC_BACKEND_URL || ""
+                                  }${
                                     me.user_photo || me.committee_member_photo
                                   }`
                             }
@@ -555,7 +557,7 @@ const NavBar: React.FC = () => {
                               me.user_photo || me.committee_member_photo
                             ).startsWith("http")
                               ? me.user_photo || me.committee_member_photo
-                              : `${process.env.NEXT_PUBLIC_API_BASE || ""}${
+                              : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${
                                   me.user_photo || me.committee_member_photo
                                 }`
                           }

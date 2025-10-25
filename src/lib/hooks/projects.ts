@@ -29,7 +29,7 @@ export function useProjects() {
   }, []);
 
   const create = useCallback(async (form: FormData) => {
-    const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+    const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
     const res = await authedFetch(`${base}/api/project/projects/`, {
       method: "POST",
       body: form,
@@ -45,7 +45,7 @@ export function useProjects() {
   }, []);
 
   const update = useCallback(async (slug: string, form: FormData) => {
-    const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+    const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
     const res = await authedFetch(`${base}/api/project/projects/${slug}/`, {
       method: "PATCH",
       body: form,
@@ -55,7 +55,7 @@ export function useProjects() {
   }, []);
 
   const remove = useCallback(async (slug: string) => {
-    const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+    const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
     const res = await authedFetch(`${base}/api/project/projects/${slug}/`, {
       method: "DELETE",
     });

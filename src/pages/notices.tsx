@@ -2,9 +2,9 @@ import { GetServerSideProps } from "next";
 import { useState } from "react";
 import Image from "next/image";
 import { Notice } from "../types";
-import styles from "../components/css/file1.module.css";
 import Navbar from "@/components/nav";
 import Footer from "@/components/footar";
+import NewsletterSubscribe from "@/components/NewsletterSubscribe";
 import clsx from "clsx";
 
 interface NoticesPageProps {
@@ -70,7 +70,7 @@ const NoticesPage: React.FC<NoticesPageProps> = ({
 
   const getFullUrl = (path: string | null | undefined) => {
     if (!path) return "";
-    const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+    const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
     return path.startsWith("http") ? path : `${base}${path}`;
   };
 
@@ -347,6 +347,15 @@ const NoticesPage: React.FC<NoticesPageProps> = ({
         </div>
       )}
 
+      {/* Newsletter Subscription */}
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        <NewsletterSubscribe
+          category="NOTICES"
+          title="Subscribe to Notice Updates"
+          description="Get notified instantly when important notices are posted. Stay informed about announcements, deadlines, and important information."
+        />
+      </div>
+
       <Footer />
     </>
   );
@@ -402,7 +411,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
         totalPages,
       },
     };
-  } catch (_e) {
+  } catch (e) {
     console.error("Error fetching notices:", e);
     return {
       props: {

@@ -15,7 +15,7 @@ export default function ResetPasswordPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
-  const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
   const requestReset = async (e: React.FormEvent) => {
     e.preventDefault();

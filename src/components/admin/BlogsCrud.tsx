@@ -98,7 +98,7 @@ export default function BlogsCrud({
     const coverUrl =
       b.cover_image && (b.cover_image as string).startsWith("http")
         ? b.cover_image
-        : `${process.env.NEXT_PUBLIC_API_BASE || ""}${b.cover_image || ""}`;
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${b.cover_image || ""}`;
     setCurrentCoverUrl(b.cover_image ? coverUrl : null);
     setShowEditModal(true);
   };
@@ -226,7 +226,7 @@ export default function BlogsCrud({
                   const coverUrl =
                     b.cover_image && b.cover_image.startsWith("http")
                       ? b.cover_image
-                      : `${process.env.NEXT_PUBLIC_API_BASE || ""}${
+                      : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${
                           b.cover_image || ""
                         }`;
                   return (

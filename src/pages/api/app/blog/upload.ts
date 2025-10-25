@@ -10,14 +10,18 @@ async function readBuffer(req: NextApiRequest): Promise<Buffer> {
   return Buffer.concat(chunks);
 }
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+export default async function handler(
+  req: NextApiRequest,
+  res: NextApiResponse
+) {
   if (req.method !== "POST") return res.status(405).end();
-  const base = process.env.NEXT_PUBLIC_API_BASE || "http://localhost:8000";
+  const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
   // Forward auth header; fall back to x-access-token if provided
   let authorization = (req.headers["authorization"] as string) || "";
   if (!authorization) {
     const token = (req.headers["x-access-token"] as string) || "";
-    if (token) authorization = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
+    if (token)
+      authorization = token.startsWith("Bearer ") ? token : `Bearer ${token}`;
   }
   const body = await readBuffer(req);
   const r = await fetch(`${base}/api/blog/uploads/`, {

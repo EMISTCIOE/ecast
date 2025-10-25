@@ -4,7 +4,14 @@ import {
   XMarkIcon,
   LinkIcon,
   GlobeAltIcon,
+  XCircleIcon,
 } from "@heroicons/react/24/outline";
+import {
+  validateProjectForm,
+  parseBackendErrors,
+  scrollToFirstError,
+  type ValidationErrors,
+} from "@/lib/validation";
 
 interface EditProjectModalProps {
   project: any;
@@ -26,6 +33,7 @@ export default function EditProjectModal({
   const [repoLink, setRepoLink] = useState("");
   const [liveLink, setLiveLink] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [errors, setErrors] = useState<ValidationErrors>({});
 
   useEffect(() => {
     if (project) {
@@ -34,20 +42,45 @@ export default function EditProjectModal({
       setRepoLink(project.repo_link || "");
       setLiveLink(project.live_link || "");
       setImage(null);
+      setErrors({});
     }
   }, [project]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formData = new FormData();
-    formData.append("title", title);
-    formData.append("description", description);
-    formData.append("repo_link", repoLink);
-    if (liveLink) formData.append("live_link", liveLink);
-    if (image) {
-      formData.append("image", image);
+
+    // Client-side validation
+    const validationErrors = validateProjectForm({
+      title,
+      description,
+      repoLink,
+      liveLink,
+      image,
+    });
+
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      scrollToFirstError();
+      return;
     }
-    await onSave(formData);
+
+    try {
+      const formData = new FormData();
+      formData.append("title", title);
+      formData.append("description", description);
+      formData.append("repo_link", repoLink);
+      if (liveLink) formData.append("live_link", liveLink);
+      if (image) {
+        formData.append("image", image);
+      }
+      await onSave(formData);
+    } catch (error: any) {
+      if (error.response?.data) {
+        const backendErrors = parseBackendErrors(error.response.data);
+        setErrors(backendErrors);
+        scrollToFirstError();
+      }
+    }
   };
 
   if (!isOpen) return null;
@@ -74,11 +107,25 @@ export default function EditProjectModal({
             <input
               type="text"
               required
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-blue-500/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold text-lg text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.title ? "border-red-500" : "border-blue-500/50"
+              } focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold text-lg text-white transition-all`}
               placeholder="Enter project title"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                if (errors.title) {
+                  const { title, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.title && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.title}
+              </p>
+            )}
           </div>
 
           {/* Description */}
@@ -88,12 +135,26 @@ export default function EditProjectModal({
             </label>
             <textarea
               required
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-blue-500/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.description ? "border-red-500" : "border-blue-500/50"
+              } focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none text-white transition-all`}
               placeholder="Describe your project"
               rows={4}
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e) => {
+                setDescription(e.target.value);
+                if (errors.description) {
+                  const { description, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.description && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.description}
+              </p>
+            )}
           </div>
 
           {/* Repository Link */}
@@ -105,11 +166,25 @@ export default function EditProjectModal({
             <input
               type="url"
               required
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-blue-500/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.repoLink ? "border-red-500" : "border-blue-500/50"
+              } focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all`}
               placeholder="https://github.com/username/repo"
               value={repoLink}
-              onChange={(e) => setRepoLink(e.target.value)}
+              onChange={(e) => {
+                setRepoLink(e.target.value);
+                if (errors.repoLink) {
+                  const { repoLink, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.repoLink && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.repoLink}
+              </p>
+            )}
           </div>
 
           {/* Live Link */}
@@ -120,11 +195,25 @@ export default function EditProjectModal({
             </label>
             <input
               type="url"
-              className="w-full bg-gray-900/90 p-3 rounded-xl border border-blue-500/50 focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all"
+              className={`w-full bg-gray-900/90 p-3 rounded-xl border ${
+                errors.liveLink ? "border-red-500" : "border-blue-500/50"
+              } focus:ring-2 focus:ring-blue-500 focus:border-transparent text-white transition-all`}
               placeholder="https://your-project.com"
               value={liveLink}
-              onChange={(e) => setLiveLink(e.target.value)}
+              onChange={(e) => {
+                setLiveLink(e.target.value);
+                if (errors.liveLink) {
+                  const { liveLink, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.liveLink && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.liveLink}
+              </p>
+            )}
           </div>
 
           {/* Image Upload */}
@@ -145,8 +234,20 @@ export default function EditProjectModal({
               type="file"
               accept="image/*"
               className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-blue-500/30 rounded-xl hover:border-blue-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-blue-600/20 file:text-blue-300 hover:file:bg-blue-600/30 file:transition-all cursor-pointer text-sm text-white"
-              onChange={(e) => setImage(e.target.files?.[0] || null)}
+              onChange={(e) => {
+                setImage(e.target.files?.[0] || null);
+                if (errors.image) {
+                  const { image, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
             />
+            {errors.image && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.image}
+              </p>
+            )}
             {image && image.type?.startsWith("image/") && (
               <div className="mt-3">
                 <img
