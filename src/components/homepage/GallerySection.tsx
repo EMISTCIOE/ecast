@@ -21,26 +21,26 @@ export default function GallerySection({ images }: GallerySectionProps) {
   }
 
   return (
-    <section className="py-8 bg-black">
-      <div className="container mx-auto px-4 max-w-6xl">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-            <PhotoIcon className="w-5 h-5" />
-            Gallery
+    <section className="py-16 bg-black">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-3xl font-bold flex items-center gap-3 text-white">
+            <PhotoIcon className="w-8 h-8" />
+            Our Gallery
           </h2>
           <Link
             href="/gallery"
-            className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+            className="text-base text-blue-400 hover:text-blue-300 font-medium"
           >
             View All
           </Link>
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-          {images.slice(0, 6).map((img) => (
+        <div className="grid grid-cols-3 gap-4">
+          {images.slice(0, 9).map((img) => (
             <div
               key={img.id}
-              className="relative aspect-square rounded overflow-hidden hover:opacity-90 transition-opacity cursor-pointer group border border-gray-800"
+              className="relative aspect-square rounded-lg overflow-hidden hover:opacity-90 transition-opacity cursor-pointer group border border-gray-800"
             >
               <Image
                 src={
@@ -52,6 +52,13 @@ export default function GallerySection({ images }: GallerySectionProps) {
                 fill
                 className="object-cover"
               />
+              {img.caption && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-3 transform translate-y-full group-hover:translate-y-0 transition-transform">
+                  <p className="text-white text-sm line-clamp-2">
+                    {img.caption}
+                  </p>
+                </div>
+              )}
             </div>
           ))}
         </div>

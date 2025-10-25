@@ -52,43 +52,43 @@ export default function BlogsAndContentSection({
   const displayBlogs = hasBlogs ? blogs.slice(0, 2) : [];
 
   return (
-    <section className="py-10 bg-black">
-      <div className="container mx-auto px-4 max-w-6xl">
-        <div className="grid md:grid-cols-2 gap-6">
+    <section className="py-16 bg-black">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* Blogs Column */}
           {hasBlogs && (
             <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
-                  <DocumentTextIcon className="w-6 h-6" />
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold flex items-center gap-3 text-white">
+                  <DocumentTextIcon className="w-8 h-8" />
                   Latest Blogs
                 </h2>
                 <Link
                   href="/blogs"
-                  className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+                  className="text-base text-blue-400 hover:text-blue-300 font-medium"
                 >
                   View All
                 </Link>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-5">
                 {blogs.map((blog) => (
                   <Link
                     key={blog.id}
                     href={`/blogs/${blog.slug || blog.id}`}
                     className="block"
                   >
-                    <div className="border border-gray-800 rounded-lg p-3 hover:border-blue-500 hover:bg-gray-900 transition-all bg-gray-900/50">
-                      <div className="flex gap-3">
+                    <div className="border border-gray-800 rounded-lg p-5 hover:border-blue-500 hover:bg-gray-900 transition-all bg-gray-900/50">
+                      <div className="flex gap-4">
                         {/* Left side - Content */}
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-semibold text-white text-sm line-clamp-2 mb-1">
+                          <h3 className="font-semibold text-white text-lg line-clamp-2 mb-2">
                             {blog.title}
                           </h3>
-                          <p className="text-xs text-gray-500 mb-1">
+                          <p className="text-sm text-gray-500 mb-2">
                             by {blog.author_username || "ECAST"}
                           </p>
-                          <p className="text-xs text-gray-400 line-clamp-2">
+                          <p className="text-base text-gray-400 line-clamp-3">
                             {blog.description}
                           </p>
                         </div>
@@ -99,11 +99,11 @@ export default function BlogsAndContentSection({
                             <img
                               src={`${blog.cover_image}`}
                               alt={blog.title}
-                              className="w-20 h-20 object-cover rounded-md"
+                              className="w-32 h-32 object-cover rounded-md"
                             />
                           ) : (
-                            <div className="w-20 h-20 bg-gray-800 rounded-md flex items-center justify-center">
-                              <DocumentTextIcon className="w-8 h-8 text-gray-600" />
+                            <div className="w-32 h-32 bg-gray-800 rounded-md flex items-center justify-center">
+                              <DocumentTextIcon className="w-12 h-12 text-gray-600" />
                             </div>
                           )}
                         </div>
@@ -118,20 +118,20 @@ export default function BlogsAndContentSection({
           {/* Latest Content (Research/Project) Column */}
           {hasContent && content && (
             <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-bold flex items-center gap-2 text-white">
-                  <SparklesIcon className="w-5 h-5" />
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold flex items-center gap-3 text-white">
+                  <SparklesIcon className="w-8 h-8" />
                   Latest {content.type === "project" ? "Project" : "Research"}
                 </h2>
                 <Link
                   href={content.type === "project" ? "/projects" : "/research"}
-                  className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+                  className="text-base text-blue-400 hover:text-blue-300 font-medium"
                 >
                   View All
                 </Link>
               </div>
 
-              <div className="space-y-3">
+              <div className="space-y-5">
                 <Link
                   href={
                     content.type === "project"
@@ -140,34 +140,34 @@ export default function BlogsAndContentSection({
                   }
                   className="block"
                 >
-                  <div className="border border-gray-800 rounded-lg p-3 hover:border-blue-500 hover:bg-gray-900 transition-all bg-gray-900/50">
-                    <div className="flex items-start gap-3 mb-2">
-                      <div className="p-1.5 bg-blue-900/50 rounded">
+                  <div className="border border-gray-800 rounded-lg p-6 hover:border-blue-500 hover:bg-gray-900 transition-all bg-gray-900/50">
+                    <div className="flex items-start gap-4 mb-3">
+                      <div className="p-3 bg-blue-900/50 rounded-lg">
                         {content.type === "project" ? (
-                          <CodeBracketIcon className="w-4 h-4 text-blue-400" />
+                          <CodeBracketIcon className="w-8 h-8 text-blue-400" />
                         ) : (
-                          <BeakerIcon className="w-4 h-4 text-blue-400" />
+                          <BeakerIcon className="w-8 h-8 text-blue-400" />
                         )}
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-white text-sm line-clamp-2 mb-1">
+                        <h3 className="font-semibold text-white text-xl line-clamp-2 mb-2">
                           {content.data.title}
                         </h3>
                         {content.type === "research" &&
                           content.data.authors && (
-                            <p className="text-xs text-gray-500 mb-1">
+                            <p className="text-base text-gray-500 mb-2">
                               by {content.data.authors}
                             </p>
                           )}
                       </div>
                     </div>
 
-                    <p className="text-xs text-gray-400 line-clamp-3 mb-2">
+                    <p className="text-base text-gray-400 line-clamp-4 mb-4">
                       {content.data.description}
                     </p>
 
                     <div className="flex items-center justify-between">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-sm text-gray-500">
                         {new Date(content.data.created_at).toLocaleDateString(
                           "en-US",
                           {
@@ -185,7 +185,7 @@ export default function BlogsAndContentSection({
                             target="_blank"
                             rel="noopener noreferrer"
                             onClick={(e) => e.stopPropagation()}
-                            className="text-xs text-blue-400 hover:text-blue-300"
+                            className="text-base text-blue-400 hover:text-blue-300 font-medium"
                           >
                             GitHub →
                           </a>
@@ -201,7 +201,7 @@ export default function BlogsAndContentSection({
                           target="_blank"
                           rel="noopener noreferrer"
                           onClick={(e) => e.stopPropagation()}
-                          className="text-xs text-blue-400 hover:text-blue-300"
+                          className="text-base text-blue-400 hover:text-blue-300 font-medium"
                         >
                           Read Paper →
                         </a>

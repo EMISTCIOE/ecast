@@ -5,7 +5,7 @@ import Footer from "@/components/footar";
 import NoticesAndEventsSection from "@/components/homepage/NoticesAndEventsSection";
 import BlogsAndContentSection from "@/components/homepage/BlogsAndContentSection";
 import GallerySection from "@/components/homepage/GallerySection";
-import { fetchHomepageData } from "@/lib/homepage-api";
+import { useHomepageData } from "@/lib/hooks/useHomepageData";
 
 const Typewriter = ({ text, speed }: { text: string; speed?: number }) => {
   const [displayedText, setDisplayedText] = useState("");
@@ -27,20 +27,7 @@ const Typewriter = ({ text, speed }: { text: string; speed?: number }) => {
 
 const Home = () => {
   const router = useRouter();
-  const [homepageData, setHomepageData] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    fetchHomepageData()
-      .then((data) => {
-        setHomepageData(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error loading homepage data:", error);
-        setLoading(false);
-      });
-  }, []);
+  const { data: homepageData, isLoading, isError } = useHomepageData();
 
   const eventsClick = () => {
     router.push("/ourevents");
@@ -101,7 +88,7 @@ const Home = () => {
       </main>
 
       {/* Homepage Content Sections */}
-      {!loading && homepageData && (
+      {!isLoading && homepageData && (
         <>
           {/* Recent Notices and Events */}
           <NoticesAndEventsSection
@@ -122,7 +109,7 @@ const Home = () => {
       )}
 
       {/* Loading State */}
-      {loading && (
+      {isLoading && (
         <div className="py-16 text-center">
           <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
           <p className="mt-4 text-gray-600">Loading content...</p>

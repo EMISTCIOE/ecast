@@ -53,22 +53,22 @@ export default function NoticesAndEventsSection({
   const currentBatchYear = process.env.NEXT_PUBLIC_CURRENT_BATCH_YEAR || "2082";
 
   return (
-    <section className="py-10 bg-black">
-      <div className="container mx-auto px-4 max-w-6xl">
-        <div className="grid md:grid-cols-2 gap-6">
+    <section className="py-16 bg-black">
+      <div className="container mx-auto px-4 max-w-7xl">
+        <div className="grid md:grid-cols-2 gap-8">
           {/* Left Column - Notice + Community Stats */}
-          <div className="space-y-6">
+          <div className="space-y-8">
             {/* Notice */}
             {hasNotices && (
               <div>
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
-                    <BellIcon className="w-6 h-6" />
+                <div className="flex justify-between items-center mb-6">
+                  <h2 className="text-3xl font-bold flex items-center gap-3 text-white">
+                    <BellIcon className="w-8 h-8" />
                     Recent Notices
                   </h2>
                   <Link
                     href="/notices"
-                    className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+                    className="text-base text-blue-400 hover:text-blue-300 font-medium"
                   >
                     View All
                   </Link>
@@ -80,14 +80,14 @@ export default function NoticesAndEventsSection({
                     href={`/notices/${notice.slug || notice.id}`}
                     className="block"
                   >
-                    <div className="border border-gray-800 rounded-lg p-4 hover:border-blue-500 hover:bg-gray-900 transition-all bg-gray-900/50">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <h3 className="font-semibold text-white text-base flex-1 line-clamp-1">
+                    <div className="border border-gray-800 rounded-lg p-6 hover:border-blue-500 hover:bg-gray-900 transition-all bg-gray-900/50">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <h3 className="font-semibold text-white text-xl flex-1 line-clamp-2">
                           {notice.title}
                         </h3>
-                        <span className="text-sm text-gray-400 whitespace-nowrap flex items-center gap-1">
+                        <span className="text-base text-gray-400 whitespace-nowrap flex items-center gap-1">
                           <svg
-                            className="w-4 h-4"
+                            className="w-5 h-5"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -109,7 +109,7 @@ export default function NoticesAndEventsSection({
                         </span>
                       </div>
                       {notice.content && (
-                        <p className="text-sm text-gray-400 line-clamp-2 mb-2">
+                        <p className="text-base text-gray-400 line-clamp-3 mb-3">
                           {notice.content}
                         </p>
                       )}
@@ -120,7 +120,7 @@ export default function NoticesAndEventsSection({
                             .map((tag: string, idx: number) => (
                               <span
                                 key={idx}
-                                className="px-2 py-1 bg-blue-900/50 text-blue-300 text-xs rounded"
+                                className="px-3 py-1.5 bg-blue-900/50 text-blue-300 text-sm rounded"
                               >
                                 {tag}
                               </span>
@@ -136,9 +136,9 @@ export default function NoticesAndEventsSection({
             {/* Community Stats - Show in left column if there are events */}
             {hasEvents && (
               <div>
-                <h2 className="text-2xl font-bold flex items-center gap-2 text-white mb-4">
+                <h2 className="text-3xl font-bold flex items-center gap-3 text-white mb-6">
                   <svg
-                    className="w-6 h-6"
+                    className="w-8 h-8"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -152,13 +152,13 @@ export default function NoticesAndEventsSection({
                   </svg>
                   Our Community
                 </h2>
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {userCounts.alumni > 0 && (
-                    <div className="border border-gray-800 rounded-lg p-4 bg-gray-900/50">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 bg-purple-900/50 rounded-lg">
+                    <div className="border border-gray-800 rounded-lg p-6 bg-gray-900/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-4 bg-purple-900/50 rounded-lg">
                           <svg
-                            className="w-6 h-6 text-purple-400"
+                            className="w-8 h-8 text-purple-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -178,10 +178,10 @@ export default function NoticesAndEventsSection({
                           </svg>
                         </div>
                         <div>
-                          <div className="text-3xl font-bold text-white">
+                          <div className="text-4xl font-bold text-white">
                             {userCounts.alumni}
                           </div>
-                          <div className="text-sm text-gray-400">
+                          <div className="text-base text-gray-400">
                             Alumni Members
                           </div>
                         </div>
@@ -190,11 +190,11 @@ export default function NoticesAndEventsSection({
                   )}
 
                   {userCounts.ambassadors > 0 && (
-                    <div className="border border-gray-800 rounded-lg p-4 bg-gray-900/50">
-                      <div className="flex items-center gap-3">
-                        <div className="p-3 bg-blue-900/50 rounded-lg">
+                    <div className="border border-gray-800 rounded-lg p-6 bg-gray-900/50">
+                      <div className="flex items-center gap-4">
+                        <div className="p-4 bg-blue-900/50 rounded-lg">
                           <svg
-                            className="w-6 h-6 text-blue-400"
+                            className="w-8 h-8 text-blue-400"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -208,10 +208,10 @@ export default function NoticesAndEventsSection({
                           </svg>
                         </div>
                         <div>
-                          <div className="text-3xl font-bold text-white">
+                          <div className="text-4xl font-bold text-white">
                             {userCounts.ambassadors}
                           </div>
-                          <div className="text-sm text-gray-400">
+                          <div className="text-base text-gray-400">
                             Active Ambassadors (Batch {currentBatchYear})
                           </div>
                         </div>
@@ -226,34 +226,34 @@ export default function NoticesAndEventsSection({
           {/* Right Column - Events or Community Stats */}
           {hasEvents ? (
             <div>
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-2xl font-bold flex items-center gap-2 text-white">
-                  <CalendarIcon className="w-6 h-6" />
+              <div className="flex justify-between items-center mb-6">
+                <h2 className="text-3xl font-bold flex items-center gap-3 text-white">
+                  <CalendarIcon className="w-8 h-8" />
                   Events
                 </h2>
                 <Link
                   href="/ourevents"
-                  className="text-sm text-blue-400 hover:text-blue-300 font-medium"
+                  className="text-base text-blue-400 hover:text-blue-300 font-medium"
                 >
                   View All
                 </Link>
               </div>
 
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {displayEvents.map((event) => (
                   <Link
                     key={event.id}
                     href={`/events/${event.slug || event.id}`}
                     className="block"
                   >
-                    <div className="border border-gray-800 rounded-lg p-4 hover:border-blue-500 hover:bg-gray-900 transition-all bg-gray-900/50">
-                      <div className="flex items-start justify-between gap-3 mb-2">
-                        <h3 className="font-semibold text-white text-base flex-1 line-clamp-1">
+                    <div className="border border-gray-800 rounded-lg p-6 hover:border-blue-500 hover:bg-gray-900 transition-all bg-gray-900/50">
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <h3 className="font-semibold text-white text-xl flex-1 line-clamp-2">
                           {event.title}
                         </h3>
-                        <span className="text-sm text-gray-400 whitespace-nowrap flex items-center gap-1">
+                        <span className="text-base text-gray-400 whitespace-nowrap flex items-center gap-1">
                           <svg
-                            className="w-4 h-4"
+                            className="w-5 h-5"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -292,14 +292,14 @@ export default function NoticesAndEventsSection({
                         </span>
                       </div>
                       {event.description && (
-                        <p className="text-sm text-gray-400 line-clamp-2 mb-2">
+                        <p className="text-base text-gray-400 line-clamp-3 mb-3">
                           {event.description}
                         </p>
                       )}
                       {event.venue && (
-                        <div className="flex items-center gap-1 text-sm text-gray-500">
+                        <div className="flex items-center gap-1 text-base text-gray-500">
                           <svg
-                            className="w-4 h-4"
+                            className="w-5 h-5"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -328,9 +328,9 @@ export default function NoticesAndEventsSection({
           ) : (
             // No events - Show Community Stats in right column
             <div>
-              <h2 className="text-2xl font-bold flex items-center gap-2 text-white mb-4">
+              <h2 className="text-3xl font-bold flex items-center gap-3 text-white mb-6">
                 <svg
-                  className="w-6 h-6"
+                  className="w-8 h-8"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -344,13 +344,13 @@ export default function NoticesAndEventsSection({
                 </svg>
                 Our Community
               </h2>
-              <div className="space-y-4">
+              <div className="space-y-5">
                 {userCounts.alumni > 0 && (
-                  <div className="border border-gray-800 rounded-lg p-4 bg-gray-900/50">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 bg-purple-900/50 rounded-lg">
+                  <div className="border border-gray-800 rounded-lg p-6 bg-gray-900/50">
+                    <div className="flex items-center gap-4">
+                      <div className="p-4 bg-purple-900/50 rounded-lg">
                         <svg
-                          className="w-6 h-6 text-purple-400"
+                          className="w-8 h-8 text-purple-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -370,10 +370,10 @@ export default function NoticesAndEventsSection({
                         </svg>
                       </div>
                       <div>
-                        <div className="text-3xl font-bold text-white">
+                        <div className="text-4xl font-bold text-white">
                           {userCounts.alumni}
                         </div>
-                        <div className="text-sm text-gray-400">
+                        <div className="text-base text-gray-400">
                           Alumni Members
                         </div>
                       </div>
@@ -382,11 +382,11 @@ export default function NoticesAndEventsSection({
                 )}
 
                 {userCounts.ambassadors > 0 && (
-                  <div className="border border-gray-800 rounded-lg p-4 bg-gray-900/50">
-                    <div className="flex items-center gap-3">
-                      <div className="p-3 bg-blue-900/50 rounded-lg">
+                  <div className="border border-gray-800 rounded-lg p-6 bg-gray-900/50">
+                    <div className="flex items-center gap-4">
+                      <div className="p-4 bg-blue-900/50 rounded-lg">
                         <svg
-                          className="w-6 h-6 text-blue-400"
+                          className="w-8 h-8 text-blue-400"
                           fill="none"
                           stroke="currentColor"
                           viewBox="0 0 24 24"
@@ -400,10 +400,10 @@ export default function NoticesAndEventsSection({
                         </svg>
                       </div>
                       <div>
-                        <div className="text-3xl font-bold text-white">
+                        <div className="text-4xl font-bold text-white">
                           {userCounts.ambassadors}
                         </div>
-                        <div className="text-sm text-gray-400">
+                        <div className="text-base text-gray-400">
                           Active Ambassadors (Batch {currentBatchYear})
                         </div>
                       </div>

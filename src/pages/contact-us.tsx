@@ -5,13 +5,12 @@ import {
   FaFacebook,
   FaEnvelope,
   FaPhoneVolume,
+  FaMapMarkerAlt,
+  FaPaperPlane,
 } from "react-icons/fa";
-import { FaRegEnvelope, FaLocationDot } from "react-icons/fa6";
-import styles from "../components/css/file1.module.css";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
 import SEO from "@/components/SEO";
-import Image from "next/image";
 
 const Contact: React.FC = () => {
   const [name, setName] = useState<string>("");
@@ -39,19 +38,20 @@ const Contact: React.FC = () => {
     setError("");
 
     try {
-      const response = await fetch(
-        `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contact/form/`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ name, email, subject, category, message }),
-        }
-      );
+      const response = await fetch("/api/contact/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name, email, subject, category, message }),
+      });
+
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error("Some technical error. Please try again later.");
+        throw new Error(
+          data.error || "Some technical error. Please try again later."
+        );
       }
 
       setFormSubmitted(true);
@@ -61,11 +61,14 @@ const Contact: React.FC = () => {
       setCategory("general");
       setMessage("");
 
-      // Hide success message after 5 seconds
       setTimeout(() => setFormSubmitted(false), 5000);
     } catch (error) {
       console.error("Error submitting form:", error);
-      setError("Failed to submit form. Please try again.");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to submit form. Please try again."
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -79,131 +82,99 @@ const Contact: React.FC = () => {
         url="/contact-us"
       />
       <NavBar />
-      <div>
-        <h2 className="text-6xl font-medium text-slate-600 bg-black p-12 sm:flex-row sm:justify-center text-center">
-          Contact Us
-        </h2>
-      </div>
 
-      <div className="flex justify-center items-center bg-black w-full col-2">
-        <div className="highlight text-white flex flex-col sm:flex-row justify-center items-center w-full sm:max-w-5xl pb-12 bg-black">
-          <div className={styles["semi-container"]}>
-            <Image
-              src="https://shotcan.com/images/2024/07/06/449363624_1023379369466682_3008407874607543682_n712a6d91a613817d.jpg"
-              alt="Our team"
-              width={800} // Set width
-              height={600} // Set height
-              className="mx-auto mb-6 pb-6 sm:mb-0 rounded-lg"
-              style={{ maxWidth: "100%", height: "auto" }}
-              priority // Optional: To load the image faster
-            />
-            <p className="para leading-normal justify-center pb-5 flex">
-              If you need our help with anything, have questions, or are
-              experiencing any technical difficulties, please don’t hesitate to
-              reach out to us. We're here to assist you! Additionally, if you
-              have any suggestions, ideas, or feedback to share, we'd love to
-              hear from you. Your input helps us improve our services.
-            </p>
-
-            <div className="pb-6 justify-center">
-              <div className="mobile flex justify-center items-center mt-3">
-                <FaPhoneVolume className="mr-2" />
-                <span>
-                  <a href="tel:+9779824274331">+977 9824274331</a>
-                </span>
-              </div>
-              <div className="mobile flex justify-center items-center mt-3">
-                <FaPhoneVolume className="mr-2" />
-                <span>
-                  <a href="tel:+9779867404111">+977 9867404111</a>
-                </span>
-              </div>
-              <div className="email flex justify-center items-center mt-3">
-                <FaRegEnvelope className="mr-2" />
-                <span>
-                  <a
-                    href="mailto:ecast@tcioe.edu.np"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    ecast@tcioe.edu.np
-                  </a>
-                </span>
-              </div>
-              <div className="location flex justify-center items-center mt-3">
-                <FaLocationDot className="mr-2" />
-                <span>
-                  <a
-                    href="https://maps.app.goo.gl/CvzD96hgud5kjCVX8"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Thapathali Campus, Kathmandu, Nepal
-                  </a>
-                </span>
-              </div>
-            </div>
-
-            <div className="social text-white">
-              <h2 className="f2 text-center">FOLLOW US</h2>
-              <div className="social-links pt-2 flex justify-center mt-3 mb-3">
-                <a
-                  className="instagram text-3xl mx-5"
-                  href="https://www.instagram.com/ecastthapathali/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FaInstagram />
-                </a>
-                <a
-                  className="linkedin text-3xl mx-5"
-                  href="https://www.linkedin.com/company/ecastthapathali/"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FaLinkedin />
-                </a>
-                <a
-                  className="facebook text-3xl mx-5"
-                  href="https://www.facebook.com/ecastthapathali"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FaFacebook />
-                </a>
-                <a
-                  className="mail text-3xl mx-5"
-                  href="mailto:ecast@tcioe.edu.np"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <FaEnvelope />
-                </a>
-              </div>
-            </div>
-          </div>
+      {/* Hero Section */}
+      <div className="bg-black pt-24 pb-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h1 className="text-5xl md:text-6xl font-bold text-white mb-4">
+            Get In <span className="text-red-500">Touch</span>
+          </h1>
+          <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+            We'd love to hear from you. Send us a message and we'll respond as
+            soon as possible.
+          </p>
         </div>
       </div>
 
-      <div className="flex justify-center bg-black w-full">
-        <div className="highlight text-white flex justify-between w-full sm:max-w-5xl pb-12 bg-black flex-col sm:flex-row sm:justify-center">
-          <div className={styles["semi-container"]}>
-            <div className="highlight w-full max-w-5xl text-white p-13 flex justify-between mt-6">
-              <form
-                onSubmit={handleSubmit}
-                className="space-y-6 w-full"
-                autoComplete="off"
-              >
-                <div className="flex justify-center items-center pb-4 bg-black">
-                  <h2 className="text-3xl font-medium text-slate-600 bg-black sm:justify-center">
-                    Contact Form
-                  </h2>
-                </div>
+      {/* Main Content */}
+      <div className="bg-black min-h-screen pb-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Contact Info Cards */}
+          <div className="grid md:grid-cols-3 gap-6 mb-12">
+            {/* Phone Card */}
+            <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-red-500 transition-all duration-300 shadow-lg hover:shadow-red-500/20">
+              <div className="flex items-center justify-center w-12 h-12 bg-red-600/20 rounded-lg mb-4 mx-auto">
+                <FaPhoneVolume className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white text-center mb-3">
+                Phone
+              </h3>
+              <div className="space-y-2 text-center">
+                <a
+                  href="tel:+9779824274331"
+                  className="block text-gray-400 hover:text-red-500 transition"
+                >
+                  +977 9824274331
+                </a>
+                <a
+                  href="tel:+9779867404111"
+                  className="block text-gray-400 hover:text-red-500 transition"
+                >
+                  +977 9867404111
+                </a>
+              </div>
+            </div>
 
-                {formSubmitted && (
-                  <div className="bg-green-600/20 border border-green-500/30 text-green-400 p-4 rounded-lg flex items-center gap-2 animate-pulse">
+            {/* Email Card */}
+            <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-red-500 transition-all duration-300 shadow-lg hover:shadow-red-500/20">
+              <div className="flex items-center justify-center w-12 h-12 bg-red-600/20 rounded-lg mb-4 mx-auto">
+                <FaEnvelope className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white text-center mb-3">
+                Email
+              </h3>
+              <a
+                href="mailto:ecast@tcioe.edu.np"
+                className="block text-gray-400 hover:text-red-500 transition text-center"
+              >
+                ecast@tcioe.edu.np
+              </a>
+            </div>
+
+            {/* Location Card */}
+            <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 hover:border-red-500 transition-all duration-300 shadow-lg hover:shadow-red-500/20">
+              <div className="flex items-center justify-center w-12 h-12 bg-red-600/20 rounded-lg mb-4 mx-auto">
+                <FaMapMarkerAlt className="w-6 h-6 text-red-500" />
+              </div>
+              <h3 className="text-xl font-semibold text-white text-center mb-3">
+                Location
+              </h3>
+              <a
+                href="https://maps.app.goo.gl/CvzD96hgud5kjCVX8"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block text-gray-400 hover:text-red-500 transition text-center"
+              >
+                Thapathali Campus
+                <br />
+                Kathmandu, Nepal
+              </a>
+            </div>
+          </div>
+
+          {/* Form and Map Section */}
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Contact Form - Shows first on mobile */}
+            <div className="bg-gray-900 rounded-lg shadow-lg p-8 border border-gray-800 order-1">
+              <h2 className="text-3xl font-bold text-white mb-6">
+                Send us a Message
+              </h2>
+
+              {formSubmitted && (
+                <div className="mb-6 bg-green-900/30 border-l-4 border-green-500 p-4 rounded-r-lg">
+                  <div className="flex items-center gap-3">
                     <svg
-                      className="w-6 h-6"
+                      className="w-6 h-6 text-green-500"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -215,34 +186,35 @@ const Contact: React.FC = () => {
                         d="M5 13l4 4L19 7"
                       />
                     </svg>
-                    <span>
-                      Form submitted successfully! We'll get back to you soon.
+                    <span className="text-green-400 font-medium">
+                      Message sent successfully! We'll get back to you soon.
                     </span>
                   </div>
-                )}
+                </div>
+              )}
 
-                {error && (
-                  <div className="bg-red-600/20 border border-red-500/30 text-red-400 p-4 rounded-lg">
-                    {error}
-                  </div>
-                )}
+              {error && (
+                <div className="mb-6 bg-red-900/30 border-l-4 border-red-500 p-4 rounded-r-lg">
+                  <span className="text-red-400">{error}</span>
+                </div>
+              )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <form onSubmit={handleSubmit} className="space-y-5">
+                <div className="grid md:grid-cols-2 gap-5">
                   <div>
                     <label
                       htmlFor="name"
                       className="block text-sm font-medium text-gray-300 mb-2"
                     >
-                      Full Name <span className="text-red-400">*</span>
+                      Full Name <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
                       id="name"
-                      name="name"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       required
-                      className="w-full py-3 px-4 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      className="w-full py-3 px-4 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                       placeholder="John Doe"
                     />
                   </div>
@@ -252,16 +224,15 @@ const Contact: React.FC = () => {
                       htmlFor="email"
                       className="block text-sm font-medium text-gray-300 mb-2"
                     >
-                      Email Address <span className="text-red-400">*</span>
+                      Email Address <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="email"
                       id="email"
-                      name="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="w-full py-3 px-4 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                      className="w-full py-3 px-4 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                       placeholder="john@example.com"
                     />
                   </div>
@@ -272,15 +243,14 @@ const Contact: React.FC = () => {
                     htmlFor="category"
                     className="block text-sm font-medium text-gray-300 mb-2"
                   >
-                    Category <span className="text-red-400">*</span>
+                    Category <span className="text-red-500">*</span>
                   </label>
                   <select
                     id="category"
-                    name="category"
                     value={category}
                     onChange={(e) => setCategory(e.target.value)}
                     required
-                    className="w-full py-3 px-4 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    className="w-full py-3 px-4 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                   >
                     {categories.map((cat) => (
                       <option key={cat.value} value={cat.value}>
@@ -300,10 +270,9 @@ const Contact: React.FC = () => {
                   <input
                     type="text"
                     id="subject"
-                    name="subject"
                     value={subject}
                     onChange={(e) => setSubject(e.target.value)}
-                    className="w-full py-3 px-4 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all"
+                    className="w-full py-3 px-4 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                     placeholder="Brief description of your inquiry"
                   />
                 </div>
@@ -313,16 +282,16 @@ const Contact: React.FC = () => {
                     htmlFor="message"
                     className="block text-sm font-medium text-gray-300 mb-2"
                   >
-                    Message <span className="text-red-400">*</span>
+                    Message <span className="text-red-500">*</span>
                   </label>
                   <textarea
                     id="message"
-                    name="message"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
                     required
                     rows={6}
-                    className="w-full py-3 px-4 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all resize-none"
+                    maxLength={500}
+                    className="w-full py-3 px-4 bg-gray-800 border border-gray-700 text-white rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all resize-none"
                     placeholder="Tell us more about your inquiry..."
                   />
                   <p className="text-xs text-gray-400 mt-1">
@@ -333,7 +302,7 @@ const Contact: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white py-3 px-6 rounded-lg hover:from-indigo-700 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-black transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2"
+                  className="w-full bg-red-600 hover:bg-red-700 text-white py-3 px-6 rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed font-medium flex items-center justify-center gap-2 shadow-lg hover:shadow-red-500/50"
                 >
                   {isSubmitting ? (
                     <>
@@ -361,7 +330,7 @@ const Contact: React.FC = () => {
                     </>
                   ) : (
                     <>
-                      <FaEnvelope />
+                      <FaPaperPlane />
                       Send Message
                     </>
                   )}
@@ -369,20 +338,82 @@ const Contact: React.FC = () => {
               </form>
             </div>
 
-            <div className="bg-black pt-10">
-              <iframe
-                title="Map"
-                width="100%"
-                height="450"
-                loading="lazy"
-                allowFullScreen
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.7527841083115!2d85.31625117617291!3d27.694034676190054!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb19ae08c068d9%3A0x475bed1f66d060c!2sIOE%2C%20Thapathali%20Campus!5e0!3m2!1sen!2snp!4v1720262496739!5m2!1sen!2snp"
-                className="rounded-lg"
-              ></iframe>
+            {/* Map and Social Section - Shows second on mobile */}
+            <div className="space-y-6 order-2">
+              {/* Map */}
+              <div className="bg-gray-900 rounded-lg shadow-lg overflow-hidden border border-gray-800">
+                <iframe
+                  title="ECAST Location"
+                  width="100%"
+                  height="400"
+                  loading="lazy"
+                  allowFullScreen
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.7527841083115!2d85.31625117617291!3d27.694034676190054!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb19ae08c068d9%3A0x475bed1f66d060c!2sIOE%2C%20Thapathali%20Campus!5e0!3m2!1sen!2snp!4v1720262496739!5m2!1sen!2snp"
+                  className="w-full"
+                ></iframe>
+              </div>
+
+              {/* Social Links */}
+              <div className="bg-gray-900 rounded-lg shadow-lg p-8 border border-gray-800">
+                <h3 className="text-2xl font-bold text-white mb-6 text-center">
+                  Connect With Us
+                </h3>
+                <div className="flex justify-center gap-6">
+                  <a
+                    href="https://www.instagram.com/ecastthapathali/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 flex items-center justify-center bg-gray-800 rounded-lg hover:bg-red-600 transition-all duration-300 group"
+                    aria-label="Instagram"
+                  >
+                    <FaInstagram className="text-2xl text-gray-400 group-hover:text-white transition" />
+                  </a>
+                  <a
+                    href="https://www.linkedin.com/company/ecastthapathali/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 flex items-center justify-center bg-gray-800 rounded-lg hover:bg-red-600 transition-all duration-300 group"
+                    aria-label="LinkedIn"
+                  >
+                    <FaLinkedin className="text-2xl text-gray-400 group-hover:text-white transition" />
+                  </a>
+                  <a
+                    href="https://www.facebook.com/ecastthapathali"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 flex items-center justify-center bg-gray-800 rounded-lg hover:bg-red-600 transition-all duration-300 group"
+                    aria-label="Facebook"
+                  >
+                    <FaFacebook className="text-2xl text-gray-400 group-hover:text-white transition" />
+                  </a>
+                  <a
+                    href="mailto:ecast@tcioe.edu.np"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-12 h-12 flex items-center justify-center bg-gray-800 rounded-lg hover:bg-red-600 transition-all duration-300 group"
+                    aria-label="Email"
+                  >
+                    <FaEnvelope className="text-2xl text-gray-400 group-hover:text-white transition" />
+                  </a>
+                </div>
+              </div>
+
+              {/* Info Box */}
+              <div className="bg-gray-900 rounded-lg shadow-lg p-8 border border-gray-800">
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  Need Help?
+                </h3>
+                <p className="text-gray-400 leading-relaxed">
+                  Whether you have questions, need technical support, or want to
+                  share feedback, we're here to help. Our team typically
+                  responds within 24-48 hours during business days.
+                </p>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
       <Footer />
     </>
   );
