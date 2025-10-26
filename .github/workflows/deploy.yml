@@ -1,4 +1,4 @@
-name: Deploy RAC Website
+name: Deploy ECAST Website
 on:
   push:
     branches: [main]
