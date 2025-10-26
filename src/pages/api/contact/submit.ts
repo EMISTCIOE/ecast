@@ -1,6 +1,7 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 
 const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
+const frontendUrl = process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000";
 
 export default async function handler(
   req: NextApiRequest,
@@ -18,11 +19,16 @@ export default async function handler(
       return res.status(400).json({ error: "Missing required fields" });
     }
 
+    // Get the origin from the request or use the configured frontend URL
+    const origin = req.headers.origin || req.headers.referer || frontendUrl;
+
     // Forward the request to the backend
     const response = await fetch(`${base}/api/contact/form/`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
+        Origin: origin,
+        Referer: `${origin}/contact-us`,
       },
       body: JSON.stringify({ name, email, subject, category, message }),
     });
