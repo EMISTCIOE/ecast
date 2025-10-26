@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Router from "next/router";
 import NavBar from "@/components/nav";
 import Sidebar, { SidebarGroup } from "@/components/Sidebar";
+import ProfileEditModal from "@/components/ProfileEditModal";
 import Footer from "@/components/footar";
 import { useBlogs } from "@/lib/hooks/blogs";
 import { useNotices } from "@/lib/hooks/notices";
@@ -57,6 +58,7 @@ export default function AdminDashboard() {
     avatarUrl?: string;
     position?: string;
   }>();
+  const [showProfileModal, setShowProfileModal] = useState(false);
   const [activeSection, setActiveSection] = useState("overview");
   const toast = useToast();
   const { fetchStatus, updateStatus, fetchInfo } = useIntake();
@@ -570,6 +572,7 @@ export default function AdminDashboard() {
           expanded={!sidebarCollapsed}
           setExpanded={(v) => setSidebarCollapsed(!v)}
           user={sidebarUser}
+          onProfileClick={() => setShowProfileModal(true)}
           groups={
             [
               {
@@ -1985,6 +1988,78 @@ export default function AdminDashboard() {
           </div>
         </div>
       )}
+
+      <ProfileEditModal
+        isOpen={showProfileModal}
+        onClose={() => setShowProfileModal(false)}
+        currentImage={sidebarUser?.avatarUrl}
+        userName={sidebarUser?.name || ""}
+        userEmail={(() => {
+          const userStr = localStorage.getItem("user");
+          return userStr ? JSON.parse(userStr).email : "";
+        })()}
+        userRole={role || ""}
+        userPhoneNumber={(() => {
+          const userStr = localStorage.getItem("user");
+          return userStr ? JSON.parse(userStr).phone_number || "" : "";
+        })()}
+        userLinkedIn={(() => {
+          const userStr = localStorage.getItem("user");
+          return userStr ? JSON.parse(userStr).linkedin_url || "" : "";
+        })()}
+        userGitHub={(() => {
+          const userStr = localStorage.getItem("user");
+          return userStr ? JSON.parse(userStr).github_url || "" : "";
+        })()}
+        userAlumniWorkplace={(() => {
+          const userStr = localStorage.getItem("user");
+          return userStr ? JSON.parse(userStr).alumni_workplace || "" : "";
+        })()}
+        onSave={async (data) => {
+          const formData = new FormData();
+          if (data.email) formData.append("email", data.email);
+          if (data.phone_number)
+            formData.append("phone_number", data.phone_number);
+          if (data.linkedin_url)
+            formData.append("linkedin_url", data.linkedin_url);
+          if (data.github_url) formData.append("github_url", data.github_url);
+          if (data.alumni_workplace)
+            formData.append("alumni_workplace", data.alumni_workplace);
+          if (data.photo) formData.append("photo", data.photo);
+
+          const response = await fetch("/api/app/auth/profile", {
+            method: "PATCH",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("access")}`,
+            },
+            body: formData,
+          });
+
+          if (!response.ok) {
+            throw new Error("Failed to update profile");
+          }
+
+          const updatedUser = await response.json();
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+
+          // Update sidebar user
+          const raw =
+            updatedUser.user_photo || updatedUser.committee_member_photo || "";
+          const avatar = raw
+            ? raw.startsWith("http")
+              ? raw
+              : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${raw}`
+            : undefined;
+          setSidebarUser({
+            name: updatedUser.full_name || updatedUser.username,
+            role: updatedUser.role,
+            avatarUrl: avatar,
+            position: updatedUser.committee_position,
+          });
+
+          toast.success("Profile updated successfully!");
+        }}
+      />
 
       <Footer />
     </>

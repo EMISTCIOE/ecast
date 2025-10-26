@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Router from "next/router";
 import NavBar from "@/components/nav";
 import Sidebar from "@/components/Sidebar";
-import ProfilePictureModal from "@/components/ProfilePictureModal";
+import ProfileEditModal from "@/components/ProfileEditModal";
 import Footer from "@/components/footar";
 import { useNotices } from "@/lib/hooks/notices";
 import { useBlogs } from "@/lib/hooks/blogs";
@@ -450,6 +450,59 @@ export default function MemberDashboard() {
     }
   };
 
+  const handleProfileSave = async (data: {
+    email?: string;
+    phone_number?: string;
+    linkedin_url?: string;
+    github_url?: string;
+    alumni_workplace?: string;
+    photo?: File;
+  }) => {
+    const formData = new FormData();
+
+    // Add all the fields to FormData
+    if (data.email) formData.append("email", data.email);
+    if (data.phone_number) formData.append("phone_number", data.phone_number);
+    if (data.linkedin_url) formData.append("linkedin_url", data.linkedin_url);
+    if (data.github_url) formData.append("github_url", data.github_url);
+    if (data.alumni_workplace)
+      formData.append("alumni_workplace", data.alumni_workplace);
+    if (data.photo) formData.append("photo", data.photo);
+
+    const access = localStorage.getItem("access");
+    const response = await fetch(`${base}/api/auth/me/profile/`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${access}` },
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error("Update failed");
+
+    const updated = await response.json();
+    const raw = updated.user_photo || updated.committee_member_photo || "";
+    const avatar = raw
+      ? raw.startsWith("http")
+        ? raw
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${raw}`
+      : undefined;
+    // Update sidebar user
+    setSidebarUser({
+      name: updated.full_name || updated.username,
+      role: updated.role,
+      committee_position: updated.committee_position,
+      avatarUrl: avatar,
+    });
+    // Update localStorage with all updated fields
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      Object.assign(user, updated);
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+
+    toast.success("Profile updated successfully!");
+  };
+
   const handleProfileUpload = async (file: File) => {
     const formData = new FormData();
     formData.append("photo", file);
@@ -625,13 +678,34 @@ export default function MemberDashboard() {
           ]}
         />
 
-        {/* Profile Picture Modal */}
-        <ProfilePictureModal
+        {/* Profile Edit Modal */}
+        <ProfileEditModal
           isOpen={showProfileModal}
           onClose={() => setShowProfileModal(false)}
+          onSave={handleProfileSave}
           currentImage={sidebarUser?.avatarUrl}
-          userName={sidebarUser?.name || "User"}
-          onUpload={handleProfileUpload}
+          userName={sidebarUser?.name || ""}
+          userEmail={(() => {
+            const userStr = localStorage.getItem("user");
+            return userStr ? JSON.parse(userStr).email || "" : "";
+          })()}
+          userRole={role || ""}
+          userPhoneNumber={(() => {
+            const userStr = localStorage.getItem("user");
+            return userStr ? JSON.parse(userStr).phone_number || "" : "";
+          })()}
+          userLinkedIn={(() => {
+            const userStr = localStorage.getItem("user");
+            return userStr ? JSON.parse(userStr).linkedin_url || "" : "";
+          })()}
+          userGitHub={(() => {
+            const userStr = localStorage.getItem("user");
+            return userStr ? JSON.parse(userStr).github_url || "" : "";
+          })()}
+          userAlumniWorkplace={(() => {
+            const userStr = localStorage.getItem("user");
+            return userStr ? JSON.parse(userStr).alumni_workplace || "" : "";
+          })()}
         />
 
         {/* Main Content */}

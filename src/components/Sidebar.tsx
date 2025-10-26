@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import { ChevronDoubleLeftIcon, Bars3Icon } from "@heroicons/react/24/outline";
+import {
+  ChevronDoubleLeftIcon,
+  Bars3Icon,
+  PencilIcon,
+} from "@heroicons/react/24/outline";
 
 type IconComp = (props: { className?: string }) => JSX.Element;
 
@@ -69,11 +73,9 @@ export default function Sidebar({
         {user && (
           <div className="p-4 border-b border-gray-800">
             <div
-              onClick={() => onProfileClick && onProfileClick()}
-              className={`flex cursor-pointer hover:bg-white/5 rounded-lg p-2 transition-all ${
+              className={`flex rounded-lg p-2 ${
                 expanded ? "items-center gap-3" : "flex-col items-center gap-2"
               }`}
-              title="Click to change profile picture"
             >
               {user.avatarUrl ? (
                 <div
@@ -128,6 +130,24 @@ export default function Sidebar({
                     })()}
                   </div>
                 </div>
+              )}
+              {expanded && (
+                <button
+                  onClick={() => onProfileClick && onProfileClick()}
+                  className="p-2 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 rounded-lg transition-all shadow-md hover:shadow-lg group"
+                  title="Edit Profile"
+                >
+                  <PencilIcon className="w-4 h-4 text-purple-400 group-hover:text-purple-300" />
+                </button>
+              )}
+              {!expanded && (
+                <button
+                  onClick={() => onProfileClick && onProfileClick()}
+                  className="p-1.5 bg-purple-600/20 hover:bg-purple-600/40 border border-purple-500/30 rounded-lg transition-all shadow-md hover:shadow-lg group"
+                  title="Edit Profile"
+                >
+                  <PencilIcon className="w-3.5 h-3.5 text-purple-400 group-hover:text-purple-300" />
+                </button>
               )}
             </div>
           </div>

@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Router from "next/router";
 import NavBar from "@/components/nav";
 import Sidebar from "@/components/Sidebar";
-import ProfilePictureModal from "@/components/ProfilePictureModal";
+import ProfileEditModal from "@/components/ProfileEditModal";
 import Footer from "@/components/footar";
 import MySubmissions from "@/components/MySubmissions";
 import { useBlogs } from "@/lib/hooks/blogs";
@@ -209,6 +209,58 @@ export default function AlumniDashboard() {
     }
   };
 
+  const handleProfileSave = async (data: {
+    email?: string;
+    phone_number?: string;
+    linkedin_url?: string;
+    github_url?: string;
+    alumni_workplace?: string;
+    photo?: File;
+  }) => {
+    const formData = new FormData();
+
+    // Add all the fields to FormData
+    if (data.email) formData.append("email", data.email);
+    if (data.phone_number) formData.append("phone_number", data.phone_number);
+    if (data.linkedin_url) formData.append("linkedin_url", data.linkedin_url);
+    if (data.github_url) formData.append("github_url", data.github_url);
+    if (data.alumni_workplace)
+      formData.append("alumni_workplace", data.alumni_workplace);
+    if (data.photo) formData.append("photo", data.photo);
+
+    const access = localStorage.getItem("access");
+    const response = await fetch(`${base}/api/auth/me/profile/`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${access}` },
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error("Update failed");
+
+    const updated = await response.json();
+    const raw = updated.user_photo || updated.committee_member_photo || "";
+    const avatar = raw
+      ? raw.startsWith("http")
+        ? raw
+        : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${raw}`
+      : undefined;
+    // Update sidebar user
+    setSidebarUser({
+      name: updated.full_name || updated.username,
+      role: updated.role,
+      avatarUrl: avatar,
+    });
+    // Update localStorage with all updated fields
+    const userStr = localStorage.getItem("user");
+    if (userStr) {
+      const user = JSON.parse(userStr);
+      Object.assign(user, updated);
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+
+    toast.success("Profile updated successfully!");
+  };
+
   const handleProfileUpload = async (file: File) => {
     const formData = new FormData();
     formData.append("photo", file);
@@ -307,13 +359,34 @@ export default function AlumniDashboard() {
           ]}
         />
 
-        {/* Profile Picture Modal */}
-        <ProfilePictureModal
+        {/* Profile Edit Modal */}
+        <ProfileEditModal
           isOpen={showProfileModal}
           onClose={() => setShowProfileModal(false)}
+          onSave={handleProfileSave}
           currentImage={sidebarUser?.avatarUrl}
-          userName={sidebarUser?.name || "User"}
-          onUpload={handleProfileUpload}
+          userName={sidebarUser?.name || ""}
+          userEmail={(() => {
+            const userStr = localStorage.getItem("user");
+            return userStr ? JSON.parse(userStr).email || "" : "";
+          })()}
+          userRole="ALUMNI"
+          userPhoneNumber={(() => {
+            const userStr = localStorage.getItem("user");
+            return userStr ? JSON.parse(userStr).phone_number || "" : "";
+          })()}
+          userLinkedIn={(() => {
+            const userStr = localStorage.getItem("user");
+            return userStr ? JSON.parse(userStr).linkedin_url || "" : "";
+          })()}
+          userGitHub={(() => {
+            const userStr = localStorage.getItem("user");
+            return userStr ? JSON.parse(userStr).github_url || "" : "";
+          })()}
+          userAlumniWorkplace={(() => {
+            const userStr = localStorage.getItem("user");
+            return userStr ? JSON.parse(userStr).alumni_workplace || "" : "";
+          })()}
         />
 
         {/* Main Content */}
@@ -322,6 +395,63 @@ export default function AlumniDashboard() {
             sidebarCollapsed ? "ml-20" : "ml-64"
           } p-6 pt-24 transition-all duration-300`}
         >
+          {/* Profile Completion Hint */}
+          {(() => {
+            const userStr = localStorage.getItem("user");
+            const user = userStr ? JSON.parse(userStr) : null;
+            const hasWorkplace =
+              user?.alumni_workplace && user.alumni_workplace.trim() !== "";
+
+            if (!hasWorkplace) {
+              return (
+                <div className="mb-6 bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-500/30 rounded-xl p-4 flex items-start gap-4 shadow-lg">
+                  <div className="flex-shrink-0 w-10 h-10 bg-purple-600/20 rounded-full flex items-center justify-center">
+                    <span className="text-2xl">💼</span>
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-white mb-1">
+                      Complete Your Profile
+                    </h3>
+                    <p className="text-sm text-gray-300 mb-2">
+                      Help us stay connected! Update your current workplace
+                      information to let others know where you're working now.
+                    </p>
+                    <button
+                      onClick={() => setShowProfileModal(true)}
+                      className="text-sm bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-lg transition-colors font-medium"
+                    >
+                      Update Workplace
+                    </button>
+                  </div>
+                  <button
+                    onClick={(e) => {
+                      const banner = (e.target as HTMLElement).closest(
+                        ".bg-gradient-to-r"
+                      );
+                      if (banner) banner.remove();
+                    }}
+                    className="text-gray-400 hover:text-white transition-colors"
+                    title="Dismiss"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              );
+            }
+            return null;
+          })()}
+
           {/* Overview Section */}
           {activeSection === "overview" && (
             <OverviewSection

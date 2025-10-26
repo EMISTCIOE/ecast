@@ -1,5 +1,5 @@
-import { useState } from "react";
-import Router from "next/router";
+import { useState, useEffect } from "react";
+import Router, { useRouter } from "next/router";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
 import { useAuth } from "@/lib/hooks/auth";
@@ -10,12 +10,27 @@ const LoginPage = () => {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const router = useRouter();
 
   const { login } = useAuth();
+
+  // Check for session_expired query param
+  useEffect(() => {
+    if (router.query.session_expired === "true") {
+      setSessionExpired(true);
+      // Clear the query param after showing the message
+      const timer = setTimeout(() => {
+        router.replace("/login", undefined, { shallow: true });
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [router.query.session_expired]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setSessionExpired(false);
     setIsLoading(true);
     try {
       const user = await login(username, password);
@@ -105,6 +120,29 @@ const LoginPage = () => {
                   />
                 </svg>
                 <span className="text-sm">{error}</span>
+              </div>
+            )}
+
+            {/* Session Expired Warning */}
+            {sessionExpired && (
+              <div className="bg-yellow-500/10 border border-yellow-500/50 text-yellow-400 px-4 py-3 rounded-lg flex items-center gap-3 animate-in fade-in slide-in-from-top-2">
+                <svg
+                  className="w-5 h-5 flex-shrink-0"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                <div className="text-sm">
+                  <p className="font-semibold">Session Expired</p>
+                  <p className="text-yellow-400/80">
+                    Your permissions have been updated. Please log in again.
+                  </p>
+                </div>
               </div>
             )}
 
