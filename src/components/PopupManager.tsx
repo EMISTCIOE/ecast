@@ -4,7 +4,7 @@ import { Event, Notice } from "@/types/index";
 import { shouldShowPopup, setPopupCookie } from "@/lib/popupCookies";
 
 const NEXT_PUBLIC_BACKEND_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 interface PopupData {
   id: string;
@@ -41,7 +41,7 @@ function getDaysSinceCreation(createdAt: string): number {
 async function fetchPinnedNotices(): Promise<Notice[]> {
   try {
     const response = await fetch(
-      `${NEXT_PUBLIC_BACKEND_URL}/notice/notices/?status=APPROVED&pinned=true`
+      `${NEXT_PUBLIC_BACKEND_URL}/api/notice/notices/?status=APPROVED&pinned=true`
     );
     if (!response.ok) return [];
 
@@ -66,7 +66,7 @@ async function fetchPinnedNotices(): Promise<Notice[]> {
 async function fetchEvents(): Promise<Event[]> {
   try {
     const response = await fetch(
-      `${NEXT_PUBLIC_BACKEND_URL}/event/events/?status=APPROVED`
+      `${NEXT_PUBLIC_BACKEND_URL}/api/event/events/?status=APPROVED`
     );
     if (!response.ok) return [];
 

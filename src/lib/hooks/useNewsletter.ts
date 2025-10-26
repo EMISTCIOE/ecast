@@ -28,7 +28,7 @@ export const useNewsletter = () => {
 
       const response = await fetch(
         `${
-          process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+          process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000"
         }/api/event/newsletter/subscribe/`,
         {
           method: "POST",

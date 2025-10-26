@@ -40,6 +40,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "ecast-backend.tcioe.edu.np",
       },
+      {
+        protocol: "http",
+        hostname: "ecast-backend.tcioe.edu.np",
+      },
     ],
   },
   pageExtensions: ["ts", "tsx", "mdx"],
