@@ -139,12 +139,7 @@ export default function CreateEventModal({
   };
 
   return (
-    <Modal
-      isOpen={isOpen}
-      onClose={handleClose}
-      title="📅 Create Event"
-      size="lg"
-    >
+    <Modal isOpen={isOpen} onClose={handleClose} title="Create Event" size="lg">
       <form onSubmit={handleSubmit} className="space-y-6">
         {message && (
           <div

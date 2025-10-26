@@ -157,21 +157,53 @@ export const ComprehensiveAnalyticsDashboard: React.FC<
                       onClick={handleExportJSON}
                       className="w-full px-4 py-2 text-left hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 text-sm font-medium text-gray-700 flex items-center gap-2"
                     >
-                      <span className="text-blue-600">📄</span>
+                      <svg
+                        className="w-4 h-4 text-blue-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
                       Export as JSON
                     </button>
                     <button
                       onClick={handleExportCSV}
                       className="w-full px-4 py-2 text-left hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 text-sm font-medium text-gray-700 flex items-center gap-2"
                     >
-                      <span className="text-green-600">📊</span>
+                      <svg
+                        className="w-4 h-4 text-green-600"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+                        />
+                      </svg>
                       Export as CSV
                     </button>
                     <button
                       onClick={handleExportMarkdown}
                       className="w-full px-4 py-2 text-left hover:bg-gradient-to-r hover:from-blue-50 hover:to-purple-50 transition-all duration-200 text-sm font-medium text-gray-700 flex items-center gap-2"
                     >
-                      <span className="text-purple-600">📝</span>
+                      <svg
+                        className="w-4 h-4 text-purple-600"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M18 13V5a2 2 0 00-2-2H4a2 2 0 00-2 2v8a2 2 0 002 2h3l3 3 3-3h3a2 2 0 002-2zM5 7a1 1 0 011-1h8a1 1 0 110 2H6a1 1 0 01-1-1zm1 3a1 1 0 100 2h3a1 1 0 100-2H6z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
                       Export as Markdown
                     </button>
                   </div>
@@ -296,7 +328,19 @@ export const ComprehensiveAnalyticsDashboard: React.FC<
                     {data.pages && data.pages.length > 0 && (
                       <TopList
                         title="Top Pages"
-                        icon={<span className="text-2xl">📄</span>}
+                        icon={
+                          <svg
+                            className="w-6 h-6"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
+                            <path
+                              fillRule="evenodd"
+                              d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z"
+                              clipRule="evenodd"
+                            />
+                          </svg>
+                        }
                         data={data.pages}
                       />
                     )}
@@ -305,7 +349,21 @@ export const ComprehensiveAnalyticsDashboard: React.FC<
                     {data.referrers && data.referrers.length > 0 && (
                       <TopList
                         title="Top Referrers"
-                        icon={<span className="text-2xl">🔗</span>}
+                        icon={
+                          <svg
+                            className="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                            />
+                          </svg>
+                        }
                         data={data.referrers}
                       />
                     )}
@@ -314,7 +372,21 @@ export const ComprehensiveAnalyticsDashboard: React.FC<
                     {data.browsers && data.browsers.length > 0 && (
                       <TopList
                         title="Browsers"
-                        icon={<span className="text-2xl">🌐</span>}
+                        icon={
+                          <svg
+                            className="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                            />
+                          </svg>
+                        }
                         data={data.browsers}
                       />
                     )}
@@ -323,7 +395,21 @@ export const ComprehensiveAnalyticsDashboard: React.FC<
                     {data.os && data.os.length > 0 && (
                       <TopList
                         title="Operating Systems"
-                        icon={<span className="text-2xl">💻</span>}
+                        icon={
+                          <svg
+                            className="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            />
+                          </svg>
+                        }
                         data={data.os}
                       />
                     )}
@@ -332,7 +418,21 @@ export const ComprehensiveAnalyticsDashboard: React.FC<
                     {data.devices && data.devices.length > 0 && (
                       <TopList
                         title="Devices"
-                        icon={<span className="text-2xl">📱</span>}
+                        icon={
+                          <svg
+                            className="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z"
+                            />
+                          </svg>
+                        }
                         data={data.devices}
                       />
                     )}

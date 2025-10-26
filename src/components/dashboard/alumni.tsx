@@ -406,7 +406,18 @@ export default function AlumniDashboard() {
               return (
                 <div className="mb-6 bg-gradient-to-r from-purple-900/40 to-blue-900/40 border border-purple-500/30 rounded-xl p-4 flex items-start gap-4 shadow-lg">
                   <div className="flex-shrink-0 w-10 h-10 bg-purple-600/20 rounded-full flex items-center justify-center">
-                    <span className="text-2xl">💼</span>
+                    <svg
+                      className="w-6 h-6 text-purple-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M6 6V5a3 3 0 013-3h2a3 3 0 013 3v1h2a2 2 0 012 2v3.57A22.952 22.952 0 0110 13a22.95 22.95 0 01-8-1.43V8a2 2 0 012-2h2zm2-1a1 1 0 011-1h2a1 1 0 011 1v1H8V5zm1 5a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z"
+                        clipRule="evenodd"
+                      />
+                      <path d="M2 13.692V16a2 2 0 002 2h12a2 2 0 002-2v-2.308A24.974 24.974 0 0110 15c-2.796 0-5.487-.46-8-1.308z" />
+                    </svg>
                   </div>
                   <div className="flex-1">
                     <h3 className="font-semibold text-white mb-1">

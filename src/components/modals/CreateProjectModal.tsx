@@ -114,7 +114,7 @@ export default function CreateProjectModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="🚀 Create Project"
+      title="Create Project"
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-6">

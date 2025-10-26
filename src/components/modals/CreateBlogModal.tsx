@@ -101,7 +101,7 @@ export default function CreateBlogModal({
     <Modal
       isOpen={isOpen}
       onClose={handleClose}
-      title="✍️ Create Blog Post"
+      title="Create Blog Post"
       size="full"
     >
       <form onSubmit={handleSubmit} className="space-y-6">

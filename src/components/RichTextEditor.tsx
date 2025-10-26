@@ -349,19 +349,45 @@ export default function RichTextEditor({
         </button>
         <button
           type="button"
-          className="px-2 py-1 text-sm bg-gray-800 rounded hover:bg-gray-700 transition-colors"
+          className="px-2 py-1 text-sm bg-gray-800 rounded hover:bg-gray-700 transition-colors flex items-center gap-1"
           onClick={insertLink}
           title="Insert Link"
         >
-          🔗 Link
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+            />
+          </svg>
+          Link
         </button>
         <button
           type="button"
-          className="px-2 py-1 text-sm bg-gray-800 rounded hover:bg-gray-700 transition-colors"
+          className="px-2 py-1 text-sm bg-gray-800 rounded hover:bg-gray-700 transition-colors flex items-center gap-1"
           onClick={() => fileRef.current?.click()}
           title="Insert Image"
         >
-          🖼️ Image
+          <svg
+            className="w-4 h-4"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            />
+          </svg>
+          Image
         </button>
         <input
           ref={fileRef}
@@ -388,7 +414,20 @@ export default function RichTextEditor({
           onClick={() => setViewMode("edit")}
         >
           <span className="flex items-center gap-1.5">
-            ✏️ <span>Edit</span>
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+              />
+            </svg>
+            <span>Edit</span>
           </span>
           {viewMode === "edit" && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-500" />
@@ -404,7 +443,26 @@ export default function RichTextEditor({
           onClick={() => setViewMode("preview")}
         >
           <span className="flex items-center gap-1.5">
-            👁️ <span>Preview</span>
+            <svg
+              className="w-3.5 h-3.5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              />
+            </svg>
+            <span>Preview</span>
           </span>
           {viewMode === "preview" && (
             <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-pink-500 to-purple-500" />
