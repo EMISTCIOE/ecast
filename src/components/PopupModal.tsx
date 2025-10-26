@@ -54,23 +54,23 @@ export const PopupModal: React.FC<PopupModalProps> = ({
 
       {/* Modal Content */}
       <div
-        className={`relative max-w-4xl w-full max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 ${
+        className={`relative max-w-4xl w-full max-h-[90vh] bg-gray-900 rounded-2xl shadow-2xl overflow-hidden transform transition-all duration-300 border border-gray-800 ${
           isVisible ? "scale-100 translate-y-0" : "scale-95 translate-y-4"
         }`}
       >
         {/* Close Button */}
         <button
           onClick={handleClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-white/90 hover:bg-white rounded-full shadow-lg transition-all hover:scale-110"
+          className="absolute top-4 right-4 z-10 p-2 bg-gray-800/90 hover:bg-gray-700 rounded-full shadow-lg transition-all hover:scale-110"
           aria-label="Close popup"
         >
-          <X className="w-5 h-5 text-gray-700" />
+          <X className="w-5 h-5 text-gray-300" />
         </button>
 
         {/* Content Container */}
         <div className="flex flex-col">
           {/* Image Section */}
-          <div className="relative w-full bg-gray-100">
+          <div className="relative w-full bg-gray-800">
             <div
               className="relative w-full"
               style={{ paddingBottom: "56.25%" }}
@@ -87,21 +87,21 @@ export const PopupModal: React.FC<PopupModalProps> = ({
           </div>
 
           {/* Info Section */}
-          <div className="p-6 bg-gradient-to-b from-white to-gray-50">
+          <div className="p-6 bg-gradient-to-b from-gray-900 to-gray-950">
             <div className="flex items-center gap-2 mb-3">
               <span
                 className={`px-3 py-1 text-xs font-semibold rounded-full ${
                   type === "event"
-                    ? "bg-blue-100 text-blue-700"
-                    : "bg-purple-100 text-purple-700"
+                    ? "bg-blue-900/50 text-blue-300 border border-blue-700"
+                    : "bg-purple-900/50 text-purple-300 border border-purple-700"
                 }`}
               >
                 {type === "event" ? "📅 Event" : "📌 Pinned Notice"}
               </span>
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">{title}</h2>
+            <h2 className="text-2xl font-bold text-gray-100 mb-2">{title}</h2>
             {description && (
-              <p className="text-gray-600 leading-relaxed">{description}</p>
+              <p className="text-gray-400 leading-relaxed">{description}</p>
             )}
           </div>
         </div>
