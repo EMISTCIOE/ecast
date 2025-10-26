@@ -2026,17 +2026,54 @@ function UsersCrud({
   const refresh = async () => {
     try {
       const allUsers = await usersApi.list();
+      let filteredUsers;
       if (mode === "ambassadors-alumni") {
-        setList(
-          allUsers.filter(
-            (u: any) => u.role === "AMBASSADOR" || u.role === "ALUMNI"
-          )
+        filteredUsers = allUsers.filter(
+          (u: any) => u.role === "AMBASSADOR" || u.role === "ALUMNI"
         );
       } else {
-        setList(
-          allUsers.filter((u: any) => u.role === "MEMBER" || u.role === "ADMIN")
+        filteredUsers = allUsers.filter(
+          (u: any) => u.role === "MEMBER" || u.role === "ADMIN"
         );
       }
+
+      // Sort committee members by position hierarchy
+      if (mode === "committee") {
+        const positionOrder: { [key: string]: number } = {
+          President: 1,
+          "Vice President": 2,
+          Secretary: 3,
+          "Vice Secretary/Treasurer": 4,
+          "Research and Development Team": 5,
+          "Technical Team": 6,
+          "Communication,Events & HR": 7,
+          "Editor In Chief": 8,
+          "Graphics Designer": 9,
+          "Social Media Manager": 10,
+          Consultant: 11,
+          "Vice Treasurer": 12,
+        };
+
+        filteredUsers.sort((a: any, b: any) => {
+          const posA =
+            a.committee_position || (a.committee && a.committee.position) || "";
+          const posB =
+            b.committee_position || (b.committee && b.committee.position) || "";
+          const orderA = positionOrder[posA] || 999;
+          const orderB = positionOrder[posB] || 999;
+
+          if (orderA !== orderB) {
+            return orderA - orderB;
+          }
+
+          // If same position, sort by name
+          const nameA = a.full_name || a.username || "";
+          const nameB = b.full_name || b.username || "";
+          return nameA.localeCompare(nameB);
+        });
+      }
+
+      setList(filteredUsers);
     } catch {}
   };
 
