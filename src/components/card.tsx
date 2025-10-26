@@ -11,7 +11,7 @@ interface CardProps {
 
 const Card: React.FC<CardProps> = ({ imgSrc, name, pos, linkedin, github }) => {
   return (
-    <div className="p-8 w-80 h-[420px] bg-black hover:bg-black/90 border-2 border-[#3b340d] hover:border-yellow-400 rounded-xl flex flex-col items-center justify-between transition duration-500">
+    <div className="p-6 w-80 h-[420px] bg-black hover:bg-black/90 border-2 border-[#3b340d] hover:border-yellow-400 rounded-xl flex flex-col items-center justify-between transition duration-500">
       {/* Image container with fixed dimensions */}
       <div className="w-48 h-48 relative flex-shrink-0">
         <Image
@@ -23,16 +23,20 @@ const Card: React.FC<CardProps> = ({ imgSrc, name, pos, linkedin, github }) => {
         />
       </div>
 
-      {/* Name with yellow color */}
-      <h1 className="text-3xl my-4 text-yellow-500 text-center line-clamp-2">
-        {name}
-      </h1>
-      <h1 className="text-xl my-4 text-white text-center line-clamp-2">
-        {pos}
-      </h1>
+      {/* Text container with flex-grow to take available space */}
+      <div className="flex-grow flex flex-col items-center justify-center w-full px-2">
+        {/* Name with yellow color */}
+        <h1 className="text-2xl mt-3 mb-2 text-yellow-500 text-center line-clamp-2 w-full break-words leading-tight">
+          {name}
+        </h1>
+        {/* Position */}
+        <h1 className="text-base text-white text-center line-clamp-2 w-full break-words leading-snug">
+          {pos}
+        </h1>
+      </div>
 
       {/* Social Media Links */}
-      <div className="flex justify-center space-x-4 flex-shrink-0">
+      <div className="flex justify-center space-x-4 flex-shrink-0 mt-3">
         <a href={linkedin} target="_blank" rel="noopener noreferrer">
           <FaLinkedin
             className="text-white hover:text-yellow-500 transition duration-300"
