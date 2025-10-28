@@ -31,6 +31,7 @@ const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 export default function AlumniDashboard() {
   const [authReady, setAuthReady] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Collapse sidebar on small screens for better mobile responsiveness
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarUser, setSidebarUser] = useState<{
     name: string;
@@ -296,16 +297,27 @@ export default function AlumniDashboard() {
     }
   };
 
+  // Initialize sidebar collapsed state based on viewport width (mobile first)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const preferCollapsed = window.innerWidth < 1024; // < lg
+      setSidebarCollapsed(preferCollapsed);
+    }
+  }, []);
+
   if (!authReady) return null;
 
   return (
     <>
       <NavBar />
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen">
+      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen w-full overflow-x-hidden">
         {/* Mobile Menu Button */}
         <div className="md:hidden fixed top-20 left-4 z-50">
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={() => {
+              setSidebarOpen(!sidebarOpen);
+              setSidebarCollapsed((v) => !v);
+            }}
             className="bg-gray-800 p-3 rounded-lg shadow-lg hover:bg-gray-700 transition"
           >
             {sidebarOpen ? (
@@ -359,6 +371,17 @@ export default function AlumniDashboard() {
           ]}
         />
 
+        {/* Mobile overlay when sidebar is open */}
+        {!sidebarCollapsed && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/40 z-30"
+            onClick={() => {
+              setSidebarCollapsed(true);
+              setSidebarOpen(false);
+            }}
+          />
+        )}
+
         {/* Profile Edit Modal */}
         <ProfileEditModal
           isOpen={showProfileModal}
@@ -392,8 +415,8 @@ export default function AlumniDashboard() {
         {/* Main Content */}
         <div
           className={`${
-            sidebarCollapsed ? "ml-20" : "ml-64"
-          } p-6 pt-24 transition-all duration-300`}
+            sidebarCollapsed ? "md:ml-20" : "md:ml-64"
+          } ml-0 p-4 md:p-6 pt-24 transition-all duration-300`}
         >
           {/* Profile Completion Hint */}
           {(() => {
@@ -434,29 +457,6 @@ export default function AlumniDashboard() {
                       Update Workplace
                     </button>
                   </div>
-                  <button
-                    onClick={(e) => {
-                      const banner = (e.target as HTMLElement).closest(
-                        ".bg-gradient-to-r"
-                      );
-                      if (banner) banner.remove();
-                    }}
-                    className="text-gray-400 hover:text-white transition-colors"
-                    title="Dismiss"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      className="h-5 w-5"
-                      viewBox="0 0 20 20"
-                      fill="currentColor"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                  </button>
                 </div>
               );
             }

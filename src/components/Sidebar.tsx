@@ -49,9 +49,10 @@ export default function Sidebar({
 
   return (
     <aside
-      className={`fixed left-0 top-20 h-[calc(100vh-5rem)] ${
-        expanded ? "w-64" : "w-20"
-      } bg-[#0f1020] border-r border-gray-800 transition-all duration-300 z-40 overflow-hidden shadow-2xl`}
+      className={`fixed left-0 top-20 h-[calc(100vh-5rem)] bg-[#0f1020] border-r border-gray-800 z-40 overflow-hidden shadow-2xl
+      transition-all duration-300 transform md:transform-none
+      ${expanded ? "translate-x-0 w-64" : "-translate-x-full w-64"}
+      md:translate-x-0 ${expanded ? "md:w-64" : "md:w-20"}`}
     >
       <div className="h-full flex flex-col">
         {/* Sidebar Toggle Button at Top */}

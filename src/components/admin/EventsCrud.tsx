@@ -219,7 +219,8 @@ export default function EventsCrud({
       </div>
 
       <div className="bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop/tablet table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr className="bg-[#252b47]">
@@ -368,6 +369,51 @@ export default function EventsCrud({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile list */}
+        <div className="md:hidden p-3 space-y-3">
+          {items.length === 0 ? (
+            <div className="text-center py-10 text-gray-400">No events found.</div>
+          ) : (
+            items.map((event: any) => {
+              const canEditOrDelete = isAdmin || event.status !== "APPROVED";
+              return (
+                <div key={event.id} className="rounded-xl border border-gray-800 bg-[#111428] p-3 space-y-2">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <div className="text-white font-semibold truncate">{event.title}</div>
+                      {event.description && (
+                        <div className="text-xs text-gray-400 mt-1 line-clamp-2">{event.description}</div>
+                      )}
+                      <div className="text-xs text-gray-400 mt-1">
+                        {event.date}
+                        {event.end_date && <> – {event.end_date}</>}
+                        {event.time && <> • {event.time}</>}
+                      </div>
+                      <div className="text-xs text-gray-400">{event.location}</div>
+                    </div>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${event.status === "APPROVED" ? "bg-green-900/60 text-green-300" : event.status === "PENDING" ? "bg-yellow-900/60 text-yellow-300" : "bg-red-900/60 text-red-300"}`}>{event.status}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button onClick={() => setPreviewEvent(event)} className="text-gray-300 hover:text-white flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5">Preview</button>
+                    {event.status === "PENDING" && isAdmin && (
+                      <>
+                        <button onClick={() => onApprove(event.slug)} className="text-green-300 hover:text-green-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-green-600/20">Approve</button>
+                        <button onClick={() => onReject(event.slug)} className="text-yellow-300 hover:text-yellow-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-yellow-600/20">Reject</button>
+                      </>
+                    )}
+                    {canEditOrDelete && (
+                      <>
+                        <button onClick={() => startEdit(event)} className="text-blue-300 hover:text-blue-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-600/20">Edit</button>
+                        <button onClick={() => confirmDelete(event)} className="text-red-300 hover:text-red-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-red-600/20">Delete</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

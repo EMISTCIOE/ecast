@@ -189,7 +189,8 @@ export default function BlogsCrud({
       </div>
 
       <div className="bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop/tablet table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-[#252b47]">
               <tr>
@@ -324,6 +325,107 @@ export default function BlogsCrud({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile list */}
+        <div className="md:hidden p-3 space-y-3">
+          {items.length === 0 ? (
+            <div className="text-center py-10 text-gray-400">
+              No blogs found. Create your first blog post!
+            </div>
+          ) : (
+            items.map((b: any) => {
+              const canEditOrDelete = isAdmin || b.status !== "APPROVED";
+              const coverUrl =
+                b.cover_image && b.cover_image.startsWith("http")
+                  ? b.cover_image
+                  : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${
+                      b.cover_image || ""
+                    }`;
+              return (
+                <div
+                  key={b.id}
+                  className="rounded-xl border border-gray-800 bg-[#111428] p-3 space-y-2"
+                >
+                  <div className="flex items-start gap-3">
+                    {b.cover_image && (
+                      <img
+                        src={coverUrl}
+                        alt={b.title}
+                        className="w-16 h-16 rounded-lg object-cover border border-gray-700"
+                      />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white font-semibold truncate">
+                        {b.title}
+                      </div>
+                      {b.description && (
+                        <div className="text-xs text-gray-400 mt-1 line-clamp-2">
+                          {b.description}
+                        </div>
+                      )}
+                      <div className="mt-2 flex items-center gap-2">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                            b.status === "APPROVED"
+                              ? "bg-green-900/60 text-green-300"
+                              : b.status === "PENDING"
+                              ? "bg-yellow-900/60 text-yellow-300"
+                              : "bg-red-900/60 text-red-300"
+                          }`}
+                        >
+                          {b.status}
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          {new Date(b.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button
+                      onClick={() => setPreviewBlog(b)}
+                      className="text-gray-300 hover:text-white flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5"
+                    >
+                      <EyeIcon className="w-4 h-4" /> Preview
+                    </button>
+                    {b.status === "PENDING" && isAdmin && (
+                      <>
+                        <button
+                          onClick={() => onApprove(b.slug)}
+                          className="text-green-300 hover:text-green-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-green-600/20"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => onReject(b.slug)}
+                          className="text-yellow-300 hover:text-yellow-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-yellow-600/20"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                    {canEditOrDelete && (
+                      <>
+                        <button
+                          onClick={() => startEdit(b)}
+                          className="text-blue-300 hover:text-blue-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-600/20"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => confirmDelete(b)}
+                          className="text-red-300 hover:text-red-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-red-600/20"
+                        >
+                          Delete
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

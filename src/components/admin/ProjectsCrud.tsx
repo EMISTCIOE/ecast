@@ -212,7 +212,8 @@ export default function ProjectsCrud({
       </div>
 
       <div className="bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop/tablet table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-[#252b47]">
               <tr>
@@ -363,6 +364,57 @@ export default function ProjectsCrud({
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile list */}
+        <div className="md:hidden p-3 space-y-3">
+          {items.length === 0 ? (
+            <div className="text-center py-10 text-gray-400">No projects found.</div>
+          ) : (
+            items.map((p: any) => {
+              const canEditOrDelete = isAdmin || p.status !== "APPROVED";
+              const imgUrl =
+                p.image && p.image.startsWith("http")
+                  ? p.image
+                  : `${process.env.NEXT_PUBLIC_BACKEND_URL || ""}${p.image || ""}`;
+              return (
+                <div key={p.id} className="rounded-xl border border-gray-800 bg-[#111428] p-3 space-y-2">
+                  <div className="flex items-start gap-3">
+                    {p.image && (
+                      <img src={imgUrl} alt={p.title} className="w-16 h-16 rounded-lg object-cover border border-gray-700" />
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white font-semibold truncate">{p.title}</div>
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${p.status === "APPROVED" ? "bg-green-900/60 text-green-300" : p.status === "PENDING" ? "bg-yellow-900/60 text-yellow-300" : "bg-red-900/60 text-red-300"}`}>{p.status}</span>
+                        {p.repo_link && (
+                          <a href={p.repo_link} target="_blank" rel="noopener noreferrer" className="text-xs text-blue-300 underline">Repo</a>
+                        )}
+                        {p.live_link && (
+                          <a href={p.live_link} target="_blank" rel="noopener noreferrer" className="text-xs text-green-300 underline">Demo</a>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-2 pt-1">
+                    <button onClick={() => setPreviewProject(p)} className="text-gray-300 hover:text-white flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5">Preview</button>
+                    {p.status === "PENDING" && isAdmin && (
+                      <>
+                        <button onClick={() => onApprove(p.id)} className="text-green-300 hover:text-green-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-green-600/20">Approve</button>
+                        <button onClick={() => onReject(p.id)} className="text-yellow-300 hover:text-yellow-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-yellow-600/20">Reject</button>
+                      </>
+                    )}
+                    {canEditOrDelete && (
+                      <>
+                        <button onClick={() => startEdit(p)} className="text-blue-300 hover:text-blue-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-600/20">Edit</button>
+                        <button onClick={() => confirmDelete(p)} className="text-red-300 hover:text-red-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-red-600/20">Delete</button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
         </div>
       </div>
 

@@ -176,7 +176,8 @@ export default function NoticesCrud({
       </div>
 
       <div className="bg-gray-900/50 rounded-xl border border-gray-800 overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Desktop/tablet table */}
+        <div className="hidden md:block overflow-x-auto">
           <table className="min-w-full">
             <thead className="bg-[#252b47]">
               <tr>
@@ -332,6 +333,106 @@ export default function NoticesCrud({
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile list */}
+        <div className="md:hidden p-3 space-y-3">
+          {items.map((n: any) => {
+            const canEditOrDelete = isAdmin || n.status !== "APPROVED";
+            const createdDate = new Date(n.created_at).toLocaleDateString(
+              "en-US",
+              { year: "numeric", month: "short", day: "numeric" }
+            );
+            return (
+              <div
+                key={n.id}
+                className="rounded-xl border border-gray-800 bg-[#111428] p-3 space-y-2"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <div className="text-white font-semibold truncate">
+                      {n.title}
+                    </div>
+                    <div className="text-xs text-gray-400 mt-1 truncate">
+                      {n.content}
+                    </div>
+                  </div>
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[10px] font-bold whitespace-nowrap ${
+                      n.status === "APPROVED"
+                        ? "bg-green-900/60 text-green-300"
+                        : n.status === "PENDING"
+                        ? "bg-yellow-900/60 text-yellow-300"
+                        : "bg-red-900/60 text-red-300"
+                    }`}
+                  >
+                    {n.status}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between text-xs text-gray-400">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`px-2 py-0.5 rounded-full font-bold ${
+                        n.audience === "ALL"
+                          ? "bg-green-900/50 text-green-300"
+                          : n.audience === "MEMBERS"
+                          ? "bg-blue-900/50 text-blue-300"
+                          : "bg-purple-900/50 text-purple-300"
+                      }`}
+                    >
+                      {n.audience}
+                    </span>
+                    {n.pinned && (
+                      <span className="px-2 py-0.5 rounded-full bg-pink-900/40 text-pink-300 font-bold">
+                        Pinned
+                      </span>
+                    )}
+                  </div>
+                  <span>{createdDate}</span>
+                </div>
+                <div className="flex flex-wrap gap-2 pt-1">
+                  <button
+                    onClick={() => setPreviewNotice(n)}
+                    className="text-gray-300 hover:text-white flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5"
+                  >
+                    <EyeIcon className="w-4 h-4" /> Preview
+                  </button>
+                  {n.status === "PENDING" && isAdmin && (
+                    <>
+                      <button
+                        onClick={() => onApprove(n.id)}
+                        className="text-green-300 hover:text-green-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-green-600/20"
+                      >
+                        <CheckIcon className="w-4 h-4" /> Approve
+                      </button>
+                      <button
+                        onClick={() => onReject(n.id)}
+                        className="text-yellow-300 hover:text-yellow-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-yellow-600/20"
+                      >
+                        <XMarkIcon className="w-4 h-4" /> Reject
+                      </button>
+                    </>
+                  )}
+                  {canEditOrDelete && (
+                    <>
+                      <button
+                        onClick={() => startEdit(n)}
+                        className="text-blue-300 hover:text-blue-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-600/20"
+                      >
+                        <PencilSquareIcon className="w-4 h-4" /> Edit
+                      </button>
+                      <button
+                        onClick={() => handleDelete(n)}
+                        className="text-red-300 hover:text-red-200 flex items-center gap-1 px-2 py-1 rounded-lg bg-red-600/20"
+                      >
+                        <TrashIcon className="w-4 h-4" /> Delete
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 

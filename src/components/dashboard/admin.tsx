@@ -45,12 +45,14 @@ import {
   ChartBarIcon,
   PresentationChartLineIcon,
   UserPlusIcon,
+  Bars3Icon,
 } from "@heroicons/react/24/outline";
 
 const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export default function AdminDashboard() {
   const [authReady, setAuthReady] = useState(false);
+  // Collapse sidebar by default on small screens to improve mobile UX
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarUser, setSidebarUser] = useState<{
     name: string;
@@ -150,6 +152,14 @@ export default function AdminDashboard() {
   const [editingResearch, setEditingResearch] = useState<any>(null);
   const [deletingResearch, setDeletingResearch] = useState<any>(null);
   const researchApi = useResearch();
+
+  // Initialize sidebar collapsed state based on viewport width (mobile first)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const preferCollapsed = window.innerWidth < 1024; // < lg
+      setSidebarCollapsed(preferCollapsed);
+    }
+  }, []);
 
   useEffect(() => {
     const userStr = localStorage.getItem("user");
@@ -563,11 +573,31 @@ export default function AdminDashboard() {
 
   if (!authReady) return null;
 
+  const contentMarginClass = sidebarCollapsed ? "md:ml-20" : "md:ml-64";
+
   return (
     <>
       <NavBar />
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
-      <div className="flex bg-gray-950 text-white min-h-screen">
+      <div className="flex bg-gray-950 text-white min-h-screen w-full overflow-x-hidden">
+        {/* Mobile Sidebar Toggle */}
+        <div className="md:hidden fixed top-20 left-4 z-50">
+          <button
+            onClick={() => setSidebarCollapsed((v) => !v)}
+            className="bg-gray-800 p-3 rounded-lg shadow-lg hover:bg-gray-700 transition"
+            aria-label="Toggle sidebar"
+            aria-pressed={!sidebarCollapsed}
+          >
+            <Bars3Icon className="w-6 h-6" />
+          </button>
+        </div>
+        {/* Mobile overlay when sidebar is open */}
+        {!sidebarCollapsed && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/40 z-30"
+            onClick={() => setSidebarCollapsed(true)}
+          />
+        )}
         <Sidebar
           expanded={!sidebarCollapsed}
           setExpanded={(v) => setSidebarCollapsed(!v)}
@@ -679,9 +709,7 @@ export default function AdminDashboard() {
         />
 
         <div
-          className={`flex-1 ${
-            sidebarCollapsed ? "ml-20" : "ml-64"
-          } transition-all duration-300 p-8 mt-16`}
+          className={`flex-1 ml-0 ${contentMarginClass} transition-all duration-300 p-4 sm:p-6 md:p-8 mt-16`}
         >
           {activeSection === "overview" && (
             <div className="max-w-7xl mx-auto space-y-4">

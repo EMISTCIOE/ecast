@@ -30,6 +30,7 @@ const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 export default function AmbassadorDashboard() {
   const [authReady, setAuthReady] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Collapse sidebar on small screens for better mobile responsiveness
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarUser, setSidebarUser] = useState<{
     name: string;
@@ -159,6 +160,14 @@ export default function AmbassadorDashboard() {
     return blog.status === "PENDING" || blog.status === "REJECTED";
   };
 
+  // Initialize sidebar collapsed state based on viewport width (mobile first)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const preferCollapsed = window.innerWidth < 1024; // < lg
+      setSidebarCollapsed(preferCollapsed);
+    }
+  }, []);
+
   if (!authReady) return null;
 
   const submitTask = async (e: React.FormEvent) => {
@@ -233,11 +242,14 @@ export default function AmbassadorDashboard() {
   return (
     <>
       <NavBar />
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen">
+      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen w-full overflow-x-hidden">
         {/* Mobile Menu Button */}
         <div className="md:hidden fixed top-20 left-4 z-50">
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={() => {
+              setSidebarOpen(!sidebarOpen);
+              setSidebarCollapsed((v) => !v);
+            }}
             className="bg-gray-800 p-3 rounded-lg shadow-lg hover:bg-gray-700 transition"
           >
             {sidebarOpen ? (
@@ -291,6 +303,17 @@ export default function AmbassadorDashboard() {
           ]}
         />
 
+        {/* Mobile overlay when sidebar is open */}
+        {!sidebarCollapsed && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/40 z-30"
+            onClick={() => {
+              setSidebarCollapsed(true);
+              setSidebarOpen(false);
+            }}
+          />
+        )}
+
         {/* Profile Picture Modal */}
         <ProfilePictureModal
           isOpen={showProfileModal}
@@ -302,9 +325,7 @@ export default function AmbassadorDashboard() {
 
         {/* Main Content */}
         <div
-          className={`${
-            sidebarCollapsed ? "ml-20" : "ml-64"
-          } p-6 pt-24 transition-all duration-300`}
+          className={`${sidebarCollapsed ? "md:ml-20" : "md:ml-64"} ml-0 p-4 md:p-6 pt-24 transition-all duration-300`}
         >
           {/* Overview Section */}
           {activeSection === "overview" && (

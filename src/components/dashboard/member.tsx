@@ -162,6 +162,7 @@ function TaskCard({ task, onSubmit }: { task: any; onSubmit: () => void }) {
 export default function MemberDashboard() {
   const [authReady, setAuthReady] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  // Collapse sidebar on small screens for better mobile responsiveness
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [sidebarUser, setSidebarUser] = useState<{
     name: string;
@@ -565,6 +566,14 @@ export default function MemberDashboard() {
     { id: "submissions", name: "My Submissions", icon: DocumentTextIcon },
   ];
 
+  // Initialize sidebar collapsed state based on viewport width (mobile first)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const preferCollapsed = window.innerWidth < 1024; // < lg
+      setSidebarCollapsed(preferCollapsed);
+    }
+  }, []);
+
   if (!authReady)
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
@@ -585,11 +594,14 @@ export default function MemberDashboard() {
     <>
       <ToastContainer toasts={toast.toasts} removeToast={toast.removeToast} />
       <NavBar />
-      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen">
+      <div className="bg-gradient-to-br from-gray-900 via-black to-gray-900 text-white min-h-screen w-full overflow-x-hidden">
         {/* Mobile Menu Button */}
         <div className="md:hidden fixed top-20 left-4 z-50">
           <button
-            onClick={() => setSidebarOpen(!sidebarOpen)}
+            onClick={() => {
+              setSidebarOpen(!sidebarOpen);
+              setSidebarCollapsed((v) => !v);
+            }}
             className="bg-gray-800 p-3 rounded-lg shadow-lg hover:bg-gray-700 transition"
           >
             {sidebarOpen ? (
@@ -678,6 +690,17 @@ export default function MemberDashboard() {
           ]}
         />
 
+        {/* Mobile overlay when sidebar is open */}
+        {!sidebarCollapsed && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/40 z-30"
+            onClick={() => {
+              setSidebarCollapsed(true);
+              setSidebarOpen(false);
+            }}
+          />
+        )}
+
         {/* Profile Edit Modal */}
         <ProfileEditModal
           isOpen={showProfileModal}
@@ -710,9 +733,7 @@ export default function MemberDashboard() {
 
         {/* Main Content */}
         <div
-          className={`${
-            sidebarCollapsed ? "ml-20" : "ml-64"
-          } p-6 pt-24 transition-all duration-300`}
+          className={`${sidebarCollapsed ? "md:ml-20" : "md:ml-64"} ml-0 p-4 md:p-6 pt-24 transition-all duration-300`}
         >
           {/* Overview Section */}
           {activeSection === "overview" && (
