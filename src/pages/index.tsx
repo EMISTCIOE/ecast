@@ -110,10 +110,89 @@ const Home = () => {
 
       {/* Loading State */}
       {isLoading && (
-        <div className="py-16 text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-yellow-500"></div>
-          <p className="mt-4 text-gray-600">Loading content...</p>
-        </div>
+        <section className="py-16 bg-black">
+          <div className="container mx-auto px-4 max-w-7xl">
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Left Column Skeleton */}
+              <div className="space-y-8">
+                {/* Notice Skeleton */}
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <div className="h-8 w-48 bg-gray-800 rounded animate-pulse"></div>
+                    <div className="h-6 w-20 bg-gray-800 rounded animate-pulse"></div>
+                  </div>
+                  <div className="border border-gray-800 rounded-lg p-6 bg-gray-900/50">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="h-6 w-3/4 bg-gray-800 rounded animate-pulse"></div>
+                      <div className="h-5 w-20 bg-gray-800 rounded animate-pulse"></div>
+                    </div>
+                    <div className="space-y-2 mb-3">
+                      <div className="h-4 w-full bg-gray-800 rounded animate-pulse"></div>
+                      <div className="h-4 w-5/6 bg-gray-800 rounded animate-pulse"></div>
+                      <div className="h-4 w-4/6 bg-gray-800 rounded animate-pulse"></div>
+                    </div>
+                    <div className="flex gap-2">
+                      <div className="h-7 w-16 bg-gray-800 rounded animate-pulse"></div>
+                      <div className="h-7 w-20 bg-gray-800 rounded animate-pulse"></div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Community Stats Skeleton */}
+                <div>
+                  <div className="h-8 w-56 bg-gray-800 rounded animate-pulse mb-6"></div>
+                  <div className="space-y-4">
+                    <div className="border border-gray-800 rounded-lg p-6 bg-gray-900/50">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-purple-900/50 rounded-lg animate-pulse"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-10 w-20 bg-gray-800 rounded animate-pulse"></div>
+                          <div className="h-4 w-32 bg-gray-800 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="border border-gray-800 rounded-lg p-6 bg-gray-900/50">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 h-16 bg-blue-900/50 rounded-lg animate-pulse"></div>
+                        <div className="flex-1 space-y-2">
+                          <div className="h-10 w-20 bg-gray-800 rounded animate-pulse"></div>
+                          <div className="h-4 w-48 bg-gray-800 rounded animate-pulse"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column Skeleton - Events */}
+              <div>
+                <div className="flex justify-between items-center mb-6">
+                  <div className="h-8 w-32 bg-gray-800 rounded animate-pulse"></div>
+                  <div className="h-6 w-20 bg-gray-800 rounded animate-pulse"></div>
+                </div>
+                <div className="space-y-5">
+                  {[1, 2].map((i) => (
+                    <div
+                      key={i}
+                      className="border border-gray-800 rounded-lg p-6 bg-gray-900/50"
+                    >
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        <div className="h-6 w-2/3 bg-gray-800 rounded animate-pulse"></div>
+                        <div className="h-5 w-24 bg-gray-800 rounded animate-pulse"></div>
+                      </div>
+                      <div className="space-y-2 mb-3">
+                        <div className="h-4 w-full bg-gray-800 rounded animate-pulse"></div>
+                        <div className="h-4 w-5/6 bg-gray-800 rounded animate-pulse"></div>
+                        <div className="h-4 w-3/4 bg-gray-800 rounded animate-pulse"></div>
+                      </div>
+                      <div className="h-4 w-40 bg-gray-800 rounded animate-pulse"></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       )}
 
       {/* Inline Style for Animations */}
