@@ -142,9 +142,9 @@ const NoticesPage: React.FC<NoticesPageProps> = ({
             <>
               <div className="space-y-4 pb-9">
                 {filteredNotices.map((notice) => {
-                  const documentFileType = getFileType(notice.document);
-                  const fullFlyerUrl = getFullUrl(notice.flyer);
-                  const fullDocumentUrl = getFullUrl(notice.document);
+                  const documentFileType = getFileType(notice.document || null);
+                  const fullFlyerUrl = getFullUrl(notice.flyer || null);
+                  const fullDocumentUrl = getFullUrl(notice.document || null);
                   const isExpanded = expandedNotice === notice.id;
                   const contentPreview =
                     notice.content.length > 120
@@ -178,7 +178,9 @@ const NoticesPage: React.FC<NoticesPageProps> = ({
                                   clipRule="evenodd"
                                 />
                               </svg>
-                              {formatDate(notice.created_at)}
+                              {notice.created_at
+                                ? formatDate(notice.created_at)
+                                : "N/A"}
                             </span>
                             <span>•</span>
                             <span className="flex items-center gap-1">

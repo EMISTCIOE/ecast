@@ -35,6 +35,8 @@ export type Notice = {
   id: string; // uuid
   title: string;
   content: string;
+  flyer?: string | null;
+  document?: string | null;
   audience: "ALL" | "MEMBERS" | "AMBASSADORS";
   status: "PENDING" | "APPROVED" | "REJECTED";
   pinned: boolean;
