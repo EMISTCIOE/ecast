@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { Calendar, MapPin, ArrowRight } from "lucide-react";
 
 interface IPROPS {
@@ -28,13 +27,10 @@ const PastEventComp: React.FC<IPROPS> = ({
 
         {/* Image Section - Reduced Height */}
         <div className="relative w-full h-44 flex-shrink-0 overflow-hidden">
-          <Image
+          <img
             src={image}
             alt={topic}
-            width={400}
-            height={300}
             className="object-cover w-full h-full group-hover:scale-110 transition-transform duration-700"
-            priority
           />
           <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/50 to-transparent" />
 

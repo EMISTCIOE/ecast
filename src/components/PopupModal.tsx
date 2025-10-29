@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import { X } from "lucide-react";
 
 interface PopupModalProps {
@@ -71,19 +70,13 @@ export const PopupModal: React.FC<PopupModalProps> = ({
         <div className="flex flex-col">
           {/* Image Section */}
           <div className="relative w-full bg-gray-800">
-            <div
-              className="relative w-full"
-              style={{ paddingBottom: "56.25%" }}
-            >
-              <Image
-                src={imageUrl}
-                alt={title}
-                fill
-                className="object-contain"
-                priority
-                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 1200px"
-              />
-            </div>
+              <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                <img
+                  src={imageUrl}
+                  alt={title}
+                  className="absolute inset-0 w-full h-full object-contain"
+                />
+              </div>
           </div>
 
           {/* Info Section */}

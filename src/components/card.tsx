@@ -1,5 +1,4 @@
 import { FaGithub, FaLinkedin } from "react-icons/fa";
-import Image from "next/image";
 
 interface CardProps {
   imgSrc: string;
@@ -14,12 +13,10 @@ const Card: React.FC<CardProps> = ({ imgSrc, name, pos, linkedin, github }) => {
     <div className="p-6 w-80 h-[420px] bg-black hover:bg-black/90 border-2 border-[#3b340d] hover:border-yellow-400 rounded-xl flex flex-col items-center justify-between transition duration-500">
       {/* Image container with fixed dimensions */}
       <div className="w-48 h-48 relative flex-shrink-0">
-        <Image
-          className="rounded-full object-cover"
+        <img
+          className="rounded-full object-cover w-full h-full"
           src={imgSrc}
           alt="Team Member"
-          fill
-          sizes="192px"
         />
       </div>
 

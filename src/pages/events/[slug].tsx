@@ -4,7 +4,6 @@ import Footer from "@/components/footar";
 import SEO from "@/components/SEO";
 import { generateEventJsonLd } from "@/lib/seo";
 import React, { useEffect } from "react";
-import Image from "next/image";
 import {
   Calendar,
   Clock,
@@ -116,12 +115,10 @@ const EventDetail: React.FC<EventProps> = ({ event }) => {
           <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-black rounded-2xl shadow-2xl border border-gray-700 overflow-hidden">
             {/* Hero Image */}
             <div className="relative w-full h-[300px] md:h-[400px]">
-              <Image
+              <img
                 src={event.image}
                 alt={event.title}
-                fill
-                className="object-cover"
-                priority
+                className="absolute inset-0 w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent" />
 
