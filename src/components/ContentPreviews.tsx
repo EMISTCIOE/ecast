@@ -9,7 +9,8 @@ interface NoticePreviewProps {
     created_at: string;
     audience: string;
     published_by_username: string;
-    attachment?: string;
+    flyer?: string;
+    document?: string;
   };
   onApprove?: () => void;
   onReject?: () => void;
@@ -29,21 +30,29 @@ export const NoticePreview: React.FC<NoticePreviewProps> = ({
   };
 
   const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
-  const fullAttachmentUrl = notice.attachment
-    ? notice.attachment.startsWith("http")
-      ? notice.attachment
-      : `${base}${notice.attachment}`
+
+  const fullFlyerUrl = notice.flyer
+    ? notice.flyer.startsWith("http")
+      ? notice.flyer
+      : `${base}${notice.flyer}`
     : null;
 
-  const getFileType = (url: string | null): "pdf" | "image" | null => {
+  const fullDocumentUrl = notice.document
+    ? notice.document.startsWith("http")
+      ? notice.document
+      : `${base}${notice.document}`
+    : null;
+
+  const getFileType = (url: string | null): "pdf" | "doc" | "image" | null => {
     if (!url) return null;
     const lowerUrl = url.toLowerCase();
     if (lowerUrl.endsWith(".pdf")) return "pdf";
+    if (lowerUrl.match(/\.(doc|docx)$/)) return "doc";
     if (lowerUrl.match(/\.(jpg|jpeg|png|gif|webp|svg)$/)) return "image";
     return null;
   };
 
-  const fileType = getFileType(fullAttachmentUrl);
+  const documentFileType = getFileType(fullDocumentUrl);
 
   return (
     <div className="bg-gray-900/60 border border-gray-800 rounded-xl p-6 shadow-md">
@@ -73,33 +82,49 @@ export const NoticePreview: React.FC<NoticePreviewProps> = ({
         </span>
       </p>
 
-      {/* Attachment Preview */}
-      {fullAttachmentUrl && fileType === "image" && (
+      {/* Flyer Preview */}
+      {fullFlyerUrl && (
         <div className="mb-4">
+          <p className="text-sm text-gray-400 mb-2">Flyer Image:</p>
           <img
-            src={fullAttachmentUrl}
-            alt="Notice attachment"
-            className="max-w-full h-auto rounded-lg"
+            src={fullFlyerUrl}
+            alt="Notice flyer"
+            className="max-w-full h-auto rounded-lg border border-gray-700"
           />
         </div>
       )}
 
-      {fullAttachmentUrl && fileType === "pdf" && (
-        <div className="mb-4 p-3 bg-gray-800 rounded-lg flex items-center gap-2">
-          <svg
-            className="w-5 h-5 text-gray-300"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-            />
-          </svg>
-          <p className="text-gray-300">PDF Attachment: {notice.attachment}</p>
+      {/* Document Attachment */}
+      {fullDocumentUrl && (
+        <div className="mb-4 p-3 bg-gray-800 rounded-lg">
+          <div className="flex items-center gap-2">
+            <svg
+              className="w-5 h-5 text-gray-300"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+              />
+            </svg>
+            <div className="flex-1">
+              <p className="text-sm text-gray-400">
+                {documentFileType === "pdf" ? "PDF" : "Document"} Attachment
+              </p>
+              <a
+                href={fullDocumentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple-400 hover:text-purple-300 text-sm underline"
+              >
+                {notice.document?.split("/").pop()}
+              </a>
+            </div>
+          </div>
         </div>
       )}
 

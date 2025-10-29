@@ -273,7 +273,8 @@ export const validateEventForm = (data: {
 export const validateNoticeForm = (data: {
   title: string;
   content: string;
-  attachment?: File | null;
+  flyer?: File | null;
+  document?: File | null;
   isUpdate?: boolean; // Flag to indicate if this is an update operation
 }): ValidationErrors => {
   const errors: ValidationErrors = {};
@@ -286,10 +287,31 @@ export const validateNoticeForm = (data: {
   const contentError = validateRequired(data.content, "Content");
   if (contentError) errors.content = contentError;
 
-  // Attachment validation - only validate if provided (always optional)
-  if (data.attachment) {
-    const fileError = validateFileSize(data.attachment, 10, "Attachment");
-    if (fileError) errors.attachment = fileError;
+  // Flyer validation - only validate if provided (always optional)
+  if (data.flyer) {
+    const fileError = validateFileSize(data.flyer, 10, "Flyer");
+    if (fileError) errors.flyer = fileError;
+
+    // Validate it's an image
+    if (!data.flyer.type.startsWith("image/")) {
+      errors.flyer = "Flyer must be an image file (JPG, PNG, GIF, WebP)";
+    }
+  }
+
+  // Document validation - only validate if provided (always optional)
+  if (data.document) {
+    const fileError = validateFileSize(data.document, 10, "Document");
+    if (fileError) errors.document = fileError;
+
+    // Validate it's a document
+    const allowedTypes = [
+      "application/pdf",
+      "application/msword",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    ];
+    if (!allowedTypes.includes(data.document.type)) {
+      errors.document = "Document must be PDF, DOC, or DOCX format";
+    }
   }
 
   return errors;

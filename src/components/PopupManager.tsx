@@ -36,7 +36,7 @@ function getDaysSinceCreation(createdAt: string): number {
 }
 
 /**
- * Fetch pinned notices with image attachments that are less than 5 days old
+ * Fetch pinned notices with image flyers that are less than 5 days old
  */
 async function fetchPinnedNotices(): Promise<Notice[]> {
   try {
@@ -47,10 +47,9 @@ async function fetchPinnedNotices(): Promise<Notice[]> {
 
     const notices: Notice[] = await response.json();
 
-    // Filter notices: must have image attachment and be less than 5 days old
+    // Filter notices: must have image flyer and be less than 5 days old
     return notices.filter((notice) => {
-      if (!isValidImageUrl(notice.attachment) || !notice.created_at)
-        return false;
+      if (!isValidImageUrl(notice.flyer) || !notice.created_at) return false;
       const daysSince = getDaysSinceCreation(notice.created_at);
       return daysSince <= 5;
     });
@@ -141,7 +140,7 @@ async function determinePopupContent(): Promise<PopupData | null> {
     return {
       id: String(notice.id),
       title: notice.title,
-      imageUrl: notice.attachment!,
+      imageUrl: notice.flyer!,
       description: notice.content,
       type: "notice",
     };

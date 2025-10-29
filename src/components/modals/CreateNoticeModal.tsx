@@ -22,7 +22,8 @@ interface CreateNoticeModalProps {
     title: string;
     content: string;
     audience: string;
-    file: File | null;
+    flyer: File | null;
+    document: File | null;
   }) => Promise<void>;
 }
 
@@ -34,7 +35,8 @@ export default function CreateNoticeModal({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [audience, setAudience] = useState("ALL");
-  const [file, setFile] = useState<File | null>(null);
+  const [flyer, setFlyer] = useState<File | null>(null);
+  const [document, setDocument] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [message, setMessage] = useState("");
   const [errors, setErrors] = useState<ValidationErrors>({});
@@ -48,7 +50,8 @@ export default function CreateNoticeModal({
     const validationErrors = validateNoticeForm({
       title,
       content,
-      attachment: file,
+      flyer,
+      document,
     });
 
     if (Object.keys(validationErrors).length > 0) {
@@ -60,14 +63,15 @@ export default function CreateNoticeModal({
     setIsSubmitting(true);
 
     try {
-      await onSubmit({ title, content, audience, file });
+      await onSubmit({ title, content, audience, flyer, document });
       setMessage("Notice submitted successfully!");
       // Reset form
       setTimeout(() => {
         setTitle("");
         setContent("");
         setAudience("ALL");
-        setFile(null);
+        setFlyer(null);
+        setDocument(null);
         setMessage("");
         setErrors({});
         onClose();
@@ -91,7 +95,8 @@ export default function CreateNoticeModal({
       setTitle("");
       setContent("");
       setAudience("ALL");
-      setFile(null);
+      setFlyer(null);
+      setDocument(null);
       setMessage("");
       onClose();
     }
@@ -200,43 +205,78 @@ export default function CreateNoticeModal({
         <div className="space-y-2">
           <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
             <ArrowUpTrayIcon className="w-5 h-5 text-purple-400" />
-            Attachment (Optional){" "}
-            {file && (
-              <span className="text-green-400 text-xs">({file.name})</span>
+            Flyer Image (Optional){" "}
+            {flyer && (
+              <span className="text-green-400 text-xs">({flyer.name})</span>
             )}
           </label>
           <input
-            key={file ? "has-file" : "no-file"}
+            key={flyer ? "has-flyer" : "no-flyer"}
             type="file"
-            accept="application/pdf,image/*"
+            accept="image/*"
             className={`w-full p-4 bg-gray-900/80 border-2 border-dashed rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-purple-600 file:to-pink-600 file:text-white file:font-semibold hover:file:from-purple-700 hover:file:to-pink-700 file:shadow-lg file:transition-all cursor-pointer text-white ${
-              errors.attachment ? "border-red-500" : "border-gray-700"
+              errors.flyer ? "border-red-500" : "border-gray-700"
             }`}
             onChange={(e) => {
-              setFile(e.target.files?.[0] || null);
-              if (errors.attachment) {
+              setFlyer(e.target.files?.[0] || null);
+              if (errors.flyer) {
                 const newErrors = { ...errors };
-                delete newErrors.attachment;
+                delete newErrors.flyer;
                 setErrors(newErrors);
               }
             }}
           />
-          {file && file.type?.startsWith("image/") && (
+          {flyer && flyer.type?.startsWith("image/") && (
             <div className="mt-3">
               <img
-                src={URL.createObjectURL(file)}
-                alt="Attachment preview"
+                src={URL.createObjectURL(flyer)}
+                alt="Flyer preview"
                 className="max-h-48 rounded-lg border border-purple-500/30"
               />
             </div>
           )}
           <p className="text-xs text-gray-500 mt-1">
-            Supported: PDF, JPG, PNG (Max 10MB)
+            Supported: JPG, PNG, GIF, WebP (Max 10MB) - Used for popups
           </p>
-          {errors.attachment && (
+          {errors.flyer && (
             <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
               <XCircleIcon className="w-4 h-4" />
-              {errors.attachment}
+              {errors.flyer}
+            </p>
+          )}
+        </div>
+
+        <div className="space-y-2">
+          <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+            <ArrowUpTrayIcon className="w-5 h-5 text-purple-400" />
+            Document (Optional){" "}
+            {document && (
+              <span className="text-green-400 text-xs">({document.name})</span>
+            )}
+          </label>
+          <input
+            key={document ? "has-document" : "no-document"}
+            type="file"
+            accept="application/pdf,.doc,.docx"
+            className={`w-full p-4 bg-gray-900/80 border-2 border-dashed rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2.5 file:px-5 file:rounded-xl file:border-0 file:bg-gradient-to-r file:from-purple-600 file:to-pink-600 file:text-white file:font-semibold hover:file:from-purple-700 hover:file:to-pink-700 file:shadow-lg file:transition-all cursor-pointer text-white ${
+              errors.document ? "border-red-500" : "border-gray-700"
+            }`}
+            onChange={(e) => {
+              setDocument(e.target.files?.[0] || null);
+              if (errors.document) {
+                const newErrors = { ...errors };
+                delete newErrors.document;
+                setErrors(newErrors);
+              }
+            }}
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Supported: PDF, DOC, DOCX (Max 10MB)
+          </p>
+          {errors.document && (
+            <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+              <XCircleIcon className="w-4 h-4" />
+              {errors.document}
             </p>
           )}
         </div>

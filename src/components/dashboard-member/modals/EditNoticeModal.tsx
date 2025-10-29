@@ -29,7 +29,8 @@ export default function EditNoticeModal({
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [audience, setAudience] = useState("ALL");
-  const [file, setFile] = useState<File | null>(null);
+  const [flyer, setFlyer] = useState<File | null>(null);
+  const [document, setDocument] = useState<File | null>(null);
   const [errors, setErrors] = useState<ValidationErrors>({});
 
   useEffect(() => {
@@ -37,7 +38,8 @@ export default function EditNoticeModal({
       setTitle(notice.title || "");
       setContent(notice.content || "");
       setAudience(notice.audience || "ALL");
-      setFile(null);
+      setFlyer(null);
+      setDocument(null);
       setErrors({});
     }
   }, [notice]);
@@ -49,8 +51,9 @@ export default function EditNoticeModal({
     const validationErrors = validateNoticeForm({
       title,
       content,
-      attachment: file,
-      isUpdate: true, // This makes attachment optional
+      flyer,
+      document,
+      isUpdate: true, // This makes files optional
     });
 
     if (Object.keys(validationErrors).length > 0) {
@@ -64,8 +67,11 @@ export default function EditNoticeModal({
       formData.append("title", title);
       formData.append("content", content);
       formData.append("audience", audience);
-      if (file) {
-        formData.append("attachment", file);
+      if (flyer) {
+        formData.append("flyer", flyer);
+      }
+      if (document) {
+        formData.append("document", document);
       }
       await onSave(formData);
     } catch (error: any) {
@@ -167,47 +173,89 @@ export default function EditNoticeModal({
             </select>
           </div>
 
-          {/* File Upload */}
+          {/* Flyer Upload */}
           <div className="space-y-2">
             <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
               <ArrowUpTrayIcon className="w-4 h-4 text-purple-400" />
-              Update Attachment{" "}
-              {file && (
-                <span className="text-green-400 text-xs">({file.name})</span>
+              Update Flyer Image{" "}
+              {flyer && (
+                <span className="text-green-400 text-xs">({flyer.name})</span>
               )}
-              {notice?.attachment && !file && (
+              {notice?.flyer && !flyer && (
                 <span className="text-gray-500 text-xs">
-                  (Current: {notice.attachment.split("/").pop()})
+                  (Current: {notice.flyer.split("/").pop()})
                 </span>
               )}
             </label>
             <input
               type="file"
-              accept="application/pdf,image/*"
+              accept="image/*"
               className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-purple-500/30 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600/20 file:text-purple-300 hover:file:bg-purple-600/30 file:transition-all cursor-pointer text-sm text-white"
               onChange={(e) => {
-                setFile(e.target.files?.[0] || null);
-                if (errors.attachment) {
-                  const { attachment, ...rest } = errors;
+                setFlyer(e.target.files?.[0] || null);
+                if (errors.flyer) {
+                  const { flyer, ...rest } = errors;
                   setErrors(rest);
                 }
               }}
             />
-            {errors.attachment && (
+            {errors.flyer && (
               <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
                 <XCircleIcon className="w-4 h-4" />
-                {errors.attachment}
+                {errors.flyer}
               </p>
             )}
-            {file && file.type?.startsWith("image/") && (
+            {flyer && flyer.type?.startsWith("image/") && (
               <div className="mt-3">
                 <img
-                  src={URL.createObjectURL(file)}
-                  alt="New attachment preview"
+                  src={URL.createObjectURL(flyer)}
+                  alt="New flyer preview"
                   className="max-h-48 rounded-lg border border-purple-500/30"
                 />
               </div>
             )}
+            <p className="text-xs text-gray-500 mt-1">
+              Supported: JPG, PNG, GIF, WebP (Max 10MB) - Used for popups
+            </p>
+          </div>
+
+          {/* Document Upload */}
+          <div className="space-y-2">
+            <label className="block text-sm font-semibold text-gray-300 flex items-center gap-2">
+              <ArrowUpTrayIcon className="w-4 h-4 text-purple-400" />
+              Update Document{" "}
+              {document && (
+                <span className="text-green-400 text-xs">
+                  ({document.name})
+                </span>
+              )}
+              {notice?.document && !document && (
+                <span className="text-gray-500 text-xs">
+                  (Current: {notice.document.split("/").pop()})
+                </span>
+              )}
+            </label>
+            <input
+              type="file"
+              accept="application/pdf,.doc,.docx"
+              className="w-full p-3 bg-gray-900/90 border-2 border-dashed border-purple-500/30 rounded-xl hover:border-purple-500/50 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:bg-purple-600/20 file:text-purple-300 hover:file:bg-purple-600/30 file:transition-all cursor-pointer text-sm text-white"
+              onChange={(e) => {
+                setDocument(e.target.files?.[0] || null);
+                if (errors.document) {
+                  const { document, ...rest } = errors;
+                  setErrors(rest);
+                }
+              }}
+            />
+            {errors.document && (
+              <p className="error-message text-red-400 text-sm mt-1 flex items-center gap-1">
+                <XCircleIcon className="w-4 h-4" />
+                {errors.document}
+              </p>
+            )}
+            <p className="text-xs text-gray-500 mt-1">
+              Supported: PDF, DOC, DOCX (Max 10MB)
+            </p>
           </div>
 
           {/* Action Buttons */}

@@ -733,7 +733,9 @@ export default function MemberDashboard() {
 
         {/* Main Content */}
         <div
-          className={`${sidebarCollapsed ? "md:ml-20" : "md:ml-64"} ml-0 p-4 md:p-6 pt-24 transition-all duration-300`}
+          className={`${
+            sidebarCollapsed ? "md:ml-20" : "md:ml-64"
+          } ml-0 p-4 md:p-6 pt-24 transition-all duration-300`}
         >
           {/* Overview Section */}
           {activeSection === "overview" && (
@@ -1006,7 +1008,8 @@ export default function MemberDashboard() {
             form.append("title", data.title);
             form.append("content", data.content);
             form.append("audience", data.audience);
-            if (data.file) form.append("attachment", data.file);
+            if (data.flyer) form.append("flyer", data.flyer);
+            if (data.document) form.append("document", data.document);
 
             await createNoticeApi(form);
             toast.success("Notice submitted for review successfully!");

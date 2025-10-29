@@ -49,7 +49,8 @@ export interface Notice {
   id: number | string;
   title: string;
   content: string;
-  attachment?: string | null;
+  flyer?: string | null;
+  document?: string | null;
   audience?: string;
   pinned?: boolean;
   published_by?: number;

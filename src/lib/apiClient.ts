@@ -4,6 +4,21 @@ const base = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:8000";
 
 export const api = axios.create({ baseURL: base });
 
+function isPublicPath(): boolean {
+  if (typeof window === "undefined") return false;
+  const p = window.location.pathname || "";
+  // Pages that should never force-redirect on auth changes
+  return (
+    p === "/login" ||
+    p === "/reset-password" ||
+    p.startsWith("/reset-password/") ||
+    p.startsWith("/account/") || // first-time password change
+    p === "/unsubscribe" ||
+    p === "/ambassadors" ||
+    p === "/alumni"
+  );
+}
+
 api.interceptors.request.use((config) => {
   if (typeof window !== "undefined") {
     const token = localStorage.getItem("access");
@@ -33,7 +48,16 @@ api.interceptors.response.use(
               errorCode.includes("permissions have been updated"))))
       ) {
         console.warn("Token invalidated due to permission changes");
-        logout();
+        // On public paths, just clear tokens; avoid redirect loops
+        if (isPublicPath()) {
+          try {
+            localStorage.removeItem("access");
+            localStorage.removeItem("refresh");
+            localStorage.removeItem("user");
+          } catch {}
+        } else {
+          logout();
+        }
       }
     }
     return Promise.reject(error);
@@ -46,7 +70,10 @@ export function logout() {
     localStorage.removeItem("access");
     localStorage.removeItem("refresh");
     localStorage.removeItem("user");
-    window.location.href = "/login?session_expired=true";
+    // Avoid redirecting away from reset/login related screens
+    if (!isPublicPath()) {
+      window.location.href = "/login?session_expired=true";
+    }
   }
 }
 
@@ -83,7 +110,16 @@ export function validateTokenRole(): boolean {
     // Check if role in token matches current user role
     if (payload?.role && user?.role && payload.role !== user.role) {
       console.warn("Token role mismatch detected - logging out");
-      logout();
+      // On public paths, clear tokens but don't redirect
+      if (isPublicPath()) {
+        try {
+          localStorage.removeItem("access");
+          localStorage.removeItem("refresh");
+          localStorage.removeItem("user");
+        } catch {}
+      } else {
+        logout();
+      }
       return false;
     }
 
@@ -161,7 +197,15 @@ export async function authedFetch(
             errorCode.includes("permissions have been updated")))
       ) {
         console.warn("Token invalidated due to permission changes");
-        logout();
+        if (isPublicPath()) {
+          try {
+            localStorage.removeItem("access");
+            localStorage.removeItem("refresh");
+            localStorage.removeItem("user");
+          } catch {}
+        } else {
+          logout();
+        }
         throw new Error("Your permissions have changed. Please log in again.");
       }
     } catch (e) {
@@ -177,7 +221,15 @@ export async function authedFetch(
   // Try refresh once for generic 401
   const newAccess = await refreshAccess();
   if (!newAccess) {
-    logout();
+    if (isPublicPath()) {
+      try {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        localStorage.removeItem("user");
+      } catch {}
+    } else {
+      logout();
+    }
     return res;
   }
 
@@ -187,7 +239,15 @@ export async function authedFetch(
 
   // If retry also fails with 401, logout
   if (retryRes.status === 401) {
-    logout();
+    if (isPublicPath()) {
+      try {
+        localStorage.removeItem("access");
+        localStorage.removeItem("refresh");
+        localStorage.removeItem("user");
+      } catch {}
+    } else {
+      logout();
+    }
   }
 
   return retryRes;
