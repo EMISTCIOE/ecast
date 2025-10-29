@@ -75,11 +75,7 @@ export default function NoticesAndEventsSection({
                 </div>
 
                 {displayNotice.map((notice) => (
-                  <Link
-                    key={notice.id}
-                    href={`/notices/${notice.slug || notice.id}`}
-                    className="block"
-                  >
+                  <Link key={notice.id} href={`/notices`} className="block">
                     <div className="border border-gray-800 rounded-lg p-6 hover:border-blue-500 hover:bg-gray-900 transition-all bg-gray-900/50">
                       <div className="flex items-start justify-between gap-3 mb-3">
                         <h3 className="font-semibold text-white text-xl flex-1 line-clamp-2">
