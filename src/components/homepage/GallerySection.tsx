@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { PhotoIcon } from "@heroicons/react/24/outline";
 
@@ -42,15 +41,14 @@ export default function GallerySection({ images }: GallerySectionProps) {
               key={img.id}
               className="relative aspect-square rounded-lg overflow-hidden hover:opacity-90 transition-opacity cursor-pointer group border border-gray-800"
             >
-              <Image
+              <img
                 src={
                   img.image.startsWith("http")
                     ? img.image
                     : `${BASE_URL}${img.image}`
                 }
                 alt={img.caption || "Gallery image"}
-                fill
-                className="object-cover"
+                className="absolute inset-0 w-full h-full object-cover"
               />
               {img.caption && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/70 p-3 transform translate-y-full group-hover:translate-y-0 transition-transform">

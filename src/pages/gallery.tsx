@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import Image from "next/image";
 import NavBar from "@/components/nav";
 import Footer from "@/components/footar";
 
@@ -52,12 +51,10 @@ export default function GalleryPage() {
                   >
                     {/* Image Container with fixed aspect ratio */}
                     <div className="relative aspect-square bg-gray-900">
-                      <Image
+                      <img
                         src={g.image}
                         alt={g.title || "Gallery"}
-                        fill
-                        className="object-cover"
-                        sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, (max-width: 1024px) 33vw, 25vw"
+                        className="absolute inset-0 w-full h-full object-cover"
                       />
 
                       {/* Overlay with gradient */}
