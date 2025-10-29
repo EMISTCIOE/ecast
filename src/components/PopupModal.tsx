@@ -70,13 +70,16 @@ export const PopupModal: React.FC<PopupModalProps> = ({
         <div className="flex flex-col">
           {/* Image Section */}
           <div className="relative w-full bg-gray-800">
-              <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-                <img
-                  src={imageUrl}
-                  alt={title}
-                  className="absolute inset-0 w-full h-full object-contain"
-                />
-              </div>
+            <div
+              className="relative w-full"
+              style={{ paddingBottom: "56.25%" }}
+            >
+              <img
+                src={imageUrl}
+                alt={title}
+                className="absolute inset-0 w-full h-full object-contain"
+              />
+            </div>
           </div>
 
           {/* Info Section */}
