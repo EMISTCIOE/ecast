@@ -1,4 +1,4 @@
-name: Deploy ECAST Website
+name: Deploy ECAST
 on:
   push:
     branches: [main]
