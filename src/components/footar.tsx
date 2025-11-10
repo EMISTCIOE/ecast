@@ -238,7 +238,7 @@ const Footer = () => {
                 Terms
               </Link>
               <a
-                href="https://status.cioe.edu.np"
+                href="https://status.tcioe.edu.np"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-gray-500 hover:text-blue-400 transition-colors duration-200"
