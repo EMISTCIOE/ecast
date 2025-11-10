@@ -31,7 +31,6 @@ const JoinUs = () => {
   const [reason_to_join, setReason_to_join] = useState<string>("");
   const [interest, setInterest] = useState<string>("");
   const [timeAvailability, setTimeAvailability] = useState<string>("");
-  const [timeAvailability, setTimeAvailability] = useState<string>("");
   const [resume, setResume] = useState<File | null>(null);
   const [resumeName, setResumeName] = useState<string>("");
   const [formSubmitted, setFormSubmitted] = useState<boolean>(false);
