@@ -237,6 +237,14 @@ const Footer = () => {
               >
                 Terms
               </Link>
+              <a
+                href="https://status.cioe.edu.np"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-gray-500 hover:text-blue-400 transition-colors duration-200"
+              >
+                Status
+              </a>
               <Link
                 href="/contact-us"
                 className="text-gray-500 hover:text-blue-400 transition-colors duration-200"
