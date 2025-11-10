@@ -8,11 +8,30 @@ const JoinUs = () => {
   const router = useRouter();
   const { fetchStatus, fetchInfo, submitForm } = useIntake();
 
-  // Redirect /join-us to /join-us/members to keep URLs consistent
+  // Smart redirect from /join-us to the open intake (members or ambassadors)
+  const [redirectChecked, setRedirectChecked] = useState(false);
   useEffect(() => {
-    if (router && router.pathname === "/join-us") {
-      router.replace("/join-us/members");
-    }
+    const checkAndRedirect = async () => {
+      if (!router || router.pathname !== "/join-us") return;
+      try {
+        const [mRes, aRes] = await Promise.all([
+          fetch("/api/intake/status"),
+          fetch("/api/ambassador-intake/status"),
+        ]);
+        const m = await mRes.json().catch(() => ({}));
+        const a = await aRes.json().catch(() => ({}));
+        if (m?.is_open) {
+          router.replace("/join-us/members");
+          return;
+        }
+        if (a?.is_open) {
+          router.replace("/join-us/ambassadors");
+          return;
+        }
+      } catch {}
+      setRedirectChecked(true);
+    };
+    checkAndRedirect();
   }, [router]);
 
   const [intakeStatus, setIntakeStatus] = useState<IntakeStatus | null>(null);
@@ -199,6 +218,22 @@ const JoinUs = () => {
     if (!intakeStatus?.available_batches) return true; // If no restriction, allow all
     return intakeStatus.available_batches.includes(batchCode);
   };
+
+  // On /join-us, wait for redirect decision first
+  if (typeof window !== "undefined" && router.pathname === "/join-us" && !redirectChecked) {
+    return (
+      <>
+        <NavBar />
+        <div className="bg-black min-h-screen flex items-center justify-center pt-20">
+          <div className="text-gray-800 text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-red-600 mx-auto mb-4"></div>
+            <p className="text-xl">Checking enrollment status...</p>
+          </div>
+        </div>
+        <Footer />
+      </>
+    );
+  }
 
   if (loading) {
     return (

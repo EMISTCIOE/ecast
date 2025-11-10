@@ -2061,6 +2061,42 @@ export default function AdminDashboard() {
                     ))
   )}
 
+  
+                </div>
+                <p className="text-xs text-gray-400 mt-1">
+                  Leave empty to allow all batches
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleOpenIntake}
+                  disabled={isTogglingIntake || !intakeStartDate}
+                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
+                >
+                  <CheckIcon className="w-5 h-5" />
+                  {isTogglingIntake ? "Opening..." : "Open Enrollment"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowIntakeDialog(false);
+                    setIntakeStartDate("");
+                    setIntakeEndDate("");
+                    setCreateNewBatch(false);
+                    setSelectedBatches([]);
+                  }}
+                  disabled={isTogglingIntake}
+                  className="px-6 py-3 rounded-xl border-2 border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
   {/* Ambassador Intake Opening Dialog */}
   {showAmbIntakeDialog && (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
@@ -2128,40 +2164,6 @@ export default function AdminDashboard() {
       </div>
     </div>
   )}
-                </div>
-                <p className="text-xs text-gray-400 mt-1">
-                  Leave empty to allow all batches
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={handleOpenIntake}
-                  disabled={isTogglingIntake || !intakeStartDate}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-6 py-3 rounded-xl font-semibold transition-all flex items-center justify-center gap-2"
-                >
-                  <CheckIcon className="w-5 h-5" />
-                  {isTogglingIntake ? "Opening..." : "Open Enrollment"}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowIntakeDialog(false);
-                    setIntakeStartDate("");
-                    setIntakeEndDate("");
-                    setCreateNewBatch(false);
-                    setSelectedBatches([]);
-                  }}
-                  disabled={isTogglingIntake}
-                  className="px-6 py-3 rounded-xl border-2 border-gray-600 text-gray-300 hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all font-semibold"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Research Modals */}
       <CreateResearchModal
