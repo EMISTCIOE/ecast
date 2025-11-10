@@ -8,6 +8,13 @@ const JoinUs = () => {
   const router = useRouter();
   const { fetchStatus, fetchInfo, submitForm } = useIntake();
 
+  // Redirect /join-us to /join-us/members to keep URLs consistent
+  useEffect(() => {
+    if (router && router.pathname === "/join-us") {
+      router.replace("/join-us/members");
+    }
+  }, [router]);
+
   const [intakeStatus, setIntakeStatus] = useState<IntakeStatus | null>(null);
   const [intakeInfo, setIntakeInfo] = useState<IntakeInfo | null>(null);
   const [loading, setLoading] = useState(true);
@@ -23,6 +30,8 @@ const JoinUs = () => {
   const [about, setAbout] = useState<string>("");
   const [reason_to_join, setReason_to_join] = useState<string>("");
   const [interest, setInterest] = useState<string>("");
+  const [timeAvailability, setTimeAvailability] = useState<string>("");
+  const [timeAvailability, setTimeAvailability] = useState<string>("");
   const [resume, setResume] = useState<File | null>(null);
   const [resumeName, setResumeName] = useState<string>("");
   const [formSubmitted, setFormSubmitted] = useState<boolean>(false);
@@ -115,6 +124,7 @@ const JoinUs = () => {
     formData.append("github_link", link2);
     formData.append("facebook_link", link3);
     formData.append("linkedin_link", link1);
+    formData.append("time_availability", timeAvailability);
 
     try {
       // Submit to Google Sheets (non-critical, fire and forget)
@@ -137,6 +147,7 @@ const JoinUs = () => {
           github_link: link2,
           facebook_link: link3,
           linkedin_link: link1,
+          time_availability: timeAvailability,
         };
 
         await fetch(gasUrl, {
@@ -701,6 +712,26 @@ const JoinUs = () => {
                   placeholder="Mention your skills, interests, and any additional positions you'd like to consider"
                   rows={4}
                   required
+                  disabled={isSubmitting || formSubmitted}
+                />
+              </div>
+
+              {/* Time Availability */}
+              <div>
+                <label
+                  className="block text-gray-300 font-semibold mb-2"
+                  htmlFor="time_availability"
+                >
+                  Time Availability
+                </label>
+                <textarea
+                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent transition resize-none placeholder-gray-500"
+                  id="time_availability"
+                  name="time_availability"
+                  value={timeAvailability}
+                  onChange={(e) => setTimeAvailability(e.target.value)}
+                  placeholder="When can you typically contribute? e.g., 5 hrs/week, evenings, weekends"
+                  rows={3}
                   disabled={isSubmitting || formSubmitted}
                 />
               </div>

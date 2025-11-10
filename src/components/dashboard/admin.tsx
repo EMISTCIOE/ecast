@@ -12,6 +12,7 @@ import { useTasks } from "@/lib/hooks/tasks";
 import { useProjects } from "@/lib/hooks/projects";
 import { useUsers } from "@/lib/hooks/users";
 import { useIntake, IntakeStatus } from "@/lib/hooks/intake";
+import { useAmbassadorIntake } from "@/lib/hooks/ambassadorIntake";
 import { useResearch } from "@/lib/hooks/research";
 import { authedFetch } from "@/lib/apiClient";
 import { useToast } from "@/hooks/useToast";
@@ -64,6 +65,10 @@ export default function AdminDashboard() {
   const [activeSection, setActiveSection] = useState("overview");
   const toast = useToast();
   const { fetchStatus, updateStatus, fetchInfo } = useIntake();
+  const {
+    fetchStatus: fetchAmbStatus,
+    updateStatus: updateAmbStatus,
+  } = useAmbassadorIntake();
 
   const [tasks, setTasks] = useState<any[]>([]);
   const [showTaskModal, setShowTaskModal] = useState(false);
@@ -86,6 +91,15 @@ export default function AdminDashboard() {
   const [createNewBatch, setCreateNewBatch] = useState(false);
   const [selectedBatches, setSelectedBatches] = useState<string[]>([]);
   const [availableBatches, setAvailableBatches] = useState<any[]>([]);
+
+  // Ambassador intake status state
+  const [ambIntakeStatus, setAmbIntakeStatus] = useState<IntakeStatus | null>(
+    null
+  );
+  const [isTogglingAmbIntake, setIsTogglingAmbIntake] = useState(false);
+  const [showAmbIntakeDialog, setShowAmbIntakeDialog] = useState(false);
+  const [ambIntakeStartDate, setAmbIntakeStartDate] = useState("");
+  const [ambIntakeEndDate, setAmbIntakeEndDate] = useState("");
 
   // Task form
   const [assignees, setAssignees] = useState<any[]>([]);
@@ -251,6 +265,8 @@ export default function AdminDashboard() {
 
       // Load intake status
       loadIntakeStatus();
+      // Load ambassador intake status
+      loadAmbIntakeStatus();
     }
   }, []);
 
@@ -274,6 +290,15 @@ export default function AdminDashboard() {
       setAvailableBatches(info.batches || []);
     } catch (error) {
       console.error("Failed to load intake status:", error);
+    }
+  };
+
+  const loadAmbIntakeStatus = async () => {
+    try {
+      const status = await fetchAmbStatus();
+      setAmbIntakeStatus(status);
+    } catch (error) {
+      console.error("Failed to load ambassador intake status:", error);
     }
   };
 
@@ -347,6 +372,56 @@ export default function AdminDashboard() {
       toast.error("Failed to open enrollment");
     } finally {
       setIsTogglingIntake(false);
+    }
+  };
+
+  const toggleAmbIntakeStatus = async () => {
+    if (!ambIntakeStatus) return;
+    if (!ambIntakeStatus.is_open) {
+      setShowAmbIntakeDialog(true);
+      return;
+    }
+    setIsTogglingAmbIntake(true);
+    try {
+      const newStatus = await updateAmbStatus(!ambIntakeStatus.is_open);
+      setAmbIntakeStatus(newStatus);
+      toast.success(
+        `Ambassador enrollment ${newStatus.is_open ? "opened" : "closed"} successfully!`
+      );
+      await loadAmbIntakeStatus();
+    } catch (error) {
+      console.error("Failed to toggle ambassador intake status:", error);
+      toast.error("Failed to update ambassador enrollment status");
+    } finally {
+      setIsTogglingAmbIntake(false);
+    }
+  };
+
+  const handleOpenAmbIntake = async () => {
+    if (!ambIntakeStartDate) {
+      toast.error("Please set a start date and time");
+      return;
+    }
+    setIsTogglingAmbIntake(true);
+    try {
+      const params: any = {
+        start_datetime: new Date(ambIntakeStartDate).toISOString(),
+      };
+      if (ambIntakeEndDate) {
+        params.end_datetime = new Date(ambIntakeEndDate).toISOString();
+      }
+      const newStatus = await updateAmbStatus(true, params);
+      setAmbIntakeStatus(newStatus);
+      toast.success("Ambassador enrollment opened successfully!");
+      setShowAmbIntakeDialog(false);
+      setAmbIntakeStartDate("");
+      setAmbIntakeEndDate("");
+      await loadAmbIntakeStatus();
+    } catch (error) {
+      console.error("Failed to open ambassador intake:", error);
+      toast.error("Failed to open ambassador enrollment");
+    } finally {
+      setIsTogglingAmbIntake(false);
     }
   };
 
@@ -779,6 +854,76 @@ export default function AdminDashboard() {
                   <div className="mt-2 text-sm text-gray-400">
                     Deadline:{" "}
                     {new Date(intakeStatus.end_date).toLocaleString("en-NP", {
+                      timeZone: "Asia/Kathmandu",
+                      dateStyle: "medium",
+                      timeStyle: "short",
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Ambassador Enrollment Status Control */}
+              <div className="mb-4 bg-gradient-to-br from-fuchsia-900/40 to-fuchsia-600/20 p-6 rounded-lg border border-fuchsia-500/30">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <UserPlusIcon className="w-8 h-8 text-fuchsia-400" />
+                    <div>
+                      <h3 className="text-lg font-semibold text-white">
+                        Ambassador Enrollment Status
+                      </h3>
+                      <p className="text-sm text-gray-400">
+                        {ambIntakeStatus?.is_open
+                          ? "Ambassadors can currently submit applications"
+                          : "Ambassador enrollment is currently closed"}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="text-right">
+                      <div className="text-sm text-gray-400">Status</div>
+                      <div
+                        className={`text-lg font-bold ${
+                          ambIntakeStatus?.is_open
+                            ? "text-green-400"
+                            : "text-red-400"
+                        }`}
+                      >
+                        {ambIntakeStatus?.is_open ? "OPEN" : "CLOSED"}
+                      </div>
+                    </div>
+                    <button
+                      onClick={toggleAmbIntakeStatus}
+                      disabled={isTogglingAmbIntake || !ambIntakeStatus}
+                      className={`relative inline-flex items-center h-8 rounded-full w-16 transition-colors duration-200 ease-in-out focus:outline-none ${
+                        ambIntakeStatus?.is_open ? "bg-green-600" : "bg-gray-600"
+                      } ${
+                        isTogglingAmbIntake || !ambIntakeStatus
+                          ? "opacity-50 cursor-not-allowed"
+                          : "cursor-pointer"
+                      }`}
+                    >
+                      <span
+                        className={`inline-block w-6 h-6 transform transition-transform duration-200 ease-in-out bg-white rounded-full ${
+                          ambIntakeStatus?.is_open
+                            ? "translate-x-9"
+                            : "translate-x-1"
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+                {ambIntakeStatus?.message && (
+                  <div className="mt-3 p-3 bg-gray-900/50 rounded-lg">
+                    <p className="text-sm text-gray-300">
+                      <span className="font-semibold">Message: </span>
+                      {ambIntakeStatus.message}
+                    </p>
+                  </div>
+                )}
+                {ambIntakeStatus?.end_date && ambIntakeStatus.is_open && (
+                  <div className="mt-2 text-sm text-gray-400">
+                    Deadline:{" "}
+                    {new Date(ambIntakeStatus.end_date).toLocaleString("en-NP", {
                       timeZone: "Asia/Kathmandu",
                       dateStyle: "medium",
                       timeStyle: "short",
@@ -1792,8 +1937,8 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Intake Opening Dialog */}
-      {showIntakeDialog && (
+  {/* Intake Opening Dialog */}
+  {showIntakeDialog && (
         <div className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50 p-4">
           <div className="bg-[#1a1f3a] rounded-2xl shadow-2xl max-w-2xl w-full border border-indigo-700 max-h-[90vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-700">
@@ -1914,7 +2059,75 @@ export default function AdminDashboard() {
                         </label>
                       </div>
                     ))
-                  )}
+  )}
+
+  {/* Ambassador Intake Opening Dialog */}
+  {showAmbIntakeDialog && (
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
+      <div className="bg-slate-900 border border-white/10 rounded-xl p-6 w-full max-w-lg">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-xl font-semibold">Open Ambassador Enrollment</h3>
+          <button
+            className="text-gray-400 hover:text-white"
+            onClick={() => {
+              setShowAmbIntakeDialog(false);
+              setAmbIntakeStartDate("");
+              setAmbIntakeEndDate("");
+            }}
+          >
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm text-gray-300 mb-1">
+              Start Date & Time
+            </label>
+            <input
+              type="datetime-local"
+              className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2"
+              value={ambIntakeStartDate}
+              onChange={(e) => setAmbIntakeStartDate(e.target.value)}
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-300 mb-1">
+              Optional End Date & Time
+            </label>
+            <input
+              type="datetime-local"
+              className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2"
+              value={ambIntakeEndDate}
+              onChange={(e) => setAmbIntakeEndDate(e.target.value)}
+            />
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button
+              className="px-4 py-2 rounded-lg bg-white/10 hover:bg-white/20"
+              onClick={() => {
+                setShowAmbIntakeDialog(false);
+                setAmbIntakeStartDate("");
+                setAmbIntakeEndDate("");
+              }}
+              disabled={isTogglingAmbIntake}
+            >
+              Cancel
+            </button>
+            <button
+              className="px-4 py-2 rounded-lg bg-fuchsia-600 hover:bg-fuchsia-700 text-white"
+              onClick={handleOpenAmbIntake}
+              disabled={isTogglingAmbIntake || !ambIntakeStartDate}
+            >
+              {isTogglingAmbIntake ? "Opening..." : "Open Ambassador Enrollment"}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )}
                 </div>
                 <p className="text-xs text-gray-400 mt-1">
                   Leave empty to allow all batches

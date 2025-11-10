@@ -106,7 +106,8 @@ const Footer = () => {
                 { href: "/", label: "Home" },
                 { href: "/about", label: "About Us" },
                 { href: "/committee", label: "Committee" },
-                { href: "/join-us", label: "Join Us" },
+                { href: "/join-us/members", label: "Join as Member" },
+                { href: "/join-us/ambassadors", label: "Join as Ambassador" },
                 { href: "/contact-us", label: "Contact Us" },
               ].map((link) => (
                 <Link
